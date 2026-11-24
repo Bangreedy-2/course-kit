@@ -1,0 +1,540 @@
+{
+ "format": 1,
+ "id": "music-theory",
+ "title": "Music Theory Basics",
+ "subtitle": "3-week starter course · no instrument needed",
+ "description": "Read notes and rhythms, build major scales and key signatures, name intervals, spell chords and hear how progressions and cadences work.",
+ "language": "en",
+ "runtimes": [],
+ "schedule": {
+  "start": "2026-11-23",
+  "unit": "week"
+ },
+ "labels": {
+  "projects": "Projects",
+  "project": "Project",
+  "projectsIntro": "Apply what you learned to real music you like. Each counts as done when its written answers are in."
+ },
+ "linkHosts": [],
+ "tracks": {
+  "read": "Reading music",
+  "rhythm": "Rhythm",
+  "harmony": "Scales and harmony"
+ },
+ "phases": [
+  {
+   "id": "p1",
+   "title": "Phase 1 · Reading music",
+   "weeks": [
+    1
+   ],
+   "goal": "Name notes on both clefs and count rhythms in simple and compound time."
+  },
+  {
+   "id": "p2",
+   "title": "Phase 2 · Harmony",
+   "weeks": [
+    2,
+    3
+   ],
+   "goal": "Build major scales, name intervals, spell the chords of a key and recognise cadences. Pass the final checkpoint with 70% or more."
+  }
+ ],
+ "weeks": [
+  {
+   "n": 1,
+   "title": "Notes and rhythm",
+   "goal": "Read notes in treble and bass clef, use sharps and flats, and count note values in 2/4, 3/4, 4/4 and 6/8.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w1-pitch",
+     "track": "read",
+     "core": true,
+     "h": 1,
+     "title": "Pitch, note names and the staff",
+     "desc": "Letter names, octaves, half and whole steps, sharps and flats, and the two clefs.",
+     "lessons": [
+      "pitch"
+     ],
+     "res": [
+      [
+       "musictheory.net lessons",
+       "https://www.musictheory.net/lessons"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "pitch"
+      },
+      {
+       "t": "D",
+       "id": "d-staff"
+      }
+     ]
+    },
+    {
+     "id": "w1-rhythm",
+     "track": "rhythm",
+     "core": true,
+     "h": 1,
+     "title": "Note values, rests and time signatures",
+     "desc": "How long each note lasts, dots and ties, and simple vs compound time.",
+     "lessons": [
+      "rhythm"
+     ],
+     "res": [
+      [
+       "musictheory.net lessons",
+       "https://www.musictheory.net/lessons"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "rhythm"
+      },
+      {
+       "t": "D",
+       "id": "d-beats"
+      }
+     ]
+    },
+    {
+     "id": "w1-habit",
+     "track": "read",
+     "core": true,
+     "h": 0.5,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 3,
+       "w": 1
+      },
+      {
+       "t": "QZ",
+       "w": 1,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "w1-keys",
+     "track": "read",
+     "core": false,
+     "h": 0.5,
+     "title": "Find middle C on a keyboard",
+     "desc": "Open any piano app or a real keyboard. Find every C, then middle C (C4), then play C up to the next C on white keys only.",
+     "crit": [
+      {
+       "t": "C",
+       "label": "I found middle C and played the C major scale"
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Which white-key pairs are a half step apart?",
+     "o": [
+      "C–D and F–G",
+      "E–F and B–C",
+      "D–E and A–B",
+      "G–A and C–D"
+     ],
+     "a": 1,
+     "why": "There is no black key between E and F or between B and C."
+    },
+    {
+     "q": "The bottom line of the treble clef is:",
+     "o": [
+      "G",
+      "F",
+      "E",
+      "C"
+     ],
+     "a": 2,
+     "why": "Treble lines are E G B D F."
+    },
+    {
+     "q": "A dotted quarter note lasts:",
+     "o": [
+      "1 beat",
+      "1.5 beats",
+      "2 beats",
+      "0.75 beats"
+     ],
+     "a": 1,
+     "why": "1 + half of 1 = 1.5 quarter-note beats."
+    },
+    {
+     "q": "6/8 time is:",
+     "o": [
+      "Simple triple",
+      "Compound duple",
+      "Simple duple",
+      "Compound triple"
+     ],
+     "a": 1,
+     "why": "Two beats, each a dotted quarter split into three."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "title": "Scales and intervals",
+   "goal": "Spell any major scale, read key signatures, and name intervals by number and quality.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w2-scales",
+     "track": "harmony",
+     "core": true,
+     "h": 1.5,
+     "title": "Major scales and key signatures",
+     "desc": "The W W H W W W H pattern, the spelling rule, and the orders of sharps and flats.",
+     "lessons": [
+      "scales"
+     ],
+     "res": [
+      [
+       "musictheory.net lessons",
+       "https://www.musictheory.net/lessons"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "scales"
+      },
+      {
+       "t": "D",
+       "id": "d-scale"
+      }
+     ]
+    },
+    {
+     "id": "w2-intervals",
+     "track": "harmony",
+     "core": true,
+     "h": 1.5,
+     "title": "Intervals: number and quality",
+     "desc": "Count letters, then compare with the lower note's major scale.",
+     "lessons": [
+      "intervals"
+     ],
+     "res": [
+      [
+       "musictheory.net lessons",
+       "https://www.musictheory.net/lessons"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "intervals"
+      },
+      {
+       "t": "D",
+       "id": "d-intervals"
+      }
+     ]
+    },
+    {
+     "id": "pr1",
+     "project": "1",
+     "track": "harmony",
+     "core": true,
+     "h": 1,
+     "title": "Project 1: the key of a song",
+     "desc": "Pick a song you like and find its sheet music or chords online. Find its key signature (or work out the key from the chords), spell that major scale, and name three intervals from the first line of the melody.",
+     "crit": [
+      {
+       "t": "T",
+       "label": "Song, key, and its major scale spelled out",
+       "min": 15
+      },
+      {
+       "t": "T",
+       "label": "Three intervals from the melody, each with how you named it",
+       "min": 40
+      }
+     ]
+    },
+    {
+     "id": "w2-habit",
+     "track": "read",
+     "core": true,
+     "h": 0.5,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 2
+      },
+      {
+       "t": "QZ",
+       "w": 2,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "What is the major scale pattern?",
+     "o": [
+      "W H W W H W W",
+      "W W H W W W H",
+      "W W W H W W H",
+      "H W W W W H W"
+     ],
+     "a": 1,
+     "why": "Half steps fall between degrees 3–4 and 7–8."
+    },
+    {
+     "q": "Two sharps in a key signature are:",
+     "o": [
+      "F♯ and G♯",
+      "B♭ and E♭",
+      "F♯ and C♯",
+      "C♯ and G♯"
+     ],
+     "a": 2,
+     "why": "Sharps always come in the order F C G D A E B, so two sharps are F♯ and C♯: the key of D major."
+    },
+    {
+     "q": "C up to E♭ is a:",
+     "o": [
+      "major third",
+      "minor third",
+      "augmented second",
+      "diminished third"
+     ],
+     "a": 1,
+     "why": "Three letters (a third), a half step smaller than C–E, so minor."
+    },
+    {
+     "q": "How many half steps in a perfect fourth?",
+     "o": [
+      "4",
+      "5",
+      "6",
+      "7"
+     ],
+     "a": 1,
+     "why": "C–F is 5 half steps."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "title": "Chords and progressions",
+   "goal": "Spell triads of every quality, use Roman numerals, and recognise the four cadences. Pass the final checkpoint.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w3-chords",
+     "track": "harmony",
+     "core": true,
+     "h": 1.5,
+     "title": "Triads and the chords of a key",
+     "desc": "Four triad qualities, I ii iii IV V vi vii°, inversions and V7.",
+     "lessons": [
+      "chords"
+     ],
+     "res": [
+      [
+       "musictheory.net lessons",
+       "https://www.musictheory.net/lessons"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "chords"
+      },
+      {
+       "t": "D",
+       "id": "d-triads"
+      }
+     ]
+    },
+    {
+     "id": "w3-prog",
+     "track": "harmony",
+     "core": true,
+     "h": 1.5,
+     "title": "Chord progressions and cadences",
+     "desc": "Chord functions, common progressions and how phrases end.",
+     "lessons": [
+      "progressions"
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "progressions"
+      },
+      {
+       "t": "D",
+       "id": "d-cadences"
+      }
+     ]
+    },
+    {
+     "id": "pr2",
+     "project": "2",
+     "track": "harmony",
+     "core": true,
+     "h": 1.5,
+     "title": "Project 2: analyse a progression",
+     "desc": "Take the chords of a song you like (any chord site works). Write them out, convert them to Roman numerals in the song's key, mark the tonic, predominant and dominant chords, and find at least one cadence.",
+     "crit": [
+      {
+       "t": "T",
+       "label": "The chords and their Roman numerals",
+       "min": 20
+      },
+      {
+       "t": "T",
+       "label": "Functions and the cadence you found, with the chords that make it",
+       "min": 40
+      }
+     ]
+    },
+    {
+     "id": "w3-cp",
+     "track": "harmony",
+     "core": true,
+     "h": 1,
+     "title": "Final checkpoint (30 minutes)",
+     "desc": "A timed mix of exercises and drills from all three weeks. Retake as often as you like; the best score counts.",
+     "crit": [
+      {
+       "t": "X",
+       "id": "cp1"
+      }
+     ]
+    },
+    {
+     "id": "w3-habit",
+     "track": "read",
+     "core": true,
+     "h": 0.5,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 3
+      },
+      {
+       "t": "QZ",
+       "w": 3,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "A minor triad is built from:",
+     "o": [
+      "M3 + m3",
+      "m3 + M3",
+      "m3 + m3",
+      "M3 + M3"
+     ],
+     "a": 1,
+     "why": "Minor third at the bottom, major third on top; the outer interval is a perfect fifth."
+    },
+    {
+     "q": "In a major key, ii is:",
+     "o": [
+      "major",
+      "minor",
+      "diminished",
+      "augmented"
+     ],
+     "a": 1,
+     "why": "I ii iii IV V vi vii°: lower case is minor."
+    },
+    {
+     "q": "V → vi is a:",
+     "o": [
+      "authentic cadence",
+      "plagal cadence",
+      "half cadence",
+      "deceptive cadence"
+     ],
+     "a": 3,
+     "why": "The ear expects I and hears vi instead."
+    },
+    {
+     "q": "I–IV–V–I in A major is:",
+     "o": [
+      "A–D–E–A",
+      "A–C♯–E–A",
+      "A–B–C♯–A",
+      "A–E–D–A"
+     ],
+     "a": 0,
+     "why": "A major: degree 4 is D and degree 5 is E."
+    }
+   ]
+  }
+ ],
+ "exams": [
+  {
+   "id": "cp1",
+   "title": "Final checkpoint",
+   "week": 3,
+   "minutes": 30,
+   "pass": 70,
+   "lessons": [
+    "pitch",
+    "rhythm",
+    "scales",
+    "intervals",
+    "chords",
+    "progressions"
+   ],
+   "items": [
+    "pitch#1",
+    "pitch#3",
+    "rhythm#0",
+    "rhythm#4",
+    "rhythm#5",
+    "scales#1",
+    "scales#2",
+    "scales#3",
+    "intervals#1",
+    "intervals#2",
+    "intervals#3",
+    "chords#0",
+    "chords#3",
+    "chords#5",
+    "progressions#0",
+    "progressions#3",
+    "progressions#4",
+    "D:d-scale",
+    "D:d-triads"
+   ]
+  }
+ ],
+ "lessons": [
+  "lessons/01-pitch.md",
+  "lessons/02-rhythm.md",
+  "lessons/03-scales.md",
+  "lessons/04-intervals.md",
+  "lessons/05-chords.md",
+  "lessons/06-progressions.md"
+ ],
+ "drills": "drills.json"
+}

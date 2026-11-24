@@ -376,7 +376,7 @@ function renderEx(el,l,k,p,o){
   }
 }
 function localCode(l,k,p){const o=LOCALCODE[l.id+"#"+k];if(o)return o;const m=p.prompt.match(/```(\w*)\n([\s\S]*?)\n```/);if(!m)return null;if(m[1]&&!/^(py|python)$/i.test(m[1]))return null;return m[2];}
-function predictOk(p,v){const f=p.type==="answer"?(s=>normLine(s).toLowerCase().replace(/[.!]+$/,"")):normLine;const a=f(v);if(a===f(p.expect.join(" ")))return true;return p.alts.some(x=>f(x)===a);}
+function predictOk(p,v){const f=p.type==="answer"?(s=>normLine(s).replace(/♯/g,"#").replace(/♭/g,"b").toLowerCase().replace(/[.!]+$/,"")):normLine;const a=f(v);if(a===f(p.expect.join(" ")))return true;return p.alts.some(x=>f(x)===a);}
 function codeKeys(ta){ta.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+"    "+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+4;ta.dispatchEvent(new Event("input"));}});}
 
 /* ---------- Recall cards ---------- */

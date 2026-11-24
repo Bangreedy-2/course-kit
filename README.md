@@ -32,7 +32,8 @@ Courses that use Python run real CPython (Pyodide) in the browser, with numpy, p
 app/            the learning app (static HTML, CSS and JavaScript, no build step)
 packs/          course packs, one folder per course
   index.json    the list of courses the app shows
-  sigmoid-ml/   first pack: a 10-week machine learning programme
+  sigmoid-ml/   a 10-week machine learning programme with Python, notebooks and datasets
+  music-theory/ a 3-week music theory starter course with no code at all
 docs/           pack format and roadmap
 tools/pack.js   validate packs and rebuild packs/index.json
 ```

@@ -1,0 +1,104 @@
+[
+ {
+  "id": "d-staff",
+  "lesson": "pitch",
+  "track": "read",
+  "week": 1,
+  "level": 1,
+  "mins": 4,
+  "format": "text",
+  "title": "Both clefs from memory",
+  "prompt": "Without looking, write the notes on the **lines** and in the **spaces** of the treble clef and the bass clef, bottom to top. Then name the two pairs of neighbouring white keys that are a half step apart.",
+  "hints": [
+   "Treble lines: Every Good Boy Deserves Fruit.",
+   "Bass spaces: All Cows Eat Grass."
+  ],
+  "starter": "Treble lines:\nTreble spaces:\nBass lines:\nBass spaces:\nHalf-step pairs:",
+  "solution": "Treble lines: E G B D F\nTreble spaces: F A C E\nBass lines: G B D F A\nBass spaces: A C E G\nHalf-step pairs: E–F and B–C"
+ },
+ {
+  "id": "d-beats",
+  "lesson": "rhythm",
+  "track": "rhythm",
+  "week": 1,
+  "level": 1,
+  "mins": 5,
+  "format": "text",
+  "title": "Counting beats",
+  "prompt": "In quarter-note beats, write the length of: a whole note, a half note, a dotted half note, a dotted quarter note, an eighth note, and a sixteenth note. Then write how many beats per bar, and which note gets the beat, in 3/4 and in 6/8.",
+  "hints": [
+   "Each value halves the one before.",
+   "A dot adds half the note's own value."
+  ],
+  "starter": "",
+  "solution": "Whole 4, half 2, dotted half 3, dotted quarter 1.5, eighth 0.5, sixteenth 0.25.\n3/4: three beats, each a quarter note.\n6/8: two beats, each a dotted quarter (three eighths)."
+ },
+ {
+  "id": "d-scale",
+  "lesson": "scales",
+  "track": "harmony",
+  "week": 2,
+  "level": 2,
+  "mins": 8,
+  "format": "text",
+  "title": "Major scales and signatures",
+  "prompt": "From memory: write the order of sharps and the order of flats. Then spell the major scales of **A**, **E♭** and **B**, and give how many sharps or flats each has.",
+  "hints": [
+   "Pattern W W H W W W H, each letter once.",
+   "Sharps: Father Charles Goes Down And Ends Battle."
+  ],
+  "starter": "",
+  "solution": "Order of sharps: F C G D A E B. Order of flats: B E A D G C F.\nA major: A B C♯ D E F♯ G♯ (3 sharps).\nE♭ major: E♭ F G A♭ B♭ C D (3 flats).\nB major: B C♯ D♯ E F♯ G♯ A♯ (5 sharps)."
+ },
+ {
+  "id": "d-intervals",
+  "lesson": "intervals",
+  "track": "harmony",
+  "week": 2,
+  "level": 2,
+  "mins": 6,
+  "format": "text",
+  "title": "Intervals by half steps",
+  "prompt": "Write the half-step count of each interval: m2, M2, m3, M3, P4, tritone, P5, m6, M6, m7, M7, P8. Then name these intervals: C–A♭, D–F♯, G–F.",
+  "hints": [
+   "P5 is 7 half steps; work outwards from there.",
+   "Count letters first for the names."
+  ],
+  "starter": "",
+  "solution": "m2 1, M2 2, m3 3, M3 4, P4 5, tritone 6, P5 7, m6 8, M6 9, m7 10, M7 11, P8 12.\nC–A♭: minor sixth. D–F♯: major third. G–F: minor seventh."
+ },
+ {
+  "id": "d-triads",
+  "lesson": "chords",
+  "track": "harmony",
+  "week": 3,
+  "level": 2,
+  "mins": 8,
+  "format": "text",
+  "title": "The triads of a key",
+  "prompt": "Write the Roman-numeral pattern of the triads in a major key. Then spell all seven triads of **G major** with their chord symbols.",
+  "hints": [
+   "Major, minor, minor, major, major, minor, diminished.",
+   "G major has one sharp: F♯."
+  ],
+  "starter": "",
+  "solution": "I ii iii IV V vi vii°.\nG major: G (G B D), Am (A C E), Bm (B D F♯), C (C E G), D (D F♯ A), Em (E G B), F♯° (F♯ A C)."
+ },
+ {
+  "id": "d-cadences",
+  "lesson": "progressions",
+  "track": "harmony",
+  "week": 3,
+  "level": 2,
+  "mins": 5,
+  "format": "text",
+  "title": "Cadences and progressions",
+  "prompt": "Name the four cadences with their chords. Then write I–IV–V–I and I–V–vi–IV in **D major** as chord symbols.",
+  "hints": [
+   "Authentic, plagal, half, deceptive.",
+   "D major: D E F♯ G A B C♯."
+  ],
+  "starter": "",
+  "solution": "Authentic V–I, plagal IV–I, half (any chord)–V, deceptive V–vi.\nD major I–IV–V–I: D G A D. I–V–vi–IV: D A Bm G."
+ }
+]
