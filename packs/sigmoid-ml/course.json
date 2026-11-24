@@ -1,0 +1,2740 @@
+{
+ "format": 1,
+ "id": "sigmoid-ml",
+ "title": "Sigmoid Prep",
+ "subtitle": "Sigmoid ML02 · study programme",
+ "description": "A 10-week preparation programme for the Sigmoid Machine Learning course (ML02): Python, pandas, the maths behind the models, 20 homework notebooks and three timed checkpoints.",
+ "language": "en",
+ "assistantName": "Viorel",
+ "runtimes": [
+  "python"
+ ],
+ "schedule": {
+  "start": "2026-11-23",
+  "unit": "week"
+ },
+ "labels": {
+  "projects": "Homework",
+  "project": "Homework",
+  "projectsIntro": "The notebooks from the ML Homework Book, scheduled after the lesson they need. Each counts as done when its link, numbers and written conclusion are in."
+ },
+ "linkHosts": [
+  "github.com",
+  "kaggle.com",
+  "colab.research.google.com"
+ ],
+ "tracks": {
+  "py": "Python & tools",
+  "data": "Data analysis",
+  "math": "Maths for ML",
+  "sup": "Supervised models",
+  "unsup": "Unsupervised learning",
+  "craft": "Data preparation",
+  "ship": "Interpretation & delivery"
+ },
+ "phases": [
+  {
+   "id": "p1",
+   "title": "Phase 1 · Foundations and first models",
+   "weeks": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "goal": "Write Python classes, explore data with pandas, turn formulas into code, and build linear and logistic regression from scratch. Pass Checkpoint 1 with 70% or more and hand in homework 1 to 4."
+  },
+  {
+   "id": "p2",
+   "title": "Phase 2 · The classic toolbox",
+   "weeks": [
+    5,
+    6,
+    7
+   ],
+   "goal": "Understand and use PCA, naive Bayes, decision trees, random forests, SVMs, imputation and hyperparameter search. Pass Checkpoint 2 and hand in homework 5 to 9."
+  },
+  {
+   "id": "p3",
+   "title": "Phase 3 · Unsupervised learning, data craft and shipping",
+   "weeks": [
+    8,
+    9,
+    10
+   ],
+   "goal": "Cluster with k-means and GMM, handle outliers, engineer and select features, balance classes, explain models with SHAP and LIME, and ship a Streamlit app. Pass the final checkpoint and finish the remaining homework."
+  }
+ ],
+ "weeks": [
+  {
+   "n": 1,
+   "title": "Python objects and data exploration",
+   "goal": "Write classes with inheritance and polymorphism, load and summarise a table with pandas, and compute mean, median, mode, spread and correlation by hand.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w1-setup",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Set up your ML environment",
+     "desc": "Install Anaconda (or use Google Colab) so you have Jupyter, NumPy, pandas, scikit-learn, matplotlib and seaborn. Every homework notebook runs there. Run this in a notebook cell and paste the output: `import sys, numpy, pandas, sklearn, matplotlib, seaborn; print(sys.version); print('numpy', numpy.__version__); print('pandas', pandas.__version__); print('sklearn', sklearn.__version__); print('matplotlib', matplotlib.__version__); print('seaborn', seaborn.__version__)`",
+     "res": [
+      [
+       "Anaconda download",
+       "https://www.anaconda.com/download"
+      ],
+      [
+       "Google Colab",
+       "https://colab.research.google.com/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "T",
+       "label": "Pasted output of the version check",
+       "min": 0,
+       "lines": 6,
+       "mono": true,
+       "expect": [
+        "numpy",
+        "pandas",
+        "sklearn",
+        "matplotlib",
+        "seaborn"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "w1-oop",
+     "track": "py",
+     "core": true,
+     "h": 1.5,
+     "title": "Classes, inheritance and polymorphism",
+     "desc": "The handbook's models are all Python classes with `fit` and `predict` methods, so reading and writing classes is the first skill. Handbook chapter 2.",
+     "lessons": [
+      "oop"
+     ],
+     "res": [
+      [
+       "Python tutorial: classes",
+       "https://docs.python.org/3/tutorial/classes.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "oop"
+      },
+      {
+       "t": "D",
+       "id": "d-student"
+      }
+     ]
+    },
+    {
+     "id": "w1-pandas",
+     "track": "data",
+     "core": true,
+     "h": 1.5,
+     "title": "pandas Series and DataFrames",
+     "desc": "Load, select, filter, group and summarise tables. Handbook chapter 3.",
+     "lessons": [
+      "pandas"
+     ],
+     "res": [
+      [
+       "10 minutes to pandas",
+       "https://pandas.pydata.org/docs/user_guide/10min.html"
+      ],
+      [
+       "Kaggle Learn: Pandas",
+       "https://www.kaggle.com/learn/pandas"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "pandas"
+      },
+      {
+       "t": "D",
+       "id": "d-describe"
+      }
+     ]
+    },
+    {
+     "id": "w1-stats",
+     "track": "math",
+     "core": true,
+     "h": 1.5,
+     "title": "Descriptive statistics and correlation",
+     "desc": "Mean, median, mode, variance, standard deviation, range and Pearson correlation, computed by hand and with pandas. This is exactly what homework 1 asks for.",
+     "lessons": [
+      "stats"
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "stats"
+      },
+      {
+       "t": "D",
+       "id": "d-pearson"
+      }
+     ]
+    },
+    {
+     "id": "hw1",
+     "track": "data",
+     "core": true,
+     "h": 3,
+     "title": "Homework 1: statistical analysis with pandas",
+     "desc": "Pick one dataset (Heart Disease, Pima Diabetes, Titanic or Wine Quality). In a new notebook, study each column's mean, median, mode, standard deviation, variance and range, then find the columns with the highest absolute correlation with the target and explain why, using a source if you can.",
+     "res": [
+      [
+       "Heart Disease (Kaggle)",
+       "https://bit.ly/3Nkw8fd"
+      ],
+      [
+       "Pima Diabetes (Kaggle)",
+       "https://bit.ly/3zqVZMs"
+      ],
+      [
+       "Titanic (Kaggle)",
+       "https://bit.ly/3sJhAfo"
+      ],
+      [
+       "Wine Quality",
+       "https://bit.ly/3WgcSDt"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Highest absolute correlation with the target you found",
+       "min": 0,
+       "max": 1,
+       "unit": "|r|"
+      },
+      {
+       "t": "T",
+       "label": "The top three columns and their correlation with the target",
+       "min": 8
+      },
+      {
+       "t": "T",
+       "label": "Why you think these columns correlate with the target",
+       "min": 80
+      }
+     ],
+     "project": "1"
+    },
+    {
+     "id": "w1-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 1
+      },
+      {
+       "t": "QZ",
+       "w": 1,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "w1-kaggle",
+     "track": "data",
+     "core": false,
+     "h": 2,
+     "title": "Kaggle Learn: Pandas course",
+     "desc": "Optional extra practice with short graded exercises on indexing, grouping and data types.",
+     "res": [
+      [
+       "Kaggle Learn: Pandas",
+       "https://www.kaggle.com/learn/pandas"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your Kaggle profile or certificate",
+       "hosts": [
+        "kaggle.com"
+       ]
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "In `class Student(Human):`, what is `Human`?",
+     "o": [
+      "An attribute of Student",
+      "The parent class Student inherits from",
+      "A method",
+      "An instance"
+     ],
+     "a": 1,
+     "why": "The name in brackets is the parent (base) class. Student gets all of Human's methods and can override them."
+    },
+    {
+     "q": "Which pandas call gives the mean of every numeric column of `df`?",
+     "o": [
+      "`df.mean()`",
+      "`mean(df)`",
+      "`df.avg()`",
+      "`df['mean']`"
+     ],
+     "a": 0,
+     "why": "`DataFrame.mean()` works column by column and returns a Series indexed by column name."
+    },
+    {
+     "q": "The values 2, 3, 3, 10 have which median?",
+     "o": [
+      "3",
+      "4.5",
+      "3.5",
+      "2.5"
+     ],
+     "a": 0,
+     "why": "With an even count the median is the average of the two middle values after sorting: (3 + 3) / 2 = 3."
+    },
+    {
+     "q": "A Pearson correlation of −0.85 between two columns means:",
+     "o": [
+      "No relationship",
+      "A strong relationship where one goes up as the other goes down",
+      "A weak positive relationship",
+      "One column causes the other"
+     ],
+     "a": 1,
+     "why": "The sign gives the direction and the size gives the strength. Correlation never proves causation."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "title": "Linear algebra and NumPy",
+   "goal": "Multiply vectors and matrices by hand and with NumPy, use broadcasting, and turn the five homework formulas into vectorised functions.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w2-linalg",
+     "track": "math",
+     "core": true,
+     "h": 1.5,
+     "title": "Vectors, matrices and their products",
+     "desc": "Dot product, matrix multiplication, transpose, identity and inverse: the language every model in the handbook is written in. Handbook chapter 4.1.",
+     "lessons": [
+      "linalg"
+     ],
+     "res": [
+      [
+       "3Blue1Brown: linear algebra",
+       "https://www.3blue1brown.com/topics/linear-algebra"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "linalg"
+      },
+      {
+       "t": "D",
+       "id": "d-matmul"
+      }
+     ]
+    },
+    {
+     "id": "w2-numpy",
+     "track": "py",
+     "core": true,
+     "h": 1.5,
+     "title": "NumPy arrays and broadcasting",
+     "desc": "Create arrays, read their shape, index and slice, and replace loops with vectorised maths. Handbook chapter 4.2.",
+     "lessons": [
+      "numpy"
+     ],
+     "res": [
+      [
+       "NumPy for absolute beginners",
+       "https://numpy.org/doc/stable/user/absolute_beginners.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "numpy"
+      },
+      {
+       "t": "D",
+       "id": "d-vector"
+      }
+     ]
+    },
+    {
+     "id": "w2-formulas",
+     "track": "math",
+     "core": true,
+     "h": 1.5,
+     "title": "From formula to code: the five homework formulas",
+     "desc": "Normal density, sigmoid, the logistic regression weight update, mean squared error and binary cross-entropy, read symbol by symbol and implemented.",
+     "lessons": [
+      "formulas"
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "formulas"
+      },
+      {
+       "t": "D",
+       "id": "d-sigmoid-bce"
+      }
+     ]
+    },
+    {
+     "id": "hw2",
+     "track": "math",
+     "core": true,
+     "h": 3,
+     "title": "Homework 2: NumPy formulas",
+     "desc": "Implement the five functions from the Homework Book with NumPy. Then run them on these inputs and paste the printed results: `normal(0, 0, 1)`, `sigmoid(1)`, `mse(np.array([1,2,3]), np.array([1,2,5]))`, `bce(np.array([1,0,1]), np.array([0.9,0.2,0.7]))`, and the weight update with `w=[0.5,-0.25]`, `X=[[1,2],[3,4]]`, `y=[1,0]`, `y_hat=[0.8,0.3]`, `alpha=0.1`. Round each to 4 decimals.",
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Pasted output of the five functions",
+       "min": 0,
+       "lines": 5,
+       "mono": true,
+       "expect": [
+        "0.3989",
+        "0.7311",
+        "1.3333",
+        "0.2284",
+        "0.465"
+       ]
+      }
+     ],
+     "project": "2"
+    },
+    {
+     "id": "w2-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 2
+      },
+      {
+       "t": "QZ",
+       "w": 2,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "w2-3b1b",
+     "track": "math",
+     "core": false,
+     "h": 2,
+     "title": "Watch: Essence of linear algebra, chapters 1 to 4",
+     "desc": "Visual intuition for vectors, linear combinations, matrices as transformations and matrix multiplication.",
+     "res": [
+      [
+       "3Blue1Brown: linear algebra",
+       "https://www.3blue1brown.com/topics/linear-algebra"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "T",
+       "label": "In your own words: what does multiplying a vector by a matrix do geometrically?",
+       "min": 50
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "A matrix of shape (3, 2) times a matrix of shape (2, 4) gives shape:",
+     "o": [
+      "(3, 4)",
+      "(2, 2)",
+      "(3, 2)",
+      "It is not defined"
+     ],
+     "a": 0,
+     "why": "Inner sizes (2 and 2) must match; the result takes the outer sizes: 3 rows, 4 columns."
+    },
+    {
+     "q": "For NumPy arrays `a` and `b` of the same shape, `a * b` is:",
+     "o": [
+      "Matrix multiplication",
+      "Element-wise multiplication",
+      "The dot product",
+      "An error"
+     ],
+     "a": 1,
+     "why": "`*` multiplies element by element. Use `@` or `np.dot` for matrix multiplication."
+    },
+    {
+     "q": "σ(0), the sigmoid of zero, equals:",
+     "o": [
+      "0",
+      "1",
+      "0.5",
+      "−1"
+     ],
+     "a": 2,
+     "why": "1 / (1 + e⁰) = 1 / 2."
+    },
+    {
+     "q": "Why does MSE square the errors?",
+     "o": [
+      "To make the result smaller",
+      "So positive and negative errors cannot cancel, and big errors count more",
+      "Because squares are faster to compute",
+      "To make it a probability"
+     ],
+     "a": 1,
+     "why": "Squaring makes every error positive and punishes large errors more, and it gives a smooth function for gradient descent."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "title": "Linear regression",
+   "goal": "Explain the model, the cost and gradient descent, implement it from scratch, and evaluate it with a train/test split, MSE, MAE, RMSE and R².",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w3-linreg",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "The linear model and its cost",
+     "desc": "Targets, features, weights, the column of ones for the intercept, and the least-squares cost. Handbook chapter 5.1.",
+     "lessons": [
+      "linreg"
+     ],
+     "res": [
+      [
+       "scikit-learn: linear models",
+       "https://scikit-learn.org/stable/modules/linear_model.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "linreg"
+      },
+      {
+       "t": "D",
+       "id": "d-predict-lin"
+      }
+     ]
+    },
+    {
+     "id": "w3-gd",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Gradient descent from scratch",
+     "desc": "The update rule, the learning rate, batches and convergence; the handbook's `LinearRegression` class line by line. Handbook chapter 5.2.",
+     "lessons": [
+      "gd"
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "gd"
+      },
+      {
+       "t": "D",
+       "id": "d-linreg-gd"
+      }
+     ]
+    },
+    {
+     "id": "w3-eval",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Train/test split and regression metrics",
+     "desc": "Why we hold data back, `train_test_split`, and how to read MSE, MAE, RMSE and R² (what `.score` returns).",
+     "lessons": [
+      "evalreg"
+     ],
+     "res": [
+      [
+       "scikit-learn: model evaluation",
+       "https://scikit-learn.org/stable/modules/model_evaluation.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "evalreg"
+      },
+      {
+       "t": "D",
+       "id": "d-r2"
+      }
+     ]
+    },
+    {
+     "id": "hw3",
+     "track": "sup",
+     "core": true,
+     "h": 3.5,
+     "title": "Homework 3: linear regression, sklearn vs from scratch",
+     "desc": "On Boston house prices, used car data or electric motor temperature: study correlations, build a second feature set with |r| between 0.5 and 0.8, split each set, train sklearn's `LinearRegression` and the handbook's from-scratch version, compare their R² on the test sets, and comment on your code.",
+     "res": [
+      [
+       "Boston house prices",
+       "https://bit.ly/3t4nb0h"
+      ],
+      [
+       "Used car data",
+       "https://bit.ly/3sLi4lj"
+      ],
+      [
+       "Electric motor temperature",
+       "https://bit.ly/3UuvaPV"
+      ],
+      [
+       "scikit-learn: linear models",
+       "https://scikit-learn.org/stable/modules/linear_model.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Test R² of sklearn on all features",
+       "min": -1,
+       "max": 1,
+       "unit": "R²"
+      },
+      {
+       "t": "N",
+       "label": "Test R² of your from-scratch model on all features",
+       "min": -1,
+       "max": 1,
+       "unit": "R²"
+      },
+      {
+       "t": "T",
+       "label": "Which model and feature set did best, and why",
+       "min": 80
+      }
+     ],
+     "project": "3"
+    },
+    {
+     "id": "w3-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 3
+      },
+      {
+       "t": "QZ",
+       "w": 3,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Why does the handbook add a column of ones to X?",
+     "o": [
+      "To normalise the data",
+      "So one weight acts as the intercept b",
+      "To avoid division by zero",
+      "It is a bug"
+     ],
+     "a": 1,
+     "why": "The weight that multiplies the ones column is added to every prediction unchanged, which is exactly the intercept."
+    },
+    {
+     "q": "A learning rate that is far too large usually makes gradient descent:",
+     "o": [
+      "Converge faster to the exact minimum",
+      "Overshoot and diverge or bounce",
+      "Stop immediately",
+      "Ignore the gradient"
+     ],
+     "a": 1,
+     "why": "Huge steps jump over the valley and can make the cost grow every step."
+    },
+    {
+     "q": "R² of 0 on the test set means the model:",
+     "o": [
+      "Is perfect",
+      "Predicts no better than always guessing the mean",
+      "Has zero error",
+      "Is overfitted for sure"
+     ],
+     "a": 1,
+     "why": "R² = 1 − SSE/SST. When SSE equals SST you are no better than the mean."
+    },
+    {
+     "q": "Why evaluate on a test set the model never saw?",
+     "o": [
+      "It is faster",
+      "To estimate performance on new data, not memorised data",
+      "sklearn requires it",
+      "To increase R²"
+     ],
+     "a": 1,
+     "why": "Training error is optimistic. Held-out data tells you how the model generalises."
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "title": "Logistic regression and classification metrics",
+   "goal": "Build logistic regression from scratch, read probabilities and thresholds, and judge classifiers with accuracy, precision, recall, F1 and the confusion matrix. Pass Checkpoint 1.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w4-logreg",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Logistic regression from scratch",
+     "desc": "Sigmoid on top of a linear model, log loss, the gradient, and the handbook's `LogisticRegression` class. Handbook chapter 6.",
+     "lessons": [
+      "logreg"
+     ],
+     "res": [
+      [
+       "LogisticRegression docs",
+       "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "logreg"
+      },
+      {
+       "t": "D",
+       "id": "d-logreg-step"
+      }
+     ]
+    },
+    {
+     "id": "w4-metrics",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Confusion matrix, precision, recall and F1",
+     "desc": "Why accuracy can lie on imbalanced data, and which metric to use when false negatives are costly.",
+     "lessons": [
+      "clsmetrics"
+     ],
+     "res": [
+      [
+       "scikit-learn: model evaluation",
+       "https://scikit-learn.org/stable/modules/model_evaluation.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "clsmetrics"
+      },
+      {
+       "t": "D",
+       "id": "d-confusion"
+      }
+     ]
+    },
+    {
+     "id": "hw4",
+     "track": "sup",
+     "core": true,
+     "h": 3.5,
+     "title": "Homework 4: logistic regression, sklearn vs from scratch",
+     "desc": "On one of the listed classification datasets: map classes to numbers, study correlations, build the 0.5 to 0.8 correlation subset, train sklearn's `LogisticRegression` and the handbook's from-scratch version on both feature sets, and compare test accuracy with `accuracy_score`.",
+     "res": [
+      [
+       "Heart Disease (Kaggle)",
+       "https://bit.ly/3Nkw8fd"
+      ],
+      [
+       "Pima Diabetes (Kaggle)",
+       "https://bit.ly/3zqVZMs"
+      ],
+      [
+       "Titanic (Kaggle)",
+       "https://bit.ly/3sJhAfo"
+      ],
+      [
+       "Telco churn",
+       "https://bit.ly/3fqDwc7"
+      ],
+      [
+       "Heart failure prediction",
+       "https://bit.ly/3TR0yYU"
+      ],
+      [
+       "Body performance",
+       "https://bit.ly/3FBtYWu"
+      ],
+      [
+       "LogisticRegression docs",
+       "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Test accuracy of sklearn on all features",
+       "min": 0,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "N",
+       "label": "Test accuracy of your from-scratch model on all features",
+       "min": 0,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "T",
+       "label": "Interpretation of the four accuracies",
+       "min": 80
+      }
+     ],
+     "project": "4"
+    },
+    {
+     "id": "w4-cp1",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Checkpoint 1 (75 minutes)",
+     "desc": "A timed mock exam mixing exercises and drills from weeks 1 to 4. Open it from Today or Record once all its lessons are learned. Retake as often as you like; the best score counts.",
+     "crit": [
+      {
+       "t": "X",
+       "id": "cp1"
+      }
+     ]
+    },
+    {
+     "id": "w4-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 4
+      },
+      {
+       "t": "QZ",
+       "w": 4,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Logistic regression outputs 0.73 for a sample. With threshold 0.5 the predicted class is:",
+     "o": [
+      "0",
+      "1",
+      "0.73",
+      "Undefined"
+     ],
+     "a": 1,
+     "why": "0.73 ≥ 0.5, so class 1."
+    },
+    {
+     "q": "Why not use squared error as the cost for logistic regression?",
+     "o": [
+      "It is too slow",
+      "Combined with the sigmoid it is not convex and has local minima",
+      "It gives negative values",
+      "sklearn forbids it"
+     ],
+     "a": 1,
+     "why": "The handbook's point: MSE through a sigmoid creates a bumpy cost; log loss stays convex."
+    },
+    {
+     "q": "A cancer screen should miss as few sick patients as possible. Which metric matters most?",
+     "o": [
+      "Precision",
+      "Recall",
+      "Accuracy",
+      "R²"
+     ],
+     "a": 1,
+     "why": "Recall = TP / (TP + FN). Missing a sick patient is a false negative."
+    },
+    {
+     "q": "95% of samples are class 0. A model that always predicts 0 has accuracy:",
+     "o": [
+      "5%",
+      "50%",
+      "95%",
+      "0%"
+     ],
+     "a": 2,
+     "why": "It is right on every class-0 sample, so 95%, while being useless. That is why we also check recall and F1."
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "title": "PCA, probability and naive Bayes",
+   "goal": "Reduce dimensions with PCA (eigen and SVD), reason with conditional probability and Bayes' theorem, and use Gaussian, multinomial and Bernoulli naive Bayes.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w5-pca",
+     "track": "unsup",
+     "core": true,
+     "h": 1.5,
+     "title": "Principal component analysis",
+     "desc": "Standardise, covariance, eigenvectors and eigenvalues, SVD, explained variance ratio. Handbook chapter 7.",
+     "lessons": [
+      "pca"
+     ],
+     "res": [
+      [
+       "scikit-learn: PCA",
+       "https://scikit-learn.org/stable/modules/decomposition.html#pca"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "pca"
+      },
+      {
+       "t": "D",
+       "id": "d-cov"
+      }
+     ]
+    },
+    {
+     "id": "w5-prob",
+     "track": "math",
+     "core": true,
+     "h": 1.5,
+     "title": "Probability and Bayes' theorem",
+     "desc": "Axioms, complement and addition rules, conditional probability, combinatorics, random variables, mean and variance. Handbook chapter 8.1 to 8.9.",
+     "lessons": [
+      "prob"
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "prob"
+      },
+      {
+       "t": "D",
+       "id": "d-bayes"
+      }
+     ]
+    },
+    {
+     "id": "w5-nb",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Naive Bayes classifiers",
+     "desc": "The naive independence assumption and the three sklearn variants. Handbook chapter 8.10.",
+     "lessons": [
+      "bayes"
+     ],
+     "res": [
+      [
+       "scikit-learn: naive Bayes",
+       "https://scikit-learn.org/stable/modules/naive_bayes.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "bayes"
+      },
+      {
+       "t": "D",
+       "id": "d-gnb"
+      }
+     ]
+    },
+    {
+     "id": "hw5",
+     "track": "unsup",
+     "core": true,
+     "h": 3,
+     "title": "Homework 5: PCA on iris and digits",
+     "desc": "Subtask 1 on iris: a 3D scatter, the handbook's PCA with eigen and SVD plus sklearn's PCA on standardised data, a 1×3 plot of the three 2D projections, and the explained variance ratio. Subtask 2: plot 10 random digits on a 2×5 grid, scale, reduce to 2D with PCA and scatter by label.",
+     "res": [
+      [
+       "scikit-learn: PCA",
+       "https://scikit-learn.org/stable/modules/decomposition.html#pca"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Explained variance ratio of PC1 on standardised iris",
+       "min": 0.72,
+       "max": 0.74,
+       "unit": "ratio"
+      },
+      {
+       "t": "T",
+       "label": "What the three 2D projections and the variance plot tell you",
+       "min": 80
+      }
+     ],
+     "project": "5"
+    },
+    {
+     "id": "hw6",
+     "track": "sup",
+     "core": true,
+     "h": 2,
+     "title": "Homework 6: three naive Bayes models on Telco churn",
+     "desc": "Preprocess Telco Customer Churn, split it, train Gaussian, Multinomial and Bernoulli naive Bayes, and build the `ML Model | Accuracy` table as a pandas DataFrame.",
+     "res": [
+      [
+       "Telco churn",
+       "https://bit.ly/3fqDwc7"
+      ],
+      [
+       "scikit-learn: naive Bayes",
+       "https://scikit-learn.org/stable/modules/naive_bayes.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Best test accuracy of the three",
+       "min": 0.5,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "T",
+       "label": "Your conclusion from the accuracy table",
+       "min": 60
+      }
+     ],
+     "project": "6"
+    },
+    {
+     "id": "w5-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 5
+      },
+      {
+       "t": "QZ",
+       "w": 5,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Why standardise before PCA?",
+     "o": [
+      "PCA needs integers",
+      "Otherwise columns with big units dominate the variance",
+      "It removes outliers",
+      "It makes the covariance matrix diagonal"
+     ],
+     "a": 1,
+     "why": "PCA chases variance. A salary column in euros would swamp an age column unless both are put on one scale."
+    },
+    {
+     "q": "P(A) = 0.3, P(B) = 0.5, P(A ∩ B) = 0.1. P(A ∪ B) is:",
+     "o": [
+      "0.8",
+      "0.7",
+      "0.15",
+      "0.9"
+     ],
+     "a": 1,
+     "why": "Addition rule: 0.3 + 0.5 − 0.1 = 0.7."
+    },
+    {
+     "q": "What is 'naive' about naive Bayes?",
+     "o": [
+      "It ignores the prior",
+      "It assumes features are independent given the class",
+      "It only works on text",
+      "It uses a fixed threshold"
+     ],
+     "a": 1,
+     "why": "That assumption lets the likelihood become a product of one-feature probabilities."
+    },
+    {
+     "q": "Which naive Bayes suits word-count features?",
+     "o": [
+      "Gaussian",
+      "Multinomial",
+      "Bernoulli",
+      "None"
+     ],
+     "a": 1,
+     "why": "Multinomial models counts. Bernoulli models present/absent; Gaussian models continuous values."
+    }
+   ]
+  },
+  {
+   "n": 6,
+   "title": "Decision trees and random forests",
+   "light": true,
+   "goal": "A lighter holiday week: understand how trees split with Gini and entropy, how hyperparameters control depth, and how a forest of bootstrapped trees votes.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w6-dtree",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Decision trees",
+     "desc": "Gini impurity, entropy, information gain, and the hyperparameters from homework 7.",
+     "lessons": [
+      "dtree"
+     ],
+     "res": [
+      [
+       "scikit-learn: decision trees",
+       "https://scikit-learn.org/stable/modules/tree.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "dtree"
+      },
+      {
+       "t": "D",
+       "id": "d-gini"
+      }
+     ]
+    },
+    {
+     "id": "w6-rf",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Random forests",
+     "desc": "Bagging, bootstrap samples, random feature subsets, feature importance and the regressor. Handbook chapter 9.",
+     "lessons": [
+      "rforest"
+     ],
+     "res": [
+      [
+       "scikit-learn: random forests",
+       "https://scikit-learn.org/stable/modules/ensemble.html#forests-of-randomized-trees"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "rforest"
+      },
+      {
+       "t": "D",
+       "id": "d-vote"
+      }
+     ]
+    },
+    {
+     "id": "hw7",
+     "track": "sup",
+     "core": true,
+     "h": 3,
+     "title": "Homework 7: decision tree experiments",
+     "desc": "Plot the decision boundary for the two features most correlated with the target, then for each of max_depth, min_samples_split, min_samples_leaf, min_weight_fraction_leaf, max_features, max_leaf_nodes and min_impurity_decrease plot accuracy against the value (same random_state). Train the best tree and export its structure.",
+     "res": [
+      [
+       "Heart Disease (Kaggle)",
+       "https://bit.ly/3Nkw8fd"
+      ],
+      [
+       "Pima Diabetes (Kaggle)",
+       "https://bit.ly/3zqVZMs"
+      ],
+      [
+       "Titanic (Kaggle)",
+       "https://bit.ly/3sJhAfo"
+      ],
+      [
+       "Wine Quality",
+       "https://bit.ly/3WgcSDt"
+      ],
+      [
+       "scikit-learn: decision trees",
+       "https://scikit-learn.org/stable/modules/tree.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Test accuracy of your best tree",
+       "min": 0.5,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "T",
+       "label": "How each hyperparameter changed accuracy",
+       "min": 100
+      }
+     ],
+     "project": "7"
+    },
+    {
+     "id": "w6-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 3,
+       "w": 6
+      },
+      {
+       "t": "QZ",
+       "w": 6,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "A node holds 5 samples of class A and 5 of class B. Its Gini impurity is:",
+     "o": [
+      "0",
+      "0.5",
+      "1",
+      "0.25"
+     ],
+     "a": 1,
+     "why": "1 − (0.5² + 0.5²) = 0.5, the maximum for two classes."
+    },
+    {
+     "q": "Increasing max_depth of a tree without limit tends to:",
+     "o": [
+      "Underfit",
+      "Overfit",
+      "Do nothing",
+      "Reduce training accuracy"
+     ],
+     "a": 1,
+     "why": "A deep enough tree can memorise every training sample."
+    },
+    {
+     "q": "A bootstrap sample of n rows is drawn:",
+     "o": [
+      "Without replacement",
+      "With replacement, so some rows repeat and some are left out",
+      "From the test set",
+      "Sorted by target"
+     ],
+     "a": 1,
+     "why": "Drawing with replacement makes each tree see a different version of the data."
+    },
+    {
+     "q": "Why does a random forest also pick a random subset of features at each split?",
+     "o": [
+      "To save memory",
+      "To decorrelate the trees so their errors average out",
+      "To make trees deeper",
+      "It does not"
+     ],
+     "a": 1,
+     "why": "If every tree could use the one strongest feature first, they would all look alike."
+    }
+   ]
+  },
+  {
+   "n": 7,
+   "title": "SVMs, missing values and tuning",
+   "goal": "Explain margins and kernels, impute missing values several ways, and tune hyperparameters with grid and random search and cross-validation. Pass Checkpoint 2.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w7-svm",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Support vector machines",
+     "desc": "Hyperplanes, margin, support vectors, hinge loss, C and kernels; why scaling matters. Handbook chapter 10.",
+     "lessons": [
+      "svm"
+     ],
+     "res": [
+      [
+       "scikit-learn: SVM",
+       "https://scikit-learn.org/stable/modules/svm.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "svm"
+      },
+      {
+       "t": "D",
+       "id": "d-hinge"
+      }
+     ]
+    },
+    {
+     "id": "w7-missing",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Missing values",
+     "desc": "Why values go missing, dropping vs imputing, SimpleImputer strategies, KNN imputation, MICE and reparo. Handbook chapter 11.",
+     "lessons": [
+      "missing"
+     ],
+     "res": [
+      [
+       "scikit-learn: imputation",
+       "https://scikit-learn.org/stable/modules/impute.html"
+      ],
+      [
+       "reparo (Sigmoid)",
+       "https://github.com/SigmoidAI/reparo"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "missing"
+      },
+      {
+       "t": "D",
+       "id": "d-impute"
+      }
+     ]
+    },
+    {
+     "id": "w7-tuning",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Hyperparameter tuning",
+     "desc": "Parameters vs hyperparameters, grid search, random search, cross-validation, under- and overfitting, KNN as the running example. Handbook chapter 12.",
+     "lessons": [
+      "tuning"
+     ],
+     "res": [
+      [
+       "scikit-learn: tuning hyperparameters",
+       "https://scikit-learn.org/stable/modules/grid_search.html"
+      ],
+      [
+       "scikit-learn: cross-validation",
+       "https://scikit-learn.org/stable/modules/cross_validation.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "tuning"
+      },
+      {
+       "t": "D",
+       "id": "d-knn"
+      }
+     ]
+    },
+    {
+     "id": "hw8",
+     "track": "sup",
+     "core": true,
+     "h": 2,
+     "title": "Homework 8: random forest vs decision tree",
+     "desc": "Reuse your homework 7 dataset and two features: plot the forest's decision boundary, repeat the seven hyperparameter plots for RandomForestClassifier, compare with the tree, and train the best forest.",
+     "res": [
+      [
+       "scikit-learn: random forests",
+       "https://scikit-learn.org/stable/modules/ensemble.html#forests-of-randomized-trees"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Test accuracy of your best forest",
+       "min": 0.5,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "T",
+       "label": "How the forest differed from the single tree",
+       "min": 80
+      }
+     ],
+     "project": "8"
+    },
+    {
+     "id": "w7-cp2",
+     "track": "sup",
+     "core": true,
+     "h": 1.5,
+     "title": "Checkpoint 2 (80 minutes)",
+     "desc": "Timed mock exam on weeks 5 to 7 with some review of weeks 1 to 4.",
+     "crit": [
+      {
+       "t": "X",
+       "id": "cp2"
+      }
+     ]
+    },
+    {
+     "id": "w7-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 7
+      },
+      {
+       "t": "QZ",
+       "w": 7,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "hw9",
+     "track": "sup",
+     "core": false,
+     "h": 2.5,
+     "title": "Homework 9: SVM scaling and kernels",
+     "desc": "Train an SVM on the raw data and after StandardScaler, MinMaxScaler and MaxAbsScaler; build the comparison table. Then plot decision boundaries for the linear, poly, rbf and sigmoid kernels in one figure.",
+     "res": [
+      [
+       "scikit-learn: SVM",
+       "https://scikit-learn.org/stable/modules/svm.html"
+      ],
+      [
+       "Chronic kidney disease",
+       "https://bit.ly/3UejZKK"
+      ],
+      [
+       "Heart failure prediction",
+       "https://bit.ly/3TR0yYU"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Test accuracy with StandardScaler",
+       "min": 0.5,
+       "max": 1,
+       "unit": "accuracy"
+      },
+      {
+       "t": "T",
+       "label": "What scaling and each kernel did",
+       "min": 80
+      }
+     ],
+     "project": "9"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Support vectors are:",
+     "o": [
+      "All training points",
+      "The points closest to the separating hyperplane that define the margin",
+      "The misclassified points only",
+      "The cluster centres"
+     ],
+     "a": 1,
+     "why": "Remove any other point and the solution does not change."
+    },
+    {
+     "q": "A large C in a soft-margin SVM means:",
+     "o": [
+      "A wider margin, more errors allowed",
+      "Errors are punished hard, so a narrower margin",
+      "No kernel",
+      "Faster training always"
+     ],
+     "a": 1,
+     "why": "C weighs the misclassification penalty against margin width."
+    },
+    {
+     "q": "SimpleImputer(strategy='median') is a safer default than mean when:",
+     "o": [
+      "The column has outliers or is skewed",
+      "The column is categorical",
+      "There are no missing values",
+      "Always"
+     ],
+     "a": 0,
+     "why": "The median is not dragged by extreme values."
+    },
+    {
+     "q": "In 5-fold cross-validation each sample is used for validation:",
+     "o": [
+      "Never",
+      "Exactly once",
+      "Five times",
+      "Twice"
+     ],
+     "a": 1,
+     "why": "The data is cut into 5 folds and each fold is the validation set once."
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "title": "Clustering and visualisation",
+   "goal": "Cluster with k-means and Gaussian mixtures, choose k with the silhouette score, and plot data clearly with matplotlib and seaborn.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w8-kmeans",
+     "track": "unsup",
+     "core": true,
+     "h": 1.5,
+     "title": "K-means and the silhouette score",
+     "desc": "Assign, update, repeat; inertia, the elbow, and silhouette. Handbook chapter 14.",
+     "lessons": [
+      "kmeans"
+     ],
+     "res": [
+      [
+       "scikit-learn: k-means",
+       "https://scikit-learn.org/stable/modules/clustering.html#k-means"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "kmeans"
+      },
+      {
+       "t": "D",
+       "id": "d-kmeans"
+      }
+     ]
+    },
+    {
+     "id": "w8-gmm",
+     "track": "unsup",
+     "core": true,
+     "h": 1.5,
+     "title": "Gaussian mixtures and the EM algorithm",
+     "desc": "Soft clustering, the E-step and M-step, and sklearn's GaussianMixture. Handbook chapter 13.",
+     "lessons": [
+      "gmm"
+     ],
+     "res": [
+      [
+       "scikit-learn: Gaussian mixtures",
+       "https://scikit-learn.org/stable/modules/mixture.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "gmm"
+      },
+      {
+       "t": "D",
+       "id": "d-estep"
+      }
+     ]
+    },
+    {
+     "id": "w8-viz",
+     "track": "data",
+     "core": true,
+     "h": 1,
+     "title": "Data visualisation",
+     "desc": "Line, scatter, error bars, contour, histogram; seaborn KDE, joint, box, violin and lm plots. Handbook chapter 15.",
+     "lessons": [
+      "dataviz"
+     ],
+     "res": [
+      [
+       "Matplotlib user guide",
+       "https://matplotlib.org/stable/users/index.html"
+      ],
+      [
+       "seaborn tutorial",
+       "https://seaborn.pydata.org/tutorial.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "dataviz"
+      }
+     ]
+    },
+    {
+     "id": "hw10",
+     "track": "craft",
+     "core": true,
+     "h": 2.5,
+     "title": "Homework 10: comparing imputers",
+     "desc": "Plot missing values per column, split, fit SimpleImputer (mean, median, most_frequent, constant 0) and the reparo imputers (CDI, FRNNI, HotDeck, KNN, PMM, SICE, MICE), then train logistic regression, Gaussian NB, a decision tree and a random forest on each imputed set and build the `Imputer | Model | Accuracy` table.",
+     "res": [
+      [
+       "Titanic (Kaggle)",
+       "https://bit.ly/3sJhAfo"
+      ],
+      [
+       "Chronic kidney disease",
+       "https://bit.ly/3UejZKK"
+      ],
+      [
+       "scikit-learn: imputation",
+       "https://scikit-learn.org/stable/modules/impute.html"
+      ],
+      [
+       "reparo (Sigmoid)",
+       "https://github.com/SigmoidAI/reparo"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Best imputer and model pair, with its accuracy",
+       "min": 10
+      },
+      {
+       "t": "T",
+       "label": "Your conclusion",
+       "min": 80
+      }
+     ],
+     "project": "10"
+    },
+    {
+     "id": "hw12",
+     "track": "unsup",
+     "core": true,
+     "h": 2.5,
+     "title": "Homework 12: customer segmentation with GMM and k-means",
+     "desc": "Make all columns numeric, scale, choose k for GMM and k-means with the silhouette score (plot it), cluster, extract centroids and GMM means into a table, and invent a customer for each cluster.",
+     "res": [
+      [
+       "Customer segmentation",
+       "https://bit.ly/3FG0Woy"
+      ],
+      [
+       "Customer personality",
+       "https://bit.ly/3zw8Woz"
+      ],
+      [
+       "scikit-learn: k-means",
+       "https://scikit-learn.org/stable/modules/clustering.html#k-means"
+      ],
+      [
+       "scikit-learn: Gaussian mixtures",
+       "https://scikit-learn.org/stable/modules/mixture.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Number of clusters you chose for k-means",
+       "min": 2,
+       "max": 15,
+       "unit": "k"
+      },
+      {
+       "t": "T",
+       "label": "One imaginary customer per cluster",
+       "min": 80
+      }
+     ],
+     "project": "12"
+    },
+    {
+     "id": "w8-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 8
+      },
+      {
+       "t": "QZ",
+       "w": 8,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "hw11",
+     "track": "craft",
+     "core": false,
+     "h": 3,
+     "title": "Homework 11: hyperparameter plots",
+     "desc": "On one classification and one regression dataset: KNN neighbours vs accuracy and MSE, tree heatmaps of max_depth × max_features for each criterion, random forest n_estimators curves per criterion, SVC and SVR C curves per kernel. One conclusion per plot.",
+     "res": [
+      [
+       "Used car data",
+       "https://bit.ly/3sLi4lj"
+      ],
+      [
+       "Electric motor temperature",
+       "https://bit.ly/3UuvaPV"
+      ],
+      [
+       "Body performance",
+       "https://bit.ly/3FBtYWu"
+      ],
+      [
+       "scikit-learn: tuning hyperparameters",
+       "https://scikit-learn.org/stable/modules/grid_search.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Your conclusions, one per plot",
+       "min": 120
+      }
+     ],
+     "project": "11"
+    },
+    {
+     "id": "hw13",
+     "track": "data",
+     "core": false,
+     "h": 2,
+     "title": "Homework 13: repeat and extend the book's plots",
+     "desc": "Recreate the plots from the handbook's visualisation chapter on one dataset, then add plots you found yourself.",
+     "res": [
+      [
+       "Matplotlib user guide",
+       "https://matplotlib.org/stable/users/index.html"
+      ],
+      [
+       "seaborn tutorial",
+       "https://seaborn.pydata.org/tutorial.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Which new plot taught you the most about the data, and what",
+       "min": 50
+      }
+     ],
+     "project": "13"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "K-means step 1 assigns each point to:",
+     "o": [
+      "A random cluster",
+      "The nearest centroid",
+      "The largest cluster",
+      "Its own cluster"
+     ],
+     "a": 1,
+     "why": "Assign to nearest centroid, then move each centroid to the mean of its points; repeat."
+    },
+    {
+     "q": "A silhouette score near 1 for a point means:",
+     "o": [
+      "It sits on the border",
+      "It is well inside its own cluster and far from others",
+      "It is misassigned",
+      "Nothing"
+     ],
+     "a": 1,
+     "why": "s = (b − a) / max(a, b). Small a and large b give s close to 1."
+    },
+    {
+     "q": "Compared with k-means, a GMM gives:",
+     "o": [
+      "Only hard labels",
+      "Soft probabilities and elliptical clusters",
+      "No centres",
+      "Always more clusters"
+     ],
+     "a": 1,
+     "why": "Each component has its own mean and covariance, and each point gets a probability per component."
+    },
+    {
+     "q": "Which plot best compares a numeric distribution across categories, showing quartiles and outliers?",
+     "o": [
+      "Line plot",
+      "Box plot",
+      "Pie chart",
+      "Contour plot"
+     ],
+     "a": 1,
+     "why": "A box plot shows median, quartiles and points beyond the whiskers."
+    }
+   ]
+  },
+  {
+   "n": 9,
+   "title": "Outliers, features and class balance",
+   "goal": "Detect outliers four ways, scale and encode features, select the useful ones, and fix class imbalance without leaking test data.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w9-outliers",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Outlier detection",
+     "desc": "Isolation Forest, Elliptic Envelope, Local Outlier Factor, One-Class SVM and the box-plot (IQR) rule. Handbook chapter 16.",
+     "lessons": [
+      "outliers"
+     ],
+     "res": [
+      [
+       "scikit-learn: outlier detection",
+       "https://scikit-learn.org/stable/modules/outlier_detection.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "outliers"
+      },
+      {
+       "t": "D",
+       "id": "d-iqr"
+      }
+     ]
+    },
+    {
+     "id": "w9-fe",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Feature engineering",
+     "desc": "Scaling, dummy variables, Box-Cox, ZCA, frequency and target encoding with imperio. Handbook chapter 17.",
+     "lessons": [
+      "feateng"
+     ],
+     "res": [
+      [
+       "scikit-learn: preprocessing",
+       "https://scikit-learn.org/stable/modules/preprocessing.html"
+      ],
+      [
+       "imperio (Sigmoid)",
+       "https://github.com/SigmoidAI/imperio"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "feateng"
+      },
+      {
+       "t": "D",
+       "id": "d-scale"
+      }
+     ]
+    },
+    {
+     "id": "w9-fs",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Feature selection",
+     "desc": "P-values, LASSO, correlation and point-biserial selection with kydavra. Handbook chapter 18.",
+     "lessons": [
+      "featsel"
+     ],
+     "res": [
+      [
+       "scikit-learn: feature selection",
+       "https://scikit-learn.org/stable/modules/feature_selection.html"
+      ],
+      [
+       "kydavra (Sigmoid)",
+       "https://github.com/SigmoidAI/kydavra"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "featsel"
+      },
+      {
+       "t": "D",
+       "id": "d-onehot"
+      }
+     ]
+    },
+    {
+     "id": "w9-bal",
+     "track": "craft",
+     "core": true,
+     "h": 1,
+     "title": "Class balancing",
+     "desc": "Undersampling, class weights, SMOTE, SMOTEENN and the crucio methods. Handbook chapter 19.",
+     "lessons": [
+      "balance"
+     ],
+     "res": [
+      [
+       "crucio (Sigmoid)",
+       "https://github.com/SigmoidAI/crucio"
+      ],
+      [
+       "imbalanced-learn",
+       "https://imbalanced-learn.org/stable/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "balance"
+      },
+      {
+       "t": "D",
+       "id": "d-smote"
+      }
+     ]
+    },
+    {
+     "id": "hw14",
+     "track": "craft",
+     "core": true,
+     "h": 2.5,
+     "title": "Homework 14: outliers on the Pokemon data",
+     "desc": "Find the two columns most correlated with price-like target, scatter the four detectors' outliers in a 2×2 grid, plot outlier count vs contamination, then compare LinearRegression and KNN regressor trained with and without outliers.",
+     "res": [
+      [
+       "Pokemon classification",
+       "https://bit.ly/3sJpeqn"
+      ],
+      [
+       "scikit-learn: outlier detection",
+       "https://scikit-learn.org/stable/modules/outlier_detection.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Your conclusion from the comparison table",
+       "min": 80
+      }
+     ],
+     "project": "14"
+    },
+    {
+     "id": "hw15-17",
+     "track": "craft",
+     "core": true,
+     "h": 1.5,
+     "title": "Homework 15 to 17: engineer, select and balance on earlier datasets",
+     "desc": "Go back to an earlier notebook (homework 4 or 7 works well). Apply at least one feature engineering method, one feature selection method and one class balancing method, and record the test metric before and after each.",
+     "res": [
+      [
+       "imperio (Sigmoid)",
+       "https://github.com/SigmoidAI/imperio"
+      ],
+      [
+       "kydavra (Sigmoid)",
+       "https://github.com/SigmoidAI/kydavra"
+      ],
+      [
+       "crucio (Sigmoid)",
+       "https://github.com/SigmoidAI/crucio"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Before/after metric for each of the three steps",
+       "min": 30
+      },
+      {
+       "t": "T",
+       "label": "Which step helped most and why",
+       "min": 60
+      }
+     ],
+     "project": "15–17"
+    },
+    {
+     "id": "w9-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 9
+      },
+      {
+       "t": "QZ",
+       "w": 9,
+       "max": 1
+      }
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "The IQR rule flags x as an outlier when:",
+     "o": [
+      "x is above the mean",
+      "x < Q1 − 1.5·IQR or x > Q3 + 1.5·IQR",
+      "x is the maximum",
+      "|x| > 1"
+     ],
+     "a": 1,
+     "why": "Those are the box plot whisker limits."
+    },
+    {
+     "q": "Fitting a StandardScaler on the whole dataset before splitting causes:",
+     "o": [
+      "Nothing",
+      "Data leakage: test statistics influence training",
+      "Better accuracy that is real",
+      "An error"
+     ],
+     "a": 1,
+     "why": "Fit transformers on the training set only, then apply them to the test set."
+    },
+    {
+     "q": "LASSO can select features because its L1 penalty:",
+     "o": [
+      "Squares the weights",
+      "Drives some weights to exactly zero",
+      "Removes rows",
+      "Adds features"
+     ],
+     "a": 1,
+     "why": "The L1 penalty has corners at zero, so weak features get a weight of exactly 0."
+    },
+    {
+     "q": "SMOTE creates new minority samples by:",
+     "o": [
+      "Copying them exactly",
+      "Interpolating between a minority sample and one of its minority neighbours",
+      "Deleting majority samples",
+      "Adding noise to labels"
+     ],
+     "a": 1,
+     "why": "x_new = x + λ·(x_neighbour − x) with λ between 0 and 1."
+    }
+   ]
+  },
+  {
+   "n": 10,
+   "title": "Interpretation and delivery",
+   "goal": "Explain models with weights, trees, LIME and SHAP, report regression and classification metrics, ship a Streamlit app, and process data larger than memory with Dask. Pass the final checkpoint.",
+   "quizMax": 1,
+   "tasks": [
+    {
+     "id": "w10-interp",
+     "track": "ship",
+     "core": true,
+     "h": 1.5,
+     "title": "Model interpretation",
+     "desc": "Linear weights, tree paths, permutation importance, LIME and SHAP plots. Handbook chapter 20.",
+     "lessons": [
+      "interp"
+     ],
+     "res": [
+      [
+       "SHAP documentation",
+       "https://shap.readthedocs.io/en/latest/"
+      ],
+      [
+       "LIME on GitHub",
+       "https://github.com/marcotcr/lime"
+      ],
+      [
+       "scikit-learn: inspection",
+       "https://scikit-learn.org/stable/inspection.html"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "interp"
+      },
+      {
+       "t": "D",
+       "id": "d-permimp"
+      }
+     ]
+    },
+    {
+     "id": "w10-st",
+     "track": "ship",
+     "core": true,
+     "h": 1,
+     "title": "Streamlit apps",
+     "desc": "How a script becomes an app, widgets, layout, caching. Handbook chapter 21.",
+     "lessons": [
+      "streamlit"
+     ],
+     "res": [
+      [
+       "Streamlit docs",
+       "https://docs.streamlit.io/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "streamlit"
+      },
+      {
+       "t": "D",
+       "id": "d-streamlit"
+      }
+     ]
+    },
+    {
+     "id": "w10-dask",
+     "track": "ship",
+     "core": true,
+     "h": 1,
+     "title": "Dask for larger-than-memory data",
+     "desc": "Lazy task graphs, partitions, Dask arrays and DataFrames, `.compute()`. Handbook chapter 22.",
+     "lessons": [
+      "dask"
+     ],
+     "res": [
+      [
+       "Dask docs",
+       "https://docs.dask.org/en/stable/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "L",
+       "id": "dask"
+      }
+     ]
+    },
+    {
+     "id": "hw18",
+     "track": "ship",
+     "core": true,
+     "h": 2.5,
+     "title": "Homework 18: interpret your models",
+     "desc": "One regression and one classification dataset: a weight bar plot, a tree image, the regression table (MSE, MAE, RMSE) and the classification table (accuracy, precision, recall, F1), SHAP bar, waterfall, beeswarm and force plots for the best classifier, and LIME on the regression samples with the largest errors.",
+     "res": [
+      [
+       "SHAP documentation",
+       "https://shap.readthedocs.io/en/latest/"
+      ],
+      [
+       "LIME on GitHub",
+       "https://github.com/marcotcr/lime"
+      ],
+      [
+       "Body performance",
+       "https://bit.ly/3FBtYWu"
+      ],
+      [
+       "Heart failure prediction",
+       "https://bit.ly/3TR0yYU"
+      ],
+      [
+       "Telco churn",
+       "https://bit.ly/3fqDwc7"
+      ],
+      [
+       "Used car data",
+       "https://bit.ly/3sLi4lj"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "F1 of your best classifier",
+       "min": 0,
+       "max": 1,
+       "unit": "F1"
+      },
+      {
+       "t": "T",
+       "label": "What SHAP and LIME showed you",
+       "min": 100
+      }
+     ],
+     "project": "18"
+    },
+    {
+     "id": "hw19",
+     "track": "ship",
+     "core": true,
+     "h": 2.5,
+     "title": "Homework 19: a Streamlit app for a model",
+     "desc": "Home page describing the dataset, sidebar navigation, a page of parameter widgets with a Train button, the data head, a container listing the chosen parameters, at least three charts, and every text element type (markdown, code, title, header, LaTeX).",
+     "res": [
+      [
+       "Streamlit docs",
+       "https://docs.streamlit.io/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to the app's code (GitHub) or a deployed app",
+       "hosts": [
+        "github.com",
+        "streamlit.app"
+       ]
+      },
+      {
+       "t": "T",
+       "label": "Paste the list of widgets and charts your app has",
+       "min": 20
+      }
+     ],
+     "project": "19"
+    },
+    {
+     "id": "w10-cp3",
+     "track": "ship",
+     "core": true,
+     "h": 1.5,
+     "title": "Final checkpoint (90 minutes)",
+     "desc": "Timed mock exam across the whole programme.",
+     "crit": [
+      {
+       "t": "X",
+       "id": "cp3"
+      }
+     ]
+    },
+    {
+     "id": "w10-habit",
+     "track": "py",
+     "core": true,
+     "h": 1,
+     "title": "Daily reviews and the weekly self-check",
+     "desc": "Short daily sessions beat one long one. Open Today each day: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+     "crit": [
+      {
+       "t": "DAYS",
+       "n": 4,
+       "w": 10
+      },
+      {
+       "t": "QZ",
+       "w": 10,
+       "max": 1
+      }
+     ]
+    },
+    {
+     "id": "hw20",
+     "track": "ship",
+     "core": false,
+     "h": 2.5,
+     "title": "Homework 20: Dask on a large dataset",
+     "desc": "Load one of the large datasets as a Dask DataFrame with a chosen number of partitions, prepare it, describe it, group and aggregate, apply an earlier algorithm, and plot.",
+     "res": [
+      [
+       "Dask docs",
+       "https://docs.dask.org/en/stable/"
+      ]
+     ],
+     "crit": [
+      {
+       "t": "U",
+       "label": "Link to your notebook",
+       "hosts": [
+        "github.com",
+        "kaggle.com",
+        "colab.research.google.com"
+       ]
+      },
+      {
+       "t": "N",
+       "label": "Number of partitions you used",
+       "min": 1,
+       "max": 10000,
+       "unit": "partitions"
+      },
+      {
+       "t": "T",
+       "label": "What grouping showed",
+       "min": 60
+      }
+     ],
+     "project": "20"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "A SHAP value for one feature on one prediction is:",
+     "o": [
+      "The feature's weight in the model",
+      "How much that feature pushed this prediction away from the average prediction",
+      "The feature's correlation with the target",
+      "Its p-value"
+     ],
+     "a": 1,
+     "why": "SHAP values add up from the base value to the model output."
+    },
+    {
+     "q": "RMSE is preferred over MSE for reporting because:",
+     "o": [
+      "It is always smaller",
+      "It is in the same units as the target",
+      "It ignores outliers",
+      "It is a probability"
+     ],
+     "a": 1,
+     "why": "Taking the square root returns to the target's units."
+    },
+    {
+     "q": "In Streamlit, when the user changes a widget:",
+     "o": [
+      "Only that widget updates",
+      "The whole script reruns from top to bottom",
+      "Nothing happens until refresh",
+      "A callback must be registered"
+     ],
+     "a": 1,
+     "why": "That rerun model is why caching (`st.cache_data`) matters."
+    },
+    {
+     "q": "Dask operations like `df.groupby('a').b.mean()` return:",
+     "o": [
+      "The result immediately",
+      "A lazy object; call `.compute()` to run it",
+      "An error",
+      "A pandas plot"
+     ],
+     "a": 1,
+     "why": "Dask builds a task graph and runs it in parallel only when you ask."
+    }
+   ]
+  }
+ ],
+ "exams": [
+  {
+   "id": "cp1",
+   "title": "Checkpoint 1",
+   "week": 4,
+   "minutes": 75,
+   "pass": 70,
+   "lessons": [
+    "oop",
+    "pandas",
+    "stats",
+    "linalg",
+    "numpy",
+    "formulas",
+    "linreg",
+    "gd",
+    "evalreg",
+    "logreg",
+    "clsmetrics"
+   ],
+   "items": [
+    "oop#2",
+    "oop#5",
+    "pandas#1",
+    "pandas#2",
+    "stats#3",
+    "stats#5",
+    "linalg#1",
+    "linalg#2",
+    "numpy#0",
+    "numpy#2",
+    "formulas#1",
+    "formulas#3",
+    "linreg#1",
+    "gd#2",
+    "evalreg#1",
+    "evalreg#2",
+    "logreg#1",
+    "clsmetrics#2",
+    "D:d-pearson",
+    "D:d-confusion"
+   ]
+  },
+  {
+   "id": "cp2",
+   "title": "Checkpoint 2",
+   "week": 7,
+   "minutes": 80,
+   "pass": 70,
+   "lessons": [
+    "pca",
+    "prob",
+    "bayes",
+    "dtree",
+    "rforest",
+    "svm",
+    "missing",
+    "tuning"
+   ],
+   "items": [
+    "pca#0",
+    "pca#1",
+    "prob#0",
+    "prob#2",
+    "bayes#0",
+    "bayes#3",
+    "dtree#1",
+    "dtree#2",
+    "rforest#2",
+    "rforest#5",
+    "svm#0",
+    "svm#3",
+    "missing#2",
+    "missing#5",
+    "tuning#0",
+    "tuning#2",
+    "D:d-gini",
+    "D:d-bayes",
+    "D:d-impute",
+    "D:d-r2"
+   ]
+  },
+  {
+   "id": "cp3",
+   "title": "Final checkpoint",
+   "week": 10,
+   "minutes": 90,
+   "pass": 70,
+   "lessons": [
+    "oop",
+    "pandas",
+    "stats",
+    "linalg",
+    "numpy",
+    "formulas",
+    "linreg",
+    "gd",
+    "evalreg",
+    "logreg",
+    "clsmetrics",
+    "pca",
+    "prob",
+    "bayes",
+    "dtree",
+    "rforest",
+    "svm",
+    "missing",
+    "tuning",
+    "kmeans",
+    "gmm",
+    "dataviz",
+    "outliers",
+    "feateng",
+    "featsel",
+    "balance",
+    "interp",
+    "streamlit",
+    "dask"
+   ],
+   "items": [
+    "kmeans#0",
+    "kmeans#2",
+    "gmm#0",
+    "gmm#3",
+    "dataviz#3",
+    "outliers#0",
+    "outliers#3",
+    "feateng#1",
+    "feateng#2",
+    "featsel#1",
+    "featsel#5",
+    "balance#1",
+    "balance#2",
+    "interp#2",
+    "interp#3",
+    "streamlit#1",
+    "dask#2",
+    "dtree#0",
+    "svm#3",
+    "tuning#2",
+    "D:d-kmeans",
+    "D:d-smote",
+    "D:d-permimp",
+    "D:d-linreg-gd"
+   ]
+  }
+ ],
+ "lessons": [
+  "lessons/01-oop.md",
+  "lessons/02-pandas.md",
+  "lessons/03-stats.md",
+  "lessons/04-linalg.md",
+  "lessons/05-numpy.md",
+  "lessons/06-formulas.md",
+  "lessons/07-linreg.md",
+  "lessons/08-gd.md",
+  "lessons/09-evalreg.md",
+  "lessons/10-logreg.md",
+  "lessons/11-clsmetrics.md",
+  "lessons/12-pca.md",
+  "lessons/13-prob.md",
+  "lessons/14-bayes.md",
+  "lessons/15-dtree.md",
+  "lessons/16-rforest.md",
+  "lessons/17-svm.md",
+  "lessons/18-missing.md",
+  "lessons/19-tuning.md",
+  "lessons/20-kmeans.md",
+  "lessons/21-gmm.md",
+  "lessons/22-dataviz.md",
+  "lessons/23-outliers.md",
+  "lessons/24-feateng.md",
+  "lessons/25-featsel.md",
+  "lessons/26-balance.md",
+  "lessons/27-interp.md",
+  "lessons/28-streamlit.md",
+  "lessons/29-dask.md"
+ ],
+ "drills": "drills.json",
+ "notebooks": "notebooks.json",
+ "data": [
+  "HousingData.csv",
+  "avocado.csv",
+  "car_data.csv",
+  "diabetes.csv",
+  "heart.csv",
+  "heart_failure.csv",
+  "kidney_disease.csv",
+  "marketing_campaign.csv",
+  "motor_temperature_sample.csv",
+  "pokemon.csv",
+  "telco_churn.csv",
+  "titanic.csv",
+  "wine_clust.csv",
+  "winequality.csv"
+ ],
+ "localCode": {
+  "pandas#5": "import pandas as pd\n\ndf = pd.read_csv(\"heart.csv\")   # Heart Disease UCI: 303 patients, 14 columns\nprint(df.shape)\nprint(df.describe())"
+ },
+ "python": {
+  "packages": {
+   "reparo": "reparo",
+   "kydavra": "kydavra",
+   "imperio": "imperio",
+   "crucio": "crucio",
+   "lime": "lime"
+  }
+ }
+}

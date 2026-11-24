@@ -1,0 +1,10 @@
+{
+ "packs": [
+  {
+   "id": "sigmoid-ml",
+   "title": "Sigmoid Prep",
+   "subtitle": "Sigmoid ML02 · study programme",
+   "description": "A 10-week preparation programme for the Sigmoid Machine Learning course (ML02): Python, pandas, the maths behind the models, 20 homework notebooks and three timed checkpoints."
+  }
+ ]
+}

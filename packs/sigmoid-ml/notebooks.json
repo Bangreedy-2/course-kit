@@ -1,0 +1,1372 @@
+{
+ "hw1": {
+  "title": "Homework 1: statistical analysis with pandas",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 1: statistical analysis with pandas\n\n**From the Homework Book:** study each column of one dataset (mean, median, mode, standard deviation, variance, range), then find the columns with the highest absolute correlation with the target and explain why.\n\n**Datasets bundled here:** `heart.csv` (target `target`), `diabetes.csv` (Pima, target `Outcome`), `titanic.csv` (target `Survived`), `winequality.csv` (red and white, target `quality`). You can also upload your own CSV.\n\n**So the checker can find your work, keep these names:**\n- `df`: your DataFrame\n- `TARGET`: the name of the target column\n- `stats`: a DataFrame with one row per numeric column and the columns `mean`, `median`, `mode`, `std`, `var`, `range`\n- `corr_with_target`: a Series of **absolute** correlations with the target, sorted from largest to smallest, without the target itself\n\nRun cells with **Shift + Enter**. Variables carry over from cell to cell, like Jupyter."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\n\nDATA = \"heart.csv\"      # or \"diabetes.csv\", \"titanic.csv\", \"winequality.csv\"\nTARGET = \"target\"       # \"Outcome\" for diabetes, \"Survived\" for titanic, \"quality\" for wine\n\ndf = pd.read_csv(DATA)\nprint(df.shape)\ndf.head()"
+   },
+   {
+    "t": "code",
+    "src": "# First look: dtypes, missing values, summary\ndf.info()\ndf.describe()"
+   },
+   {
+    "t": "md",
+    "src": "## 1. Statistics per column\n\nBuild `stats`. Hint: each statistic is one pandas call on the numeric columns (`df.select_dtypes(\"number\")`). Remember `mode()` returns a Series per column; take its first row. Range is max minus min."
+   },
+   {
+    "t": "code",
+    "src": "num = df.select_dtypes(\"number\")\n\nstats = pd.DataFrame({\n    # \"mean\": ...,\n    # \"median\": ...,\n    # \"mode\": ...,\n    # \"std\": ...,\n    # \"var\": ...,\n    # \"range\": ...,\n})\nstats"
+   },
+   {
+    "t": "md",
+    "src": "## 2. Correlation with the target\n\nCompute the absolute Pearson correlation of every numeric column with `TARGET`, drop the target itself, and sort from largest to smallest."
+   },
+   {
+    "t": "code",
+    "src": "corr_with_target = None   # replace with your Series\n\ncorr_with_target"
+   },
+   {
+    "t": "code",
+    "src": "# Optional: a bar chart of corr_with_target\nimport matplotlib.pyplot as plt\n# corr_with_target.plot.barh(); plt.gca().invert_yaxis(); plt.title(\"|r| with the target\"); plt.show()"
+   },
+   {
+    "t": "md",
+    "src": "## Top three columns\n_Write the three columns with the highest |r| and their values, e.g. `cp 0.43, thalach 0.42, exang 0.44`._",
+    "tag": "top3"
+   },
+   {
+    "t": "md",
+    "src": "## Why do these columns correlate with the target?\n_Explain in your own words (at least 80 words). Use what the columns mean; a source helps._",
+    "tag": "why"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`df` is loaded and `TARGET` is one of its columns",
+    "test": "isinstance(df, pd.DataFrame) and TARGET in df.columns"
+   },
+   {
+    "label": "`stats` has mean, median, mode, std, var and range",
+    "test": "all(c in stats.columns for c in ['mean','median','mode','std','var','range'])"
+   },
+   {
+    "label": "`stats` covers every numeric column",
+    "test": "set(df.select_dtypes('number').columns) <= set(stats.index)"
+   },
+   {
+    "label": "`stats` values match pandas (mean and range)",
+    "test": "abs(stats.loc[stats.index[0],'mean'] - df[stats.index[0]].mean()) < 1e-6 and abs(stats['range'] - (df[stats.index].max() - df[stats.index].min())).max() < 1e-6"
+   },
+   {
+    "label": "`corr_with_target` is absolute, sorted, and excludes the target",
+    "test": "TARGET not in corr_with_target.index and (corr_with_target >= 0).all() and corr_with_target.is_monotonic_decreasing and len(corr_with_target) >= 3"
+   },
+   {
+    "label": "Correlations match `df.corr()`",
+    "test": "abs(corr_with_target.iloc[0] - df.select_dtypes('number').corr()[TARGET].drop(TARGET).abs().max()) < 1e-6"
+   },
+   {
+    "label": "Top three columns written",
+    "test": {
+     "md": "top3",
+     "words": 3
+    }
+   },
+   {
+    "label": "Explanation of at least 80 words",
+    "test": {
+     "md": "why",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(corr_with_target.iloc[0]), 4)",
+   "2": {
+    "md": "top3"
+   },
+   "3": {
+    "md": "why"
+   }
+  }
+ },
+ "hw2": {
+  "title": "Homework 2: NumPy formulas",
+  "v": 1,
+  "datasets": [],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 2: five formulas in NumPy\n\nImplement the five functions from the Homework Book. **Use these names** so the checker can test them:\n\n| Formula | Function |\n|---|---|\n| Normal density N(x, μ, σ) | `normal(x, mu, sigma)` |\n| Sigmoid | `sigmoid(x)` |\n| Logistic regression weight update | `update_weights(w, X, y, y_hat, alpha=0.0005)` returning the new `w` |\n| Mean squared error | `mse(y, y_hat)` |\n| Binary cross-entropy | `bce(y, y_hat)` |\n\nThe checker calls them with fresh inputs, so hard-coding the answers won't pass."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\n\ndef normal(x, mu, sigma):\n    pass\n\ndef sigmoid(x):\n    pass"
+   },
+   {
+    "t": "code",
+    "src": "def update_weights(w, X, y, y_hat, alpha=0.0005):\n    # w_j = w_j - alpha * (1/n) * sum_i (y_hat_i - y_i) * X[i, j]\n    # The book iterates over the rows of X; a vectorised version is fine too.\n    pass"
+   },
+   {
+    "t": "code",
+    "src": "def mse(y, y_hat):\n    pass\n\ndef bce(y, y_hat):\n    pass"
+   },
+   {
+    "t": "code",
+    "src": "# The inputs from the task description. Each line should print one result, rounded to 4 decimals.\nprint(round(normal(0, 0, 1), 4))\nprint(round(sigmoid(1), 4))\nprint(round(mse(np.array([1, 2, 3]), np.array([1, 2, 5])), 4))\nprint(round(bce(np.array([1, 0, 1]), np.array([0.9, 0.2, 0.7])), 4))\nprint(np.round(update_weights(np.array([0.5, -0.25]), np.array([[1, 2], [3, 4]]), np.array([1, 0]), np.array([0.8, 0.3]), alpha=0.1), 4))"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`normal` matches the formula",
+    "test": "abs(float(normal(1.5, 1.0, 2.0)) - 0.193334) < 1e-4 and abs(float(normal(0, 0, 1)) - 0.398942) < 1e-4"
+   },
+   {
+    "label": "`sigmoid` works on numbers and arrays",
+    "test": "abs(float(sigmoid(1)) - 0.731059) < 1e-4 and np.allclose(sigmoid(np.array([-2.0, 0.0, 3.0])), [0.119203, 0.5, 0.952574], atol=1e-5)"
+   },
+   {
+    "label": "`update_weights` applies the update rule",
+    "test": "np.allclose(update_weights(np.array([0.5, -0.25]), np.array([[1., 2.], [3., 4.]]), np.array([1, 0]), np.array([0.8, 0.3]), alpha=0.1), [0.465, -0.29], atol=1e-6) and np.allclose(update_weights(np.array([0.0, 0.0, 1.0]), np.array([[1., 0., 2.], [0., 1., 1.], [2., 2., 0.]]), np.array([1, 0, 1]), np.array([0.6, 0.1, 0.9]), alpha=0.3), [0.06, 0.01, 1.07], atol=1e-6)"
+   },
+   {
+    "label": "`update_weights` uses the default learning rate 0.0005",
+    "test": "np.allclose(update_weights(np.array([1.0]), np.array([[2.0]]), np.array([0]), np.array([1.0])), [0.999], atol=1e-9)"
+   },
+   {
+    "label": "`mse` matches the formula",
+    "test": "abs(float(mse(np.array([1, 2, 3]), np.array([1, 2, 5]))) - 4/3) < 1e-6 and abs(float(mse(np.array([0.5, -1.0]), np.array([1.5, 1.0]))) - 2.5) < 1e-6"
+   },
+   {
+    "label": "`bce` matches the formula",
+    "test": "abs(float(bce(np.array([1, 0, 1]), np.array([0.9, 0.2, 0.7]))) - 0.228393) < 1e-5 and abs(float(bce(np.array([0, 1]), np.array([0.5, 0.5]))) - 0.693147) < 1e-5"
+   }
+  ],
+  "fill": {
+   "1": "'\\n'.join([str(round(float(normal(0, 0, 1)), 4)), str(round(float(sigmoid(1)), 4)), str(round(float(mse(np.array([1,2,3]), np.array([1,2,5]))), 4)), str(round(float(bce(np.array([1,0,1]), np.array([0.9,0.2,0.7]))), 4)), ' '.join(str(round(float(v), 4)) for v in update_weights(np.array([0.5,-0.25]), np.array([[1.,2.],[3.,4.]]), np.array([1,0]), np.array([0.8,0.3]), alpha=0.1))])"
+  }
+ },
+ "hw3": {
+  "title": "Homework 3: linear regression, sklearn vs from scratch",
+  "v": 1,
+  "datasets": [
+   "HousingData.csv",
+   "car_data.csv",
+   "motor_temperature_sample.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 3: linear regression, sklearn vs from scratch\n\n**Tasks:** study correlations; build a second feature set with |r| between 0.5 and 0.8; split both sets with `train_test_split`; train sklearn's `LinearRegression` and the handbook's from-scratch version on each; compare test R² and interpret; comment your code.\n\n**Datasets bundled here:** `HousingData.csv` (Boston, target `MEDV`, has some missing values: drop or fill them first), `car_data.csv` (used cars, target `Selling_Price`), `motor_temperature_sample.csv` (every 40th row of the 1.3M-row Kaggle file, target `pm`).\n\n**Names the checker looks for:**\n- `df`, `TARGET`\n- `selected`: the list of feature names with 0.5 ≤ |r| ≤ 0.8\n- `r2_sk_all`, `r2_scratch_all`: test R² on all features\n- `r2_sk_sel`, `r2_scratch_sel`: test R² on the selected features\n- `scratch_all`: your fitted from-scratch model (a class you defined here)"
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.metrics import r2_score\n\nDATA = \"HousingData.csv\"\nTARGET = \"MEDV\"\n\ndf = pd.read_csv(DATA)\nprint(df.shape)\ndf.isna().sum()"
+   },
+   {
+    "t": "code",
+    "src": "# Clean: handle missing values and make every feature numeric (car_data has text columns)\ndf = df.dropna()\ndf = df.select_dtypes(\"number\")\ndf.shape"
+   },
+   {
+    "t": "md",
+    "src": "## 1. Correlations with the target"
+   },
+   {
+    "t": "code",
+    "src": "corr = df.corr()[TARGET].drop(TARGET)\ncorr.sort_values()"
+   },
+   {
+    "t": "code",
+    "src": "selected = []   # features with 0.5 <= |r| <= 0.8\nselected"
+   },
+   {
+    "t": "md",
+    "src": "## 2. The from-scratch model"
+   },
+   {
+    "t": "code",
+    "src": "class LinearRegressionScratch:\n    \"\"\"Paste or rewrite the handbook's from-scratch LinearRegression (lesson: Gradient descent from scratch).\n    It needs fit(X, y) and predict(X). Scale X first (StandardScaler) or gradient descent will diverge.\"\"\"\n    def __init__(self, learning_rate=0.01, n_iter=5000):\n        self.learning_rate = learning_rate\n        self.n_iter = n_iter\n\n    def fit(self, X, y):\n        # add a column of ones, start weights at zero, repeat the gradient step\n        ...\n        return self\n\n    def predict(self, X):\n        ..."
+   },
+   {
+    "t": "md",
+    "src": "## 3. All features"
+   },
+   {
+    "t": "code",
+    "src": "X = df.drop(columns=[TARGET]).values\ny = df[TARGET].values\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\n# scale with a scaler fitted on the training set only\n# sk_all = LinearRegression().fit(...)\n# scratch_all = LinearRegressionScratch().fit(...)\n\nr2_sk_all = None\nr2_scratch_all = None\nprint(r2_sk_all, r2_scratch_all)"
+   },
+   {
+    "t": "md",
+    "src": "## 4. Selected features"
+   },
+   {
+    "t": "code",
+    "src": "r2_sk_sel = None\nr2_scratch_sel = None\nprint(r2_sk_sel, r2_scratch_sel)"
+   },
+   {
+    "t": "code",
+    "src": "results = pd.DataFrame({\"sklearn\": [r2_sk_all, r2_sk_sel], \"from scratch\": [r2_scratch_all, r2_scratch_sel]},\n                       index=[\"all features\", \"selected features\"])\nresults"
+   },
+   {
+    "t": "md",
+    "src": "## Interpretation\n_Which model and feature set did best, and why? At least 80 words._",
+    "tag": "interp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`df` and `TARGET` are set",
+    "test": "isinstance(df, pd.DataFrame) and TARGET in df.columns"
+   },
+   {
+    "label": "`selected` holds the features with 0.5 ≤ |r| ≤ 0.8",
+    "test": "set(selected) == set(c for c, r in df.corr()[TARGET].drop(TARGET).abs().items() if 0.5 <= r <= 0.8)"
+   },
+   {
+    "label": "`scratch_all` is your own class with `fit` and `predict`",
+    "test": "type(scratch_all).__module__ == '__main__' and hasattr(scratch_all, 'predict')"
+   },
+   {
+    "label": "All four R² values are numbers",
+    "test": "all(isinstance(float(v), float) for v in [r2_sk_all, r2_scratch_all, r2_sk_sel, r2_scratch_sel])"
+   },
+   {
+    "label": "sklearn R² on all features is in a sensible range",
+    "test": "0 < float(r2_sk_all) <= 1"
+   },
+   {
+    "label": "Your from-scratch model gets close to sklearn (within 0.05 R²)",
+    "test": "abs(float(r2_scratch_all) - float(r2_sk_all)) < 0.05"
+   },
+   {
+    "label": "Interpretation of at least 80 words",
+    "test": {
+     "md": "interp",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(r2_sk_all), 4)",
+   "2": "round(float(r2_scratch_all), 4)",
+   "3": {
+    "md": "interp"
+   }
+  }
+ },
+ "hw4": {
+  "title": "Homework 4: logistic regression, sklearn vs from scratch",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv",
+   "heart_failure.csv",
+   "telco_churn.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 4: logistic regression, sklearn vs from scratch\n\n**Tasks:** map text classes to numbers; study correlations; build the 0.5 to 0.8 |r| feature subset; split; train sklearn's `LogisticRegression` and the handbook's from-scratch version on both feature sets; compare test accuracy with `accuracy_score`; interpret; comment your code.\n\n**Bundled datasets:** `heart.csv` (`target`), `diabetes.csv` (`Outcome`), `titanic.csv` (`Survived`, needs cleaning), `winequality.csv` (make a binary target, e.g. `quality >= 7`), `heart_failure.csv` (`HeartDisease`, has text columns), `telco_churn.csv` (`Churn`, Yes/No).\n\nIf no column reaches |r| ≥ 0.5 on your data (common on heart.csv), say so and use the closest band you can justify, e.g. 0.4 to 0.8. Write the band you used in `BAND`.\n\n**Names the checker looks for:** `df`, `TARGET`, `BAND` (tuple), `selected`, `acc_sk_all`, `acc_scratch_all`, `acc_sk_sel`, `acc_scratch_sel`, `scratch_all`."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import accuracy_score\n\nDATA = \"heart.csv\"\nTARGET = \"target\"\ndf = pd.read_csv(DATA)\ndf.head()"
+   },
+   {
+    "t": "code",
+    "src": "# Map text classes and text features to numbers, drop ID-like columns, handle missing values\ndf.dtypes"
+   },
+   {
+    "t": "code",
+    "src": "BAND = (0.5, 0.8)\ncorr = df.corr(numeric_only=True)[TARGET].drop(TARGET).abs().sort_values(ascending=False)\nselected = [c for c, r in corr.items() if BAND[0] <= r <= BAND[1]]\nprint(corr.head(8)); print(selected)"
+   },
+   {
+    "t": "code",
+    "src": "class LogisticRegressionScratch:\n    \"\"\"Paste or rewrite the handbook's from-scratch LogisticRegression (lesson: Logistic regression from scratch).\n    It needs fit(X, y) and predict(X) returning 0/1. Scale X first.\"\"\"\n    def __init__(self, learning_rate=0.05, max_iter=5000):\n        self.learning_rate = learning_rate\n        self.max_iter = max_iter\n\n    def fit(self, X, y):\n        ...\n        return self\n\n    def predict(self, X):\n        ..."
+   },
+   {
+    "t": "code",
+    "src": "# All features: split, scale (fit on train only), train both models, compute test accuracy\nacc_sk_all = None\nacc_scratch_all = None"
+   },
+   {
+    "t": "code",
+    "src": "# Selected features\nacc_sk_sel = None\nacc_scratch_sel = None"
+   },
+   {
+    "t": "code",
+    "src": "pd.DataFrame({\"sklearn\": [acc_sk_all, acc_sk_sel], \"from scratch\": [acc_scratch_all, acc_scratch_sel]},\n             index=[\"all features\", \"selected features\"])"
+   },
+   {
+    "t": "md",
+    "src": "## Interpretation\n_Compare the four accuracies. At least 80 words._",
+    "tag": "interp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`df` and `TARGET` are set and the target is numeric",
+    "test": "TARGET in df.columns and pd.api.types.is_numeric_dtype(df[TARGET])"
+   },
+   {
+    "label": "`selected` matches your `BAND`",
+    "test": "set(selected) == set(c for c, r in df.corr(numeric_only=True)[TARGET].drop(TARGET).abs().items() if BAND[0] <= r <= BAND[1])"
+   },
+   {
+    "label": "`scratch_all` is your own class",
+    "test": "type(scratch_all).__module__ == '__main__' and hasattr(scratch_all, 'predict')"
+   },
+   {
+    "label": "Four accuracies between 0 and 1",
+    "test": "all(0 <= float(v) <= 1 for v in [acc_sk_all, acc_scratch_all, acc_sk_sel, acc_scratch_sel])"
+   },
+   {
+    "label": "Your from-scratch model is within 5 points of sklearn on all features",
+    "test": "abs(float(acc_scratch_all) - float(acc_sk_all)) <= 0.05"
+   },
+   {
+    "label": "Interpretation of at least 80 words",
+    "test": {
+     "md": "interp",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(acc_sk_all), 4)",
+   "2": "round(float(acc_scratch_all), 4)",
+   "3": {
+    "md": "interp"
+   }
+  }
+ },
+ "hw5": {
+  "title": "Homework 5: PCA on iris and digits",
+  "v": 1,
+  "datasets": [],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 5: PCA on iris and digits\n\n**Subtask 1 (iris):** 3D scatter of the first three columns coloured by target; the handbook's PCA with the eigenvector method and with SVD, plus sklearn's PCA, all on standardised data; reduce to 2D with each; one figure with three scatter plots side by side; then sklearn PCA and a line plot of the explained variance ratio.\n\n**Subtask 2 (digits):** plot 10 random digits on a 2 × 5 grid with titles; scale; PCA to 2D; scatter coloured by label.\n\nBoth datasets ship with scikit-learn: `load_iris()`, `load_digits()`.\n\n**Names the checker looks for:** `Xs` (standardised iris), `Z_eig`, `Z_svd`, `Z_sk` (each 150 × 2), `evr` (sklearn's `explained_variance_ratio_` with all 4 components), `Z_digits` (1797 × 2)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import load_iris, load_digits\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.decomposition import PCA\n\nX, y = load_iris(return_X_y=True)\nXs = StandardScaler().fit_transform(X)"
+   },
+   {
+    "t": "code",
+    "src": "# 3D scatter of the first three columns, coloured by target\nfig = plt.figure(figsize=(6, 5))\nax = fig.add_subplot(projection=\"3d\")\n# ax.scatter(...)\nplt.show()"
+   },
+   {
+    "t": "code",
+    "src": "class myPCA:\n    \"\"\"Paste or rewrite the handbook's PCA. method='eigen' or 'svd'.\"\"\"\n    def __init__(self, n_components=2, method=\"eigen\"):\n        self.n_components = n_components\n        self.method = method\n\n    def fit(self, X):\n        ...\n        return self\n\n    def transform(self, X):\n        ..."
+   },
+   {
+    "t": "code",
+    "src": "Z_eig = None\nZ_svd = None\nZ_sk = None\n# one figure, three scatter plots side by side (plt.subplots(1, 3))"
+   },
+   {
+    "t": "code",
+    "src": "evr = None   # PCA().fit(Xs).explained_variance_ratio_\n# line plot of evr"
+   },
+   {
+    "t": "md",
+    "src": "## Subtask 2: digits"
+   },
+   {
+    "t": "code",
+    "src": "Xd, yd = load_digits(return_X_y=True)\n# 10 random digits on a 2 x 5 grid with titles (images are Xd[i].reshape(8, 8))"
+   },
+   {
+    "t": "code",
+    "src": "Z_digits = None\n# scatter of Z_digits coloured by yd, with a colorbar"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusions\n_What do the three 2D projections and the variance plot tell you? At least 80 words._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`Xs` is standardised iris",
+    "test": "Xs.shape == (150, 4) and np.allclose(Xs.mean(axis=0), 0, atol=1e-6)"
+   },
+   {
+    "label": "Three 2D projections of shape (150, 2)",
+    "test": "all(np.asarray(Z).shape == (150, 2) for Z in [Z_eig, Z_svd, Z_sk])"
+   },
+   {
+    "label": "Eigen, SVD and sklearn agree up to sign",
+    "test": "all(np.allclose(np.abs(np.asarray(Z)), np.abs(np.asarray(Z_sk)), atol=1e-4) for Z in [Z_eig, Z_svd])"
+   },
+   {
+    "label": "`evr` is sklearn's explained variance ratio (4 values)",
+    "test": "len(evr) == 4 and abs(evr[0] - 0.7296) < 1e-3"
+   },
+   {
+    "label": "Digits reduced to 2D",
+    "test": "np.asarray(Z_digits).shape == (1797, 2)"
+   },
+   {
+    "label": "At least 4 figures (3D scatter, three projections, variance, digits)",
+    "test": {
+     "figs": 4
+    }
+   },
+   {
+    "label": "Conclusions of at least 80 words",
+    "test": {
+     "md": "concl",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(evr[0]), 4)",
+   "2": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw6": {
+  "title": "Homework 6: three naive Bayes models on Telco churn",
+  "v": 1,
+  "datasets": [
+   "telco_churn.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 6: three naive Bayes models on Telco churn\n\n**Tasks:** load; split into train and test; analyse and preprocess; train `GaussianNB`, `MultinomialNB` and `BernoulliNB`; get test accuracy; build the table `ML Model | Accuracy` as a pandas DataFrame; conclude.\n\nWatch out: `TotalCharges` is text with blanks (convert with `pd.to_numeric(..., errors=\"coerce\")`), `customerID` is an identifier, and MultinomialNB needs non-negative features (use MinMaxScaler, not StandardScaler).\n\n**Names the checker looks for:** `table` with columns `ML Model` and `Accuracy` and three rows."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB\nfrom sklearn.metrics import accuracy_score\n\ndf = pd.read_csv(\"telco_churn.csv\")\ndf.info()"
+   },
+   {
+    "t": "code",
+    "src": "# Preprocess: TotalCharges to numeric, drop customerID, Churn to 0/1, one-hot encode the text columns\n"
+   },
+   {
+    "t": "code",
+    "src": "# Split, then train the three models\n"
+   },
+   {
+    "t": "code",
+    "src": "table = pd.DataFrame({\"ML Model\": [], \"Accuracy\": []})\ntable"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusion\n_What does the table tell you? At least 60 words._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`table` has columns `ML Model` and `Accuracy`",
+    "test": "list(table.columns)[:2] == ['ML Model', 'Accuracy']"
+   },
+   {
+    "label": "Three models in the table",
+    "test": "len(table) == 3 and set(map(str.lower, map(str, table['ML Model']))) and all(any(k in str(m).lower() for m in table['ML Model']) for k in ['gauss', 'multinom', 'bernoulli'])"
+   },
+   {
+    "label": "Accuracies are real test scores (between 0.5 and 1)",
+    "test": "len(table) > 0 and all(0.5 <= float(a) <= 1 for a in table['Accuracy'])"
+   },
+   {
+    "label": "Conclusion of at least 60 words",
+    "test": {
+     "md": "concl",
+     "words": 60
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(max(table['Accuracy'])), 4)",
+   "2": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw7": {
+  "title": "Homework 7: decision tree experiments",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv",
+   "HousingData.csv",
+   "avocado.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 7: decision tree experiments\n\n**Tasks:** pick the 2 features with the highest |r| with the target and plot the tree's decision boundary on them; for each of `max_depth`, `min_samples_split`, `min_samples_leaf`, `min_weight_fraction_leaf`, `max_features`, `max_leaf_nodes`, `min_impurity_decrease`, plot test accuracy against the value (same `random_state` every time); comment on each; train the best tree and export its structure (`export_text` or `plot_tree`).\n\n**Names the checker looks for:** `best_tree` (fitted `DecisionTreeClassifier`), `best_acc` (its test accuracy), `two_features` (list of 2 names), and the hyperparameter plots."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.tree import DecisionTreeClassifier, export_text, plot_tree\nfrom sklearn.metrics import accuracy_score\n\nDATA = \"heart.csv\"\nTARGET = \"target\"\ndf = pd.read_csv(DATA)\nX = df.drop(columns=[TARGET]); y = df[TARGET]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)"
+   },
+   {
+    "t": "code",
+    "src": "def plot_boundary(model, X2, y, ax, title=\"\"):\n    \"\"\"Decision boundary of a fitted model on 2 features (X2 is n x 2).\"\"\"\n    x0, x1 = X2[:, 0], X2[:, 1]\n    xx, yy = np.meshgrid(np.linspace(x0.min() - 1, x0.max() + 1, 200), np.linspace(x1.min() - 1, x1.max() + 1, 200))\n    zz = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)\n    ax.contourf(xx, yy, zz, alpha=0.3)\n    ax.scatter(x0, x1, c=y, s=12, edgecolor=\"k\", linewidth=0.3)\n    ax.set_title(title)"
+   },
+   {
+    "t": "code",
+    "src": "two_features = []   # the 2 columns with the highest |r| with the target\n# fit a tree on just those two and call plot_boundary"
+   },
+   {
+    "t": "code",
+    "src": "PARAMS = {\n    \"max_depth\": range(1, 16),\n    \"min_samples_split\": range(2, 40, 2),\n    \"min_samples_leaf\": range(1, 30),\n    \"min_weight_fraction_leaf\": np.linspace(0, 0.5, 11),\n    \"max_features\": range(1, X.shape[1] + 1),\n    \"max_leaf_nodes\": range(2, 40),\n    \"min_impurity_decrease\": np.linspace(0, 0.05, 11),\n}\nfig, axes = plt.subplots(2, 4, figsize=(16, 7))\nfor ax, (name, values) in zip(axes.ravel(), PARAMS.items()):\n    accs = []\n    for v in values:\n        pass  # fit DecisionTreeClassifier(**{name: v}, random_state=42) and append the test accuracy\n    # ax.plot(list(values), accs, marker=\"o\"); ax.set_title(name)\naxes.ravel()[-1].axis(\"off\")\nplt.tight_layout(); plt.show()"
+   },
+   {
+    "t": "code",
+    "src": "best_tree = None\nbest_acc = None\n# print(export_text(best_tree, feature_names=list(X.columns)))"
+   },
+   {
+    "t": "md",
+    "src": "## How each hyperparameter changed accuracy\n_One or two sentences per hyperparameter (at least 100 words)._",
+    "tag": "hp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`two_features` are the 2 columns with the highest |r|",
+    "test": "set(two_features) == set(df.corr(numeric_only=True)[TARGET].drop(TARGET).abs().nlargest(2).index)"
+   },
+   {
+    "label": "`best_tree` is a fitted DecisionTreeClassifier",
+    "test": "type(best_tree).__name__ == 'DecisionTreeClassifier' and hasattr(best_tree, 'tree_')"
+   },
+   {
+    "label": "`best_acc` is the real test accuracy of `best_tree`",
+    "test": "abs(float(best_acc) - accuracy_score(y_test, best_tree.predict(X_test[best_tree.feature_names_in_] if hasattr(best_tree, 'feature_names_in_') else X_test))) < 1e-9"
+   },
+   {
+    "label": "At least 2 figures (boundary and hyperparameter plots)",
+    "test": {
+     "figs": 2
+    }
+   },
+   {
+    "label": "Comments of at least 100 words",
+    "test": {
+     "md": "hp",
+     "words": 100
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(best_acc), 4)",
+   "2": {
+    "md": "hp"
+   }
+  }
+ },
+ "hw8": {
+  "title": "Homework 8: random forest vs decision tree",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv",
+   "HousingData.csv",
+   "avocado.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 8: random forest vs decision tree\n\nUse the same dataset and the same two features as homework 7. **Tasks:** plot the forest's decision boundary and compare with the tree's; repeat the seven hyperparameter plots for `RandomForestClassifier` (same `random_state`); comment, comparing with the tree; train the best forest.\n\n**Names the checker looks for:** `best_forest`, `best_acc`, `two_features`."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import accuracy_score\n\nDATA = \"heart.csv\"\nTARGET = \"target\"\ndf = pd.read_csv(DATA)\nX = df.drop(columns=[TARGET]); y = df[TARGET]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)"
+   },
+   {
+    "t": "code",
+    "src": "def plot_boundary(model, X2, y, ax, title=\"\"):\n    \"\"\"Decision boundary of a fitted model on 2 features (X2 is n x 2).\"\"\"\n    x0, x1 = X2[:, 0], X2[:, 1]\n    xx, yy = np.meshgrid(np.linspace(x0.min() - 1, x0.max() + 1, 200), np.linspace(x1.min() - 1, x1.max() + 1, 200))\n    zz = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)\n    ax.contourf(xx, yy, zz, alpha=0.3)\n    ax.scatter(x0, x1, c=y, s=12, edgecolor=\"k\", linewidth=0.3)\n    ax.set_title(title)"
+   },
+   {
+    "t": "code",
+    "src": "two_features = []\n# boundary of a forest trained on the two features"
+   },
+   {
+    "t": "code",
+    "src": "# The seven hyperparameter plots. Tip: n_estimators=50 keeps this fast in the browser.\n"
+   },
+   {
+    "t": "code",
+    "src": "best_forest = None\nbest_acc = None"
+   },
+   {
+    "t": "md",
+    "src": "## Forest vs tree\n_How did the forest differ from the single tree? At least 80 words._",
+    "tag": "cmp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`best_forest` is a fitted RandomForestClassifier",
+    "test": "type(best_forest).__name__ == 'RandomForestClassifier' and hasattr(best_forest, 'estimators_')"
+   },
+   {
+    "label": "`best_acc` is its real test accuracy",
+    "test": "abs(float(best_acc) - accuracy_score(y_test, best_forest.predict(X_test[best_forest.feature_names_in_] if hasattr(best_forest, 'feature_names_in_') else X_test))) < 1e-9"
+   },
+   {
+    "label": "At least 2 figures",
+    "test": {
+     "figs": 2
+    }
+   },
+   {
+    "label": "Comparison of at least 80 words",
+    "test": {
+     "md": "cmp",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(best_acc), 4)",
+   "2": {
+    "md": "cmp"
+   }
+  }
+ },
+ "hw9": {
+  "title": "Homework 9: SVM scaling and kernels",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv",
+   "heart_failure.csv",
+   "telco_churn.csv",
+   "kidney_disease.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 9: SVM scaling and kernels\n\n**Tasks:** train an SVM on four versions of the data (raw, `StandardScaler`, `MinMaxScaler`, `MaxAbsScaler`) and build the table `Initial | standard scaler | min max scaler | max abs scaler`; then plot decision boundaries for the `linear`, `poly`, `rbf` and `sigmoid` kernels in one combined figure (2 features); compare and conclude. Digits (`load_digits`) is also allowed.\n\n**Names the checker looks for:** `scaling_table` (DataFrame with those four columns), `acc_standard` (test accuracy with StandardScaler)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler\nfrom sklearn.svm import SVC\nfrom sklearn.metrics import accuracy_score\n\nDATA = \"heart.csv\"\nTARGET = \"target\"\ndf = pd.read_csv(DATA)\nX = df.drop(columns=[TARGET]); y = df[TARGET]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)"
+   },
+   {
+    "t": "code",
+    "src": "scaling_table = pd.DataFrame(columns=[\"Initial\", \"standard scaler\", \"min max scaler\", \"max abs scaler\"])\nacc_standard = None\nscaling_table"
+   },
+   {
+    "t": "code",
+    "src": "# Four kernels on two features, one figure (plt.subplots(2, 2))\n"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusions\n_What did scaling and each kernel do? At least 80 words._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`scaling_table` has the four columns",
+    "test": "[c.lower() for c in scaling_table.columns] == ['initial', 'standard scaler', 'min max scaler', 'max abs scaler'] and len(scaling_table) >= 1"
+   },
+   {
+    "label": "`acc_standard` matches the table",
+    "test": "abs(float(acc_standard) - float(scaling_table.iloc[0, 1])) < 1e-9 and 0 <= float(acc_standard) <= 1"
+   },
+   {
+    "label": "Kernel figure drawn",
+    "test": {
+     "figs": 1
+    }
+   },
+   {
+    "label": "Conclusions of at least 80 words",
+    "test": {
+     "md": "concl",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(acc_standard), 4)",
+   "2": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw10": {
+  "title": "Homework 10: comparing imputers",
+  "v": 1,
+  "datasets": [
+   "titanic.csv",
+   "kidney_disease.csv",
+   "HousingData.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 10: comparing imputers\n\n**Tasks:** bar plot of missing values per column; split; `SimpleImputer` with mean, median, most_frequent and constant 0; the reparo imputers (CDI, FRNNI, HotDeck, KNN, PMM, SICE, MICE); fit each on train, fill train and test; train logistic regression, Gaussian NB, a decision tree and a random forest on each; build the table `Imputer | Model | Accuracy`; conclude.\n\n**reparo is installed here.** Its imputers follow sklearn's `fit` / `transform`, so they go in the same loop as the sklearn ones. They work on NumPy arrays of numbers, so pass `X_train.values`. Notes from testing on Titanic: `FRNNI` is slow (about 9 s per fit), and reparo's `MICE` can leave a few NaNs in the test set, so follow it with a `SimpleImputer` or skip it. sklearn's `IterativeImputer` is the MICE-style alternative.\n\n**Names the checker looks for:** `results` (DataFrame with columns `Imputer`, `Model`, `Accuracy`)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.impute import SimpleImputer, KNNImputer\nfrom sklearn.experimental import enable_iterative_imputer  # noqa: F401\nfrom sklearn.impute import IterativeImputer\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.naive_bayes import GaussianNB\nfrom sklearn.tree import DecisionTreeClassifier\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import accuracy_score\nfrom reparo import CDI, FRNNI, HotDeckImputation, PMM, SICE, MICE\nfrom reparo import KNNImputer as ReparoKNN\n\ndf = pd.read_csv(\"titanic.csv\")\ndf.isna().sum().plot.bar(title=\"Missing values per column\"); plt.show()"
+   },
+   {
+    "t": "code",
+    "src": "# Prepare: choose numeric/encoded features, keep the NaNs (the imputers fill them), split\n"
+   },
+   {
+    "t": "code",
+    "src": "IMPUTERS = {\n    \"mean\": SimpleImputer(strategy=\"mean\"),\n    \"median\": SimpleImputer(strategy=\"median\"),\n    \"most_frequent\": SimpleImputer(strategy=\"most_frequent\"),\n    \"constant 0\": SimpleImputer(strategy=\"constant\", fill_value=0),\n    \"KNN (sklearn)\": KNNImputer(),\n    \"MICE-style (sklearn)\": IterativeImputer(random_state=0),\n    \"CDI (reparo)\": CDI(),\n    \"HotDeck (reparo)\": HotDeckImputation(),\n    \"KNN (reparo)\": ReparoKNN(),\n    \"PMM (reparo)\": PMM(),\n    \"SICE (reparo)\": SICE(),\n    # \"FRNNI (reparo)\": FRNNI(),  # slow: about 9 s per fit\n}\nMODELS = {\n    \"Logistic Regression\": lambda: LogisticRegression(max_iter=1000),\n    \"Gaussian NB\": lambda: GaussianNB(),\n    \"Decision Tree\": lambda: DecisionTreeClassifier(random_state=0),\n    \"Random Forest\": lambda: RandomForestClassifier(n_estimators=100, random_state=0),\n}\nrows = []\n# for each imputer: fit on X_train, transform X_train and X_test, then train every model and record the accuracy\nresults = pd.DataFrame(rows, columns=[\"Imputer\", \"Model\", \"Accuracy\"])\nresults.sort_values(\"Accuracy\", ascending=False).head(10)"
+   },
+   {
+    "t": "md",
+    "src": "## Best pair\n_Write the best imputer and model pair with its accuracy._",
+    "tag": "best"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusion\n_At least 80 words._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`results` has columns Imputer, Model, Accuracy",
+    "test": "list(results.columns)[:3] == ['Imputer', 'Model', 'Accuracy']"
+   },
+   {
+    "label": "At least 4 imputers × 4 models",
+    "test": "results['Imputer'].nunique() >= 4 and results['Model'].nunique() >= 4"
+   },
+   {
+    "label": "Accuracies between 0 and 1",
+    "test": "len(results) > 0 and results['Accuracy'].astype(float).between(0, 1).all()"
+   },
+   {
+    "label": "Missing-values bar plot drawn",
+    "test": {
+     "figs": 1
+    }
+   },
+   {
+    "label": "Best pair written",
+    "test": {
+     "md": "best",
+     "words": 3
+    }
+   },
+   {
+    "label": "Conclusion of at least 80 words",
+    "test": {
+     "md": "concl",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "best"
+   },
+   "2": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw11": {
+  "title": "Homework 11: hyperparameter plots",
+  "v": 1,
+  "datasets": [
+   "car_data.csv",
+   "motor_temperature_sample.csv",
+   "heart.csv",
+   "diabetes.csv",
+   "heart_failure.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 11: hyperparameter plots\n\nYou need one **classification** and one **regression** dataset. The Homework Book suggests used cars and motor temperature (regression) and body performance (classification). Body performance isn't bundled; upload it from Kaggle or use `heart_failure.csv` or `diabetes.csv` for classification.\n\n**Plots:** KNN neighbours vs accuracy; KNN regressor neighbours vs MSE; tree classifier heatmaps of max_depth × max_features for gini and for entropy; tree regressor heatmaps for friedman_mse and poisson; random forest classifier n_estimators curves (gini, entropy); random forest regressor curves (squared_error, absolute_error, poisson); SVC and SVR C curves for poly, rbf, sigmoid. One conclusion per plot.\n\nBrowser Python uses one CPU core: keep grids small (e.g. n_estimators up to 100, the 33k-row motor sample subsampled to 5,000 rows for SVR)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\n\nclf_df = pd.read_csv(\"heart_failure.csv\")\nreg_df = pd.read_csv(\"car_data.csv\")"
+   },
+   {
+    "t": "code",
+    "src": "# Clean both datasets and split them\n"
+   },
+   {
+    "t": "code",
+    "src": "# KNN plots\n"
+   },
+   {
+    "t": "code",
+    "src": "# Tree heatmaps (plt.imshow or seaborn.heatmap)\n"
+   },
+   {
+    "t": "code",
+    "src": "# Random forest curves\n"
+   },
+   {
+    "t": "code",
+    "src": "# SVC and SVR curves\n"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusions\n_One per plot (at least 120 words in total)._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "At least 6 figures",
+    "test": {
+     "figs": 6
+    }
+   },
+   {
+    "label": "Conclusions of at least 120 words",
+    "test": {
+     "md": "concl",
+     "words": 120
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw12": {
+  "title": "Homework 12: customer segmentation with GMM and k-means",
+  "v": 1,
+  "datasets": [
+   "marketing_campaign.csv",
+   "wine_clust.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 12: customer segmentation with GMM and k-means\n\n**Tasks:** make every column numeric (mapping or dummies); scale if useful; choose the number of clusters for `GaussianMixture` and for `KMeans` with the silhouette score and plot the search; cluster with both; extract the k-means centroids and the GMM means; build a table (rows = clusters, columns = features) for each; invent an imaginary customer per cluster.\n\n**Bundled:** `marketing_campaign.csv` (Customer Personality Analysis; it is tab-separated in the Kaggle original, comma-separated here), `wine_clust.csv` (Wine Customer Segmentation). The HackerEarth customer segmentation set isn't bundled; upload it if you prefer.\n\n**Names the checker looks for:** `X` (the numeric matrix you clustered), `k_kmeans`, `k_gmm`, `kmeans` (fitted), `gmm` (fitted), `centroids_table`, `means_table`."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.cluster import KMeans\nfrom sklearn.mixture import GaussianMixture\nfrom sklearn.metrics import silhouette_score\n\ndf = pd.read_csv(\"marketing_campaign.csv\")\ndf.head()"
+   },
+   {
+    "t": "code",
+    "src": "# Make it numeric: e.g. age from Year_Birth, days since Dt_Customer, dummies for Education and Marital_Status, drop ID\nX = None"
+   },
+   {
+    "t": "code",
+    "src": "# Silhouette for k = 2..10 for both algorithms, plotted\nk_kmeans = None\nk_gmm = None"
+   },
+   {
+    "t": "code",
+    "src": "kmeans = None\ngmm = None\ncentroids_table = None   # DataFrame: one row per cluster, one column per feature\nmeans_table = None\ncentroids_table"
+   },
+   {
+    "t": "md",
+    "src": "## One imaginary customer per cluster\n_At least 80 words._",
+    "tag": "personas"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`X` is fully numeric with no missing values",
+    "test": "np.isfinite(np.asarray(X, dtype=float)).all()"
+   },
+   {
+    "label": "`kmeans` is fitted with `k_kmeans` clusters",
+    "test": "type(kmeans).__name__ == 'KMeans' and kmeans.n_clusters == int(k_kmeans) and hasattr(kmeans, 'cluster_centers_')"
+   },
+   {
+    "label": "`gmm` is fitted with `k_gmm` components",
+    "test": "type(gmm).__name__ == 'GaussianMixture' and gmm.n_components == int(k_gmm) and hasattr(gmm, 'means_')"
+   },
+   {
+    "label": "Tables have one row per cluster",
+    "test": "len(centroids_table) == int(k_kmeans) and len(means_table) == int(k_gmm)"
+   },
+   {
+    "label": "Silhouette plot drawn",
+    "test": {
+     "figs": 1
+    }
+   },
+   {
+    "label": "Personas of at least 80 words",
+    "test": {
+     "md": "personas",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": "int(k_kmeans)",
+   "2": {
+    "md": "personas"
+   }
+  }
+ },
+ "hw13": {
+  "title": "Homework 13: repeat and extend the book's plots",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "HousingData.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 13: data visualisation\n\n**Tasks:** import and prepare a dataset; repeat the plots from the handbook's visualisation chapter (line, scatter, error bars, contour, histogram; seaborn KDE, joint, box, violin and lm plots); then add new plots you found yourself. seaborn is available here (`import seaborn as sns`)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\ndf = pd.read_csv(\"heart.csv\")\ndf.head()"
+   },
+   {
+    "t": "code",
+    "src": "# The book's matplotlib plots\n"
+   },
+   {
+    "t": "code",
+    "src": "# The book's seaborn plots\n"
+   },
+   {
+    "t": "code",
+    "src": "# Your own new plots\n"
+   },
+   {
+    "t": "md",
+    "src": "## Which new plot taught you the most?\n_What did it show? At least 50 words._",
+    "tag": "best"
+   }
+  ],
+  "checks": [
+   {
+    "label": "At least 8 figures",
+    "test": {
+     "figs": 8
+    }
+   },
+   {
+    "label": "Reflection of at least 50 words",
+    "test": {
+     "md": "best",
+     "words": 50
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "best"
+   }
+  }
+ },
+ "hw14": {
+  "title": "Homework 14: outliers on the Pokemon data",
+  "v": 1,
+  "datasets": [
+   "pokemon.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 14: outlier detection\n\nThe Homework Book says \"price column\", but the Kaggle Pokemon dataset has no price. Use `Total` (the sum of base stats) as the numeric target, and say so in your notes.\n\n**Tasks:** find the 2 columns most correlated with the target; on that 2-column subset fit `IsolationForest`, `OneClassSVM`, `EllipticEnvelope` and `LocalOutlierFactor` and draw a 2 × 2 grid of scatter plots (outliers in another colour); plot the number of outliers against `contamination` for each detector on the whole feature set; split; remove outliers with each detector's defaults; train `LinearRegression` and `KNeighborsRegressor` on the original and each cleaned train set; build the comparison table; conclude.\n\nNote that `Total` is the exact sum of HP, Attack, Defense, Sp. Atk, Sp. Def and Speed, so a linear model on all six is perfect. Drop at least one of them (or predict `Attack` instead) to keep it interesting.\n\n**Names the checker looks for:** `two_cols`, `table` (columns include `Detector`, `Model` and a score column)."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.ensemble import IsolationForest\nfrom sklearn.svm import OneClassSVM\nfrom sklearn.covariance import EllipticEnvelope\nfrom sklearn.neighbors import LocalOutlierFactor, KNeighborsRegressor\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import train_test_split\n\ndf = pd.read_csv(\"pokemon.csv\")\nTARGET = \"Total\"\ndf.head()"
+   },
+   {
+    "t": "code",
+    "src": "two_cols = []\n# 2 x 2 grid of detectors on df[two_cols]"
+   },
+   {
+    "t": "code",
+    "src": "# outliers vs contamination, one line per detector\n"
+   },
+   {
+    "t": "code",
+    "src": "table = pd.DataFrame(columns=[\"Detector\", \"Model\", \"R2\"])\ntable"
+   },
+   {
+    "t": "md",
+    "src": "## Conclusion\n_At least 80 words._",
+    "tag": "concl"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`two_cols` are the 2 columns most correlated with the target",
+    "test": "set(two_cols) == set(df.corr(numeric_only=True)[TARGET].drop(TARGET).abs().nlargest(2).index)"
+   },
+   {
+    "label": "`table` compares detectors and models",
+    "test": "'Detector' in table.columns and 'Model' in table.columns and len(table) >= 8"
+   },
+   {
+    "label": "At least 2 figures (2 × 2 grid and contamination plot)",
+    "test": {
+     "figs": 2
+    }
+   },
+   {
+    "label": "Conclusion of at least 80 words",
+    "test": {
+     "md": "concl",
+     "words": 80
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "concl"
+   }
+  }
+ },
+ "hw15-17": {
+  "title": "Homework 15 to 17: engineer, select and balance",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "heart_failure.csv",
+   "telco_churn.csv",
+   "pokemon.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 15 to 17: feature engineering, feature selection, class balancing\n\nGo back to an earlier dataset (homework 4 or 7 works well; Pokemon with `Legendary` as the target is the book's suggestion for balancing). Apply at least one method from each chapter and record the test metric before and after each step.\n\n- Feature engineering: scaling, dummies, Box-Cox (`PowerTransformer`), frequency or target encoding.\n- Feature selection: correlation filter, `SelectKBest`, LASSO (`SelectFromModel`), RFE.\n- Class balancing: `class_weight=\"balanced\"`, `RandomUnderSampler`, `SMOTE`, `SMOTEENN` from imbalanced-learn (available here: `import imblearn`). Resample the training set only.\n\n**The Sigmoid libraries are installed here** and work on a whole DataFrame with the target column inside it:\n- imperio (engineering): `from imperio import BoxCoxTransformer, YeoJohnsonTransformer, FrequencyImputationTransformer, TargetImputationTransformer`. Use `.fit(X, y)` / `.transform(X)` like sklearn, or `new_df = T().apply(df, TARGET, columns=[...])`.\n- kydavra (selection): `from kydavra import PValueSelector, PearsonCorrelationSelector, ChiSquaredSelector, LassoSelector`. `cols = PValueSelector().select(train_df, TARGET)` returns the columns to keep.\n- crucio (balancing): `from crucio import SMOTE, ADASYN, SCUT, SMOTETOMEK`. `balanced = SMOTE().balance(train_df, TARGET)` returns a new DataFrame. Balance the training part only. crucio's `MWMOTE` has a bug of its own on some data (it fails on a normal computer too), so prefer the others.\n\n**Names the checker looks for:** `steps`, a DataFrame with columns `Step`, `Before`, `After` and at least three rows."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import f1_score, accuracy_score\n\ndf = pd.read_csv(\"heart.csv\")\nTARGET = \"target\""
+   },
+   {
+    "t": "code",
+    "src": "# Baseline\n"
+   },
+   {
+    "t": "code",
+    "src": "# 1. Feature engineering\n"
+   },
+   {
+    "t": "code",
+    "src": "# 2. Feature selection\n"
+   },
+   {
+    "t": "code",
+    "src": "# 3. Class balancing\n"
+   },
+   {
+    "t": "code",
+    "src": "steps = pd.DataFrame({\"Step\": [], \"Before\": [], \"After\": []})\nsteps"
+   },
+   {
+    "t": "md",
+    "src": "## Before and after\n_Write the before/after metric for each step._",
+    "tag": "ba"
+   },
+   {
+    "t": "md",
+    "src": "## Which step helped most, and why?\n_At least 60 words._",
+    "tag": "why"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`steps` has Step, Before, After and at least 3 rows",
+    "test": "list(steps.columns)[:3] == ['Step', 'Before', 'After'] and len(steps) >= 3"
+   },
+   {
+    "label": "Before/after values are numbers",
+    "test": "len(steps) > 0 and steps[['Before', 'After']].astype(float).notna().all().all()"
+   },
+   {
+    "label": "Before/after written",
+    "test": {
+     "md": "ba",
+     "words": 30
+    }
+   },
+   {
+    "label": "Explanation of at least 60 words",
+    "test": {
+     "md": "why",
+     "words": 60
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "ba"
+   },
+   "2": {
+    "md": "why"
+   }
+  }
+ },
+ "hw18": {
+  "title": "Homework 18: interpret your models",
+  "v": 1,
+  "datasets": [
+   "heart_failure.csv",
+   "telco_churn.csv",
+   "car_data.csv",
+   "motor_temperature_sample.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 18: model interpretation\n\n**Tasks:** one regression and one classification dataset. Bar plot of a linear regression's weights; an image of a decision tree; split both; train Linear Regression and KNN Regression (bonus: random forest, decision tree) and Logistic Regression, Gaussian NB and KNN (bonus: forest, tree, Bernoulli and Multinomial NB); the regression table `Estimator | MSE | MAE | RMSE`; the classification table `Estimator | Accuracy | Precision | Recall | F1-Score`; choose the best of each; SHAP bar, waterfall, beeswarm and force plots for the best classifier; LIME on the regression samples with the largest errors.\n\nSHAP needs compiled code that doesn't run in browser Python yet, and LIME arrives in a later update. Until then, do the tables, the weight plot and the tree here, plus `sklearn.inspection.permutation_importance` and partial dependence plots, and run the SHAP part in Colab.\n\n**Names the checker looks for:** `reg_table`, `clf_table`."
+   },
+   {
+    "t": "code",
+    "src": "import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score, precision_score, recall_score, f1_score\n\nreg_df = pd.read_csv(\"car_data.csv\")\nclf_df = pd.read_csv(\"heart_failure.csv\")"
+   },
+   {
+    "t": "code",
+    "src": "# Regression: weights bar plot, models, table\nreg_table = pd.DataFrame(columns=[\"Estimator\", \"MSE\", \"MAE\", \"RMSE\"])"
+   },
+   {
+    "t": "code",
+    "src": "# Classification: tree image, models, table\nclf_table = pd.DataFrame(columns=[\"Estimator\", \"Accuracy\", \"Precision\", \"Recall\", \"F1-Score\"])"
+   },
+   {
+    "t": "code",
+    "src": "# Interpretation: permutation_importance, PartialDependenceDisplay\n"
+   },
+   {
+    "t": "md",
+    "src": "## What the interpretation showed you\n_At least 100 words._",
+    "tag": "interp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`reg_table` has MSE, MAE, RMSE for at least 2 models",
+    "test": "all(c in reg_table.columns for c in ['MSE', 'MAE', 'RMSE']) and len(reg_table) >= 2"
+   },
+   {
+    "label": "RMSE is the square root of MSE",
+    "test": "len(reg_table) > 0 and np.allclose(np.sqrt(reg_table['MSE'].astype(float)), reg_table['RMSE'].astype(float), rtol=1e-6)"
+   },
+   {
+    "label": "`clf_table` has Accuracy, Precision, Recall, F1-Score for at least 3 models",
+    "test": "all(c in clf_table.columns for c in ['Accuracy', 'Precision', 'Recall', 'F1-Score']) and len(clf_table) >= 3"
+   },
+   {
+    "label": "At least 2 figures (weights and tree)",
+    "test": {
+     "figs": 2
+    }
+   },
+   {
+    "label": "Interpretation of at least 100 words",
+    "test": {
+     "md": "interp",
+     "words": 100
+    }
+   }
+  ],
+  "fill": {
+   "1": "round(float(clf_table['F1-Score'].astype(float).max()), 4)",
+   "2": {
+    "md": "interp"
+   }
+  }
+ },
+ "hw19": {
+  "title": "Homework 19: a Streamlit app for a model",
+  "v": 1,
+  "datasets": [
+   "heart.csv",
+   "diabetes.csv",
+   "titanic.csv",
+   "winequality.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 19: a Streamlit app for a model\n\n**From the Homework Book:** build a Streamlit app with\n- a **home page** that describes the dataset,\n- **sidebar navigation** between pages,\n- a page of **parameter widgets** with a **Train** button,\n- the **data head**,\n- a **container** that lists the parameters you chose,\n- **at least three charts**,\n- **every text element type**: markdown, code, title, header and LaTeX.\n\n**How it works here:** the cell marked *app.py* below is your whole app. Press **▶ Launch app** to run it with real Streamlit, inside this page. The first launch takes about 20 seconds; after that, **Apply my code** in the app view reloads your changes in a second or two. The bundled CSV files sit next to `app.py`, so `pd.read_csv(\"heart.csv\")` works.\n\n**To hand it in for the course**, export the zip (it contains `app.py` and the data) and put it on GitHub, or deploy it on Streamlit Community Cloud. Passing the checks here counts as done for this programme."
+   },
+   {
+    "t": "code",
+    "src": "import streamlit as st\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\n\nst.set_page_config(page_title=\"Heart disease model\")\n\n@st.cache_data\ndef load():\n    return pd.read_csv(\"heart.csv\")\n\ndf = load()\nTARGET = \"target\"\n\npage = st.sidebar.radio(\"Go to\", [\"Home\", \"Train a model\"])\n\nif page == \"Home\":\n    st.title(\"Heart disease data\")\n    st.markdown(f\"{len(df)} patients, {df.shape[1] - 1} features. The target is `{TARGET}` (1 = disease).\")\n    # TODO: show the data head, a header, a code snippet, a LaTeX formula and charts\n\nelse:\n    st.header(\"Train a random forest\")\n    n_estimators = st.slider(\"Number of trees\", 10, 300, 100, step=10)\n    # TODO: more parameter widgets, and a container that lists the chosen parameters\n    if st.button(\"Train\"):\n        X, y = df.drop(columns=TARGET), df[TARGET]\n        X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.25, random_state=0)\n        model = RandomForestClassifier(n_estimators=n_estimators, random_state=0).fit(X_tr, y_tr)\n        st.metric(\"Test accuracy\", f\"{model.score(X_te, y_te):.3f}\")\n",
+    "tag": "app"
+   },
+   {
+    "t": "md",
+    "src": "## Widgets and charts in my app\n_List every widget and chart your app has (this goes into the homework card)._",
+    "tag": "list"
+   }
+  ],
+  "checks": [
+   {
+    "label": "app.py is valid Python",
+    "test": "'__syntax_error__' not in ST"
+   },
+   {
+    "label": "Sidebar navigation between pages",
+    "test": "'sidebar' in APP_SRC and any(w in ST_LAST for w in ['radio', 'selectbox', 'navigation', 'page_link', 'segmented_control'])"
+   },
+   {
+    "label": "Every text type: `st.title`, `st.header`, `st.markdown`, `st.code`, `st.latex`",
+    "test": "all(w in ST_LAST for w in ['title', 'header', 'markdown', 'code', 'latex'])"
+   },
+   {
+    "label": "At least 3 parameter widgets besides the navigation",
+    "test": "sum(ST_LAST.count(w) for w in WIDGETS) >= 4"
+   },
+   {
+    "label": "A Train button",
+    "test": "'button' in ST_LAST or 'form_submit_button' in ST_LAST"
+   },
+   {
+    "label": "The data head is shown (`df.head()` with `st.dataframe`, `st.table` or `st.write`)",
+    "test": "'.head(' in APP_SRC and any(w in ST_LAST for w in ['dataframe', 'table', 'write'])"
+   },
+   {
+    "label": "A container (`st.container` or `st.expander`) for the chosen parameters",
+    "test": "any(w in ST_LAST for w in ['container', 'expander'])"
+   },
+   {
+    "label": "At least 3 charts",
+    "test": "sum(ST_LAST.count(w) for w in CHARTS) >= 3"
+   },
+   {
+    "label": "The app ran here without an error",
+    "test": {
+     "app": 1
+    }
+   },
+   {
+    "label": "Widget and chart list written",
+    "test": {
+     "md": "list",
+     "words": 20
+    }
+   }
+  ],
+  "fill": {
+   "1": {
+    "md": "list"
+   }
+  },
+  "prelude": "\nimport ast as __ast\ndef __st_calls(src):\n    try:\n        tree = __ast.parse(src)\n    except SyntaxError:\n        return ['__syntax_error__']\n    names = []\n    for n in __ast.walk(tree):\n        if isinstance(n, __ast.Call):\n            f, parts = n.func, []\n            while isinstance(f, __ast.Attribute):\n                parts.append(f.attr)\n                f = f.value\n            if isinstance(f, __ast.Name):\n                parts.append(f.id)\n            names.append('.'.join(reversed(parts)))\n    return names\nST = __st_calls(APP_SRC)\nST_LAST = [c.split('.')[-1] for c in ST]\nCHARTS = ['pyplot', 'line_chart', 'bar_chart', 'area_chart', 'scatter_chart', 'altair_chart', 'plotly_chart', 'vega_lite_chart', 'map', 'bokeh_chart']\nWIDGETS = ['slider', 'select_slider', 'number_input', 'selectbox', 'radio', 'checkbox', 'multiselect', 'text_input', 'toggle', 'date_input', 'color_picker']\n"
+ },
+ "hw20": {
+  "title": "Homework 20: Dask on a large dataset",
+  "v": 1,
+  "datasets": [
+   "motor_temperature_sample.csv",
+   "avocado.csv"
+  ],
+  "cells": [
+   {
+    "t": "md",
+    "src": "# Homework 20: Dask on a large dataset\n\n**From the Homework Book:** load a large dataset as a Dask DataFrame with a chosen number of partitions, prepare it, describe it, group and aggregate, apply an algorithm from an earlier chapter, and plot.\n\n**Data here:** `motor_temperature_sample.csv` is every 40th row of the Electric Motor Temperature dataset (33,271 rows; target `pm`, the permanent-magnet temperature; `profile_id` is the measurement session). `avocado.csv` (18,249 rows) also works. The full motor file is 1.3 million rows; on your own computer, point the same code at it.\n\n**One difference from your laptop:** the browser has no threads, so the first cell sets Dask's scheduler to `\"synchronous\"`. Everything else is normal Dask: nothing runs until `.compute()`.\n\n**Names the checker looks for:** `ddf` (the Dask DataFrame), `summary` (the computed `describe()`), `grouped` (a computed group-by result), `score` (the metric of your model)."
+   },
+   {
+    "t": "code",
+    "src": "import dask\nimport dask.dataframe as dd\nimport pandas as pd\nimport matplotlib.pyplot as plt\ndask.config.set(scheduler=\"synchronous\")\n\nddf = dd.read_csv(\"motor_temperature_sample.csv\", blocksize=\"1MB\")\nprint(ddf.npartitions, \"partitions\")\nddf.head()"
+   },
+   {
+    "t": "code",
+    "src": "# Prepare: types, missing values, columns to drop or create (still lazy)\n"
+   },
+   {
+    "t": "code",
+    "src": "# Describe (compute it)\nsummary = None"
+   },
+   {
+    "t": "code",
+    "src": "# Group and aggregate, for example per profile_id (compute it)\ngrouped = None"
+   },
+   {
+    "t": "code",
+    "src": "# Apply an earlier algorithm: compute a pandas sample or the whole frame, then use sklearn\nscore = None"
+   },
+   {
+    "t": "code",
+    "src": "# Plot\n"
+   },
+   {
+    "t": "md",
+    "src": "## What the grouping showed\n_At least 25 words._",
+    "tag": "grp"
+   }
+  ],
+  "checks": [
+   {
+    "label": "`ddf` is a Dask DataFrame",
+    "test": "type(ddf).__module__.split('.')[0] == 'dask'"
+   },
+   {
+    "label": "`ddf` has at least 2 partitions",
+    "test": "ddf.npartitions >= 2"
+   },
+   {
+    "label": "`summary` is the computed describe()",
+    "test": "isinstance(summary, pd.DataFrame) and 'mean' in summary.index"
+   },
+   {
+    "label": "`grouped` is a computed group-by with more than one group",
+    "test": "isinstance(grouped, (pd.DataFrame, pd.Series)) and len(grouped) > 1"
+   },
+   {
+    "label": "`score` is a number",
+    "test": "score is not None and float(score) == float(score)"
+   },
+   {
+    "label": "At least one plot",
+    "test": {
+     "figs": 1
+    }
+   },
+   {
+    "label": "What the grouping showed, at least 25 words",
+    "test": {
+     "md": "grp",
+     "words": 25
+    }
+   }
+  ],
+  "fill": {
+   "1": "ddf.npartitions",
+   "2": {
+    "md": "grp"
+   }
+  }
+ }
+}
