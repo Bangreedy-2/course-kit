@@ -1,0 +1,11 @@
+{
+  "name": "coursekit",
+  "owner": { "name": "Bangreedy-2" },
+  "plugins": [
+    {
+      "name": "coursekit",
+      "source": "./plugin",
+      "description": "Coursekit: a course player that lives in your Claude account, plus the strict course-design rules for making and changing courses on any topic."
+    }
+  ]
+}

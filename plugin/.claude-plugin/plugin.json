@@ -1,0 +1,9 @@
+{
+  "name": "coursekit",
+  "version": "2.0.0",
+  "description": "Install the Coursekit player and design courses on any topic with strict, enforced rules. Ask inside a course talks to Claude with the whole course in view; progress syncs across your devices.",
+  "author": { "name": "Bangreedy-2" },
+  "homepage": "https://github.com/Bangreedy-2/course-kit",
+  "repository": "https://github.com/Bangreedy-2/course-kit",
+  "keywords": ["learning", "courses", "education", "artifact"]
+}

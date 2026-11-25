@@ -9,3 +9,12 @@ Coursekit has five parts. They are built in this order, each as its own reviewab
 5. **Course generator.** "Build a course on X from these files": your AI writes a pack in this format, validates it with `tools/pack.js`, and it appears in the app.
 6. **Plugins.** Runtimes and widgets as add-ons a pack switches on: Python (in the browser or on the local helper), JavaScript, SQL, maths and diagrams, flashcard import.
 7. **One-command install and docs,** so anyone can set it up from this repository with their own AI subscription.
+
+## Version 2: the player
+
+Coursekit now also runs as one page inside the learner's own Claude account (see [player.md](player.md)): courses are data, the tutor answers and edits in place, the design rules are enforced in code, and progress syncs across devices through the artifact database. Next for the player:
+
+- run Python in lessons again (Pyodide hosted with the page) and bring back notebooks and timed checkpoints;
+- the laptop as a compute runner for heavy jobs, queued from any device;
+- a nightly tutor task in the learner's project that reads the activity log and leaves notes and requests;
+- a public catalogue of course files.

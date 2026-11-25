@@ -1,0 +1,30 @@
+<!doctype html><html><head><style>
+body{padding:12px;display:flex;flex-direction:column;gap:10px}
+.kb{position:relative;height:150px;display:flex;user-select:none;touch-action:manipulation}
+.w{flex:1;border:1px solid var(--ck-muted);border-radius:0 0 6px 6px;background:#fff;color:#222;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:12px;cursor:pointer;margin-right:-1px}
+.b{position:absolute;top:0;width:7%;height:92px;background:#222;color:#eee;border-radius:0 0 5px 5px;z-index:2;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font-size:9px;padding-bottom:4px}
+.on{background:var(--ck-accent)!important;color:#fff!important}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{padding:6px 12px;border-radius:8px;border:1px solid var(--ck-accent);background:var(--ck-surface);color:var(--ck-ink);cursor:pointer}
+#out{min-height:1.5em;font-weight:600}
+</style></head><body>
+<div class="row"><span>Tap two keys to hear them and count the half steps between them.</span><button id="clear">Clear</button><label><input type="checkbox" id="names" checked> Show names</label></div>
+<div class="kb" id="kb"></div>
+<div id="out" aria-live="polite">Tap a key.</div>
+<script>
+var names=["C","C♯/D♭","D","D♯/E♭","E","F","F♯/G♭","G","G♯/A♭","A","A♯/B♭","B"];
+var whites=[0,2,4,5,7,9,11],blackPos={1:1,3:2,6:4,8:5,10:6};
+var kb=document.getElementById("kb"),out=document.getElementById("out"),picked=[],ac=null,els={};
+function freq(n){return 261.63*Math.pow(2,n/12)}
+function play(n){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=freq(n);g.gain.setValueAtTime(0.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.2);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+1.2)}catch(e){}}
+function label(n){return names[n%12].split("/")[0]+(4+Math.floor(n/12))}
+for(var oct=0;oct<2;oct++){whites.forEach(function(s){var n=oct*12+s,d=document.createElement("div");d.className="w";d.dataset.n=n;d.textContent=label(n);kb.appendChild(d);els[n]=d})}
+for(var oct2=0;oct2<2;oct2++){Object.keys(blackPos).forEach(function(s){var n=oct2*12+ +s,d=document.createElement("div");d.className="b";d.dataset.n=n;d.style.left=((oct2*7+blackPos[s])/14*100-3.5)+"%";d.textContent=names[s].split("/")[0];kb.appendChild(d);els[n]=d})}
+kb.addEventListener("click",function(e){var n=e.target.dataset.n;if(n==null)return;n=+n;play(n);if(picked.length===2){picked.forEach(function(p){els[p].classList.remove("on")});picked=[]}
+picked.push(n);els[n].classList.add("on");
+if(picked.length===1)out.textContent=label(n)+" — tap a second key.";
+else{var d=Math.abs(picked[1]-picked[0]);out.textContent=label(picked[0])+" to "+label(picked[1])+": "+d+" half step"+(d===1?"":"s")+(d===12?" (an octave)":d===2?" (a whole step)":"")+".";setTimeout(function(){play(picked[1])},10)}
+ck.save({last:picked})});
+document.getElementById("clear").onclick=function(){picked.forEach(function(p){els[p].classList.remove("on")});picked=[];out.textContent="Tap a key."};
+document.getElementById("names").onchange=function(e){kb.querySelectorAll(".w").forEach(function(w){w.style.color=e.target.checked?"#222":"transparent"})};
+</script></body></html>

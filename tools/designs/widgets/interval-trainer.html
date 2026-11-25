@@ -1,0 +1,31 @@
+<!doctype html><html><head><style>
+body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.q{font-size:20px;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+button{padding:8px 10px;border-radius:8px;border:1px solid var(--ck-muted);background:var(--ck-bg);color:var(--ck-ink);cursor:pointer}
+button.main{background:var(--ck-accent);border-color:var(--ck-accent);color:#fff}
+.good{border-color:#1a8f55;background:#1a8f5522}.bad{border-color:#c0392b;background:#c0392b22}
+#score{color:var(--ck-muted)}
+</style></head><body>
+<p>Name 5 intervals in a row correctly. Each one is spelled from the lower note up; you can also play it.</p>
+<div class="q" id="q"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="main" id="play">Play it</button><span id="score" aria-live="polite"></span></div>
+<div class="opts" id="opts"></div>
+<script>
+var L=["C","D","E","F","G","A","B"],semis=[0,2,4,5,7,9,11];
+var IV=[["minor 2nd",1,2],["major 2nd",2,2],["minor 3rd",3,3],["major 3rd",4,3],["perfect 4th",5,4],["tritone",6,4],["perfect 5th",7,5],["minor 6th",8,6],["major 6th",9,6],["minor 7th",10,7],["major 7th",11,7],["octave",12,8]];
+var streak=(ck.state&&ck.state.streak)||0,cur=null,ac=null,done=false;
+function nm(i,acc){return L[i%7]+(acc>0?"♯":acc<0?"♭":"")}
+function make(){var iv=IV[Math.floor(Math.random()*IV.length)],lo=Math.floor(Math.random()*7),hiL=lo+iv[2]-1;
+ var loS=semis[lo],hiS=semis[hiL%7]+(hiL>=7?12:0),acc=iv[1]-(hiS-loS);
+ if(Math.abs(acc)>1)return make();cur={iv:iv,lo:loS,name:nm(lo,0)+" up to "+nm(hiL,acc)};render()}
+function render(){document.getElementById("q").textContent=cur.name+" is a…";var o=document.getElementById("opts");o.innerHTML="";
+ IV.forEach(function(v){var b=document.createElement("button");b.textContent=v[0];b.onclick=function(){answer(v,b)};o.appendChild(b)});
+ document.getElementById("score").textContent="Streak: "+streak+" of 5"}
+function tone(n,t){var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=261.63*Math.pow(2,n/12);o.type="sine";g.gain.setValueAtTime(.25,ac.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.9);o.connect(g).connect(ac.destination);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.9)}
+document.getElementById("play").onclick=function(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();tone(cur.lo,0);tone(cur.lo+cur.iv[1],.7)}catch(e){}};
+function answer(v,b){if(v===cur.iv){b.classList.add("good");streak++;}else{b.classList.add("bad");streak=0;document.getElementById("score").textContent="It was a "+cur.iv[0]+". Streak back to 0.";}
+ ck.save({streak:streak});if(streak>=5&&!done){done=true;ck.done(true);document.getElementById("score").textContent="Five in a row. Done!";return}
+ setTimeout(make,v===cur.iv?500:1600)}
+make();
+</script></body></html>

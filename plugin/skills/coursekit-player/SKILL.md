@@ -1,0 +1,61 @@
+---
+name: coursekit-player
+description: Install or update the Coursekit player (one private artifact that holds all of a learner's courses), install course files into it, and control it from a Claude project (notes, requests, reading progress). Use when someone wants Coursekit, wants a course installed, or wants their project to act on their courses.
+---
+
+# The Coursekit player
+
+The player is one page, published as a private artifact in the learner's own Claude account. It holds every course as records in the artifact's database, so the same courses and progress appear on every device signed in to that account. Inside it, the learner creates courses by describing them, imports course files, learns, reviews, and asks the course's tutor, who can also change the course (see the `coursekit-design` skill for the rules).
+
+Requirements: a paid Claude plan (artifact storage and Claude inside artifacts are not on Free).
+
+## Install or update the player
+
+Publish [coursekit-player.html](coursekit-player.html) unchanged as an artifact with these capabilities:
+
+```json
+{ "db": {}, "user": {}, "sample": {}, "downloads": true }
+```
+
+Title it "Coursekit", icon "book". To update an existing player, publish the new file to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
+
+## Install a course into the player
+
+Either tell the learner to use "Import a course file" in the library, or write the records yourself. From a clone of the repository:
+
+```sh
+node tools/course-docs.js courses/music-theory.coursekit.json /tmp/ck-docs
+```
+
+That writes one JSON file per record. Write each as a document in collection `data/users/me` of the player artifact, with the file name (without `.json`) as the document id. Write the `c~<course>` record last. The open player shows the course at once.
+
+## Records
+
+All records are in the learner's private collection `data/users/<id>` (`data/users/me` for the owner's own project). Every record has a `kind`.
+
+| Document id | kind | What it holds |
+|---|---|---|
+| `c~<course>` | course | title, design, tutor, units (with lesson order), widgets |
+| `l~<course>~<lesson>` | lesson | title, summary, minutes, blocks; `pending: true` = not written yet; `rewrite: "…"` = queued for rewriting |
+| `p~<course>~<lesson>` | progress | `b` per block {ok, n tries, a last answer}, `cards` recall schedule, `done` time |
+| `s~<course>` | stats | learned, started, due cards, last lesson |
+| `h~<course>` | chat | the Ask conversation |
+| `v~<course>~<time>` | rev | an undoable change: the records as they were before it |
+| `log~<yyyy-mm-dd>` | log | the day's events: open, check (with ok), learned, review, ask, edit, written |
+| `cmd~<id>` | cmd | a command from the project (below) |
+
+## Controlling the player from a project
+
+The page cannot message a project, but the project can write to the page and read what happened.
+
+- **Read progress:** query `data/users/me` for `kind == "log"` (recent days) or `kind == "stats"`; read `p~…` records for detail.
+- **Send a command:** create `cmd~<any id>` with `kind: "cmd"`, `status: "new"` and one of:
+  - `{"op": "notify", "text": "…"}` shows a note;
+  - `{"op": "open", "course": "…", "lesson": "…", "text": "…"}` suggests a lesson;
+  - `{"op": "ask", "course": "…", "text": "…"}` asks the course's tutor to do something (the learner presses "Do it"; the tutor then edits the course with the rules enforced and an undo point);
+  - `{"op": "write", "course": "…"}` offers to write lessons that are pending or queued for rewriting;
+  - `{"op": "import", "file": {course file}}` adds a course (files under 250 KB).
+  The page sets `status` to `done` or `dismissed`.
+- **Edit records directly** only for small, safe fixes, and keep every rule in `coursekit-design`. Prefer an `ask` command so the change gets an undo point.
+
+A nightly scheduled task in the learner's project can read the logs, decide what to review or strengthen, and leave `notify` or `ask` commands for the next session.

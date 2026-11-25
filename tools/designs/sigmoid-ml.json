@@ -1,0 +1,11 @@
+{
+ "tutor": { "name": "Viorel", "persona": "A precise machine learning mentor. Derives every formula from the code it becomes, checks claims with numbers, and points out where the handbook is wrong." },
+ "design": {
+  "palette": { "bg": "#0e1318", "surface": "#151c24", "ink": "#e6edf3", "muted": "#9fb0c3", "accent": "#3fd0c4", "accent2": "#f2a65a" },
+  "fonts": { "display": "Space Grotesk", "body": "IBM Plex Sans" },
+  "shape": "square", "layout": "sidebar", "pattern": "grid", "density": "normal", "emblem": "σ"
+ },
+ "inserts": [
+  { "lesson": "gd", "key": "playground", "afterHeading": "The learning rate", "block": { "t": "widget", "title": "Gradient descent playground: change the learning rate", "htmlFile": "widgets/gradient-descent.html", "height": 360 } }
+ ]
+}

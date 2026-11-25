@@ -1,0 +1,29 @@
+<!doctype html><html><head><style>
+body{padding:12px;display:flex;flex-direction:column;gap:10px}
+canvas{width:100%;height:220px;border:1px solid var(--ck-muted);border-radius:8px;background:var(--ck-bg)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{padding:6px 12px;border-radius:8px;border:1px solid var(--ck-accent);background:var(--ck-accent);color:var(--ck-bg);cursor:pointer;font-weight:600}
+input[type=range]{flex:1;min-width:140px}
+#info{font-family:ui-monospace,monospace;font-size:13px;color:var(--ck-muted)}
+</style></head><body>
+<div class="row"><label for="lr">Learning rate <b id="lrv"></b></label><input id="lr" type="range" min="-3" max="0.1" step="0.05" value="-1"></div>
+<div class="row"><button id="step">One step</button><button id="run">Run 30 steps</button><button id="reset">Reset</button></div>
+<canvas id="c" width="640" height="220"></canvas>
+<div id="info" aria-live="polite"></div>
+<script>
+// Cost J(w) = (w - 3)^2 + 1 for a one-weight model. Gradient 2(w - 3).
+var cv=document.getElementById("c"),g=cv.getContext("2d"),lr=0.1,w=-4,path=[];
+var css=getComputedStyle(document.documentElement),acc=css.getPropertyValue("--ck-accent").trim()||"#36c",ink=css.getPropertyValue("--ck-ink").trim()||"#222";
+function J(x){return (x-3)*(x-3)+1}
+function X(x){return (x+6)/14*cv.width}function Y(j){return cv.height-10-(j/(J(-6)+2))*(cv.height-20)}
+function draw(){g.clearRect(0,0,cv.width,cv.height);g.strokeStyle=ink;g.globalAlpha=.5;g.beginPath();for(var x=-6;x<=8;x+=0.05){var px=X(x),py=Y(J(x));x===-6?g.moveTo(px,py):g.lineTo(px,py)}g.stroke();g.globalAlpha=1;
+ g.strokeStyle=acc;g.fillStyle=acc;g.beginPath();path.forEach(function(p,i){var px=X(p),py=Y(J(p));i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke();
+ path.forEach(function(p){g.beginPath();g.arc(X(p),Y(J(p)),3,0,7);g.fill()});g.beginPath();g.arc(X(w),Y(J(w)),7,0,7);g.fill();
+ document.getElementById("info").textContent="step "+(path.length-1)+"   w = "+w.toFixed(4)+"   J(w) = "+J(w).toFixed(4)+"   gradient = "+(2*(w-3)).toFixed(4)+(Math.abs(w)>1e6?"   diverged!":"")}
+function step(){w=w-lr*2*(w-3);if(!isFinite(w)||Math.abs(w)>1e9)w=Math.sign(w||1)*1e9;path.push(w);draw()}
+function reset(){w=-4;path=[w];draw()}
+document.getElementById("lr").oninput=function(e){lr=Math.pow(10,+e.target.value);document.getElementById("lrv").textContent=lr.toFixed(3);reset()};
+document.getElementById("step").onclick=step;document.getElementById("reset").onclick=reset;
+document.getElementById("run").onclick=function(){var n=0,t=setInterval(function(){step();if(++n>=30)clearInterval(t)},60)};
+document.getElementById("lr").oninput({target:document.getElementById("lr")});
+</script></body></html>
