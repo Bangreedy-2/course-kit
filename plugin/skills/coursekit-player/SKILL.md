@@ -14,8 +14,14 @@ Requirements: a paid Claude plan (artifact storage and Claude inside artifacts a
 Publish [coursekit-player.html](coursekit-player.html) unchanged as an artifact with these capabilities:
 
 ```json
-{ "db": {}, "user": {}, "sample": {}, "downloads": true }
+{
+  "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {},
+  "desktop": {},
+  "mcp": { "servers": [{ "server": "host:coursekit", "tools": ["runner_info", "run_code"] }] }
+}
 ```
+
+`desktop` and `mcp` are what let a course run code on the learner's own computer (see the `coursekit-setup` skill). For a first setup, use the `coursekit-setup` skill, which does every step.
 
 Title it "Coursekit", icon "book". To update an existing player, publish the new file to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
 

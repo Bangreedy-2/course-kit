@@ -394,6 +394,7 @@ img.fig{display:block;max-width:100%;background:#fff;border-radius:var(--radius)
 .warnbox{border-color:var(--accent2);margin-bottom:14px}
 
 </style>
+<script type="application/json" id="claude-artifacts-manifest">{"permissions": ["full-access"]}</script>
 <header id="top"></header>
 <div id="banners"></div>
 <main id="main" tabindex="-1"></main>
@@ -767,9 +768,28 @@ function checkLessonShape(o) {
      js      = JavaScript in a sandboxed frame,
      frame   = a runner the course brings: one HTML document (same rules as widgets) that runs code
                it receives by postMessage. This is how a course adds any other language (SQL, Lua, R in wasm...). */
-const ENGINES = ["pyodide", "js", "frame"];
-const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js" };
-const langOf = l => { const s = slug(l || "", 20); return LANG_ALIAS[s] || s; };
+const ENGINES = ["pyodide", "js", "frame", "local"];
+/* Languages the "local" engine can run on the learner's own computer, through the Coursekit runner.
+   {file} is the source file, {exe} a path for a compiled program. "win" overrides the command on Windows. */
+const LOCAL_LANGS = {
+  python: { label: "Python", ext: "py", cmd: "python3 {file}", win: "python {file}", probe: "python3 --version", winProbe: "python --version" },
+  js: { label: "JavaScript (Node)", ext: "js", cmd: "node {file}", probe: "node --version" },
+  elixir: { label: "Elixir", ext: "exs", cmd: "elixir {file}", probe: "elixir --version" },
+  c: { label: "C", ext: "c", cmd: "cc {file} -o {exe} -lm && {exe}", win: "gcc {file} -o {exe} && {exe}", probe: "cc --version", winProbe: "gcc --version" },
+  cpp: { label: "C++", ext: "cpp", cmd: "c++ -std=c++17 {file} -o {exe} && {exe}", win: "g++ -std=c++17 {file} -o {exe} && {exe}", probe: "c++ --version", winProbe: "g++ --version" },
+  rust: { label: "Rust", ext: "rs", cmd: "rustc -O {file} -o {exe} && {exe}", probe: "rustc --version" },
+  go: { label: "Go", ext: "go", cmd: "go run {file}", probe: "go version" },
+  java: { label: "Java", ext: "java", cmd: "java {file}", probe: "java -version" },
+  ruby: { label: "Ruby", ext: "rb", cmd: "ruby {file}", probe: "ruby --version" },
+  bash: { label: "Bash", ext: "sh", cmd: "bash {file}", probe: "bash --version" },
+  r: { label: "R", ext: "R", cmd: "Rscript {file}", probe: "Rscript --version" },
+  julia: { label: "Julia", ext: "jl", cmd: "julia {file}", probe: "julia --version" },
+  haskell: { label: "Haskell", ext: "hs", cmd: "runghc {file}", probe: "runghc --version" },
+  lua: { label: "Lua", ext: "lua", cmd: "lua {file}", probe: "lua -v" },
+  php: { label: "PHP", ext: "php", cmd: "php {file}", probe: "php --version" },
+};
+const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js", "c-plus-plus": "cpp", cxx: "cpp", golang: "go", sh: "bash", shell: "bash", rs: "rust", ex: "elixir", exs: "elixir", rb: "ruby", hs: "haskell" };
+const langOf = l => { const s = slug(String(l || "").replace(/\+\+/g, "pp"), 20); return LANG_ALIAS[s] || s; };
 function runtimeFor(runtimes, lang) { const l = langOf(lang); return runtimes && runtimes[l] ? Object.assign({ lang: l }, runtimes[l]) : null; }
 function normalizeRuntimes(v) {
   const out = {};
@@ -780,7 +800,8 @@ function normalizeRuntimes(v) {
     const r = r0 && typeof r0 === "object" ? r0 : {};
     const engine = str(r.engine || (lang === "python" ? "pyodide" : lang === "js" ? "js" : "")).toLowerCase();
     if (!ENGINES.includes(engine)) fail("runtime \"" + lang + "\" needs an engine: " + ENGINES.join(", ") + ".");
-    const o = { engine, label: str(r.label, 40).trim() || (lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
+    if (engine === "local" && !LOCAL_LANGS[lang]) fail("the local engine cannot run \"" + lang + "\". It runs: " + Object.keys(LOCAL_LANGS).join(", ") + ".");
+    const o = { engine, label: str(r.label, 40).trim() || (engine === "local" ? LOCAL_LANGS[lang].label : lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
     if (engine === "frame") o.html = checkWidgetHtml(r.html);
     if (r.packages && typeof r.packages === "object") { o.packages = {}; for (const [a, b] of Object.entries(r.packages).slice(0, 60)) o.packages[slug(a, 40).replace(/-/g, "_")] = str(b, 60).trim(); }
     if (r.apps) o.apps = true; // python: notebook cells tagged "app" run as Streamlit apps
@@ -1099,7 +1120,7 @@ function scoreCourse(stats, ref) {
 }
 const MODULES_DOC =
 `Course modules (all optional; add the ones the subject needs):
-- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. {"elixir":{"engine":"local"}} runs the language on the learner's own computer through the Coursekit runner (languages: ${Object.keys(LOCAL_LANGS).join(", ")}); use it only when the learner has the runner, and never for code the learner has not seen. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
 - files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
 - labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
 - tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
@@ -1343,7 +1364,7 @@ const api = {
   hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
-  ENGINES, MODULE_KEYS, normalizePages, lessonDepth, lessonIssues, growModules, courseStats, scoreCourse, REF_STATS, normalizeDrill, normalizeQuiz, AUTO_CHECKED, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  ENGINES, LOCAL_LANGS, MODULE_KEYS, normalizePages, lessonDepth, lessonIssues, growModules, courseStats, scoreCourse, REF_STATS, normalizeDrill, normalizeQuiz, AUTO_CHECKED, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
   normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
   normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };
@@ -1619,6 +1640,87 @@ function frameEngine(kind, html) {
     reset: async ns => { drop(ns); return { ok: true }; }, has: async ns => spaces.has(ns), get state() { return "ready"; }, on: () => () => {} };
 }
 
+/* ---------- this computer: the "local" engine ----------
+   Runs a program on the learner's own machine. Two ways to reach it, tried in this order:
+   1. the player installed as a desktop app with permission to run programs (Mac and Windows);
+   2. the Coursekit runner, a local MCP server, reached through the Claude desktop app.
+   Nothing here runs by itself: a course must be allowed by the learner first (see allow()), and the
+   page never sends code the learner did not press Run on. */
+const LOCAL = { provider: null, state: "off", langs: {}, note: "", desktop: null, mcp: null, allowed: () => false, listeners: new Set() };
+const localSet = (st, note) => { LOCAL.state = st; if (note != null) LOCAL.note = note; LOCAL.listeners.forEach(f => { try { f(st); } catch (e) {} }); };
+const localCmd = (l, k, win) => (win && l[k === "cmd" ? "win" : "winProbe"]) || l[k];
+async function desktopExec(lang, code, o) {
+  const d = LOCAL.desktop, l = CK.LOCAL_LANGS[lang]; const win = LOCAL.platform === "win32", sep = win ? "\\" : "/";
+  const dir = (await d.os.tmpdir()) + sep + "coursekit-" + Math.random().toString(36).slice(2, 10);
+  await d.fs.mkdir(dir, { recursive: true });
+  const file = dir + sep + "main." + l.ext, exe = dir + sep + (win ? "main.exe" : "main.out"); const q = x => "\"" + x + "\"";
+  await d.fs.writeFile(file, code, "utf8");
+  const t0 = Date.now(); let r;
+  try { r = await d.childProcess.exec(localCmd(l, "cmd", win).replace(/\{file\}/g, q(file)).replace(/\{exe\}/g, q(exe)), { cwd: dir, timeout: (o && o.limitMs) || 60000, input: o && o.stdin != null ? String(o.stdin) : undefined }); }
+  finally { try { await d.fs.rm(dir, { recursive: true, force: true }); } catch (e) {} }
+  const clean = x => String(x || "").split(dir + sep).join("").split(dir).join(".");
+  return { ok: r.code === 0, out: clean(r.stdout), err: r.code === 0 ? "" : clean(r.stderr) || (r.signal ? "Stopped (" + r.signal + "): the code ran too long." : "Exit code " + r.code), ms: Date.now() - t0 };
+}
+async function mcpExec(lang, code, o) {
+  const r = await LOCAL.mcp.callTool("host:coursekit", "run_code", { lang, code, stdin: o && o.stdin != null ? String(o.stdin) : undefined, timeout: Math.round(((o && o.limitMs) || 60000) / 1000) });
+  const p = r && r.payload; if (!p || typeof p !== "object") throw new Error("The runner gave no result.");
+  return p;
+}
+/* Finds a way to this computer. "interactive" means the learner just clicked, so the page may ask for permission. */
+async function localConnect(interactive) {
+  if (LOCAL.state === "ready") return true;
+  localSet("connecting");
+  try {
+    const d = LOCAL.desktop || (LOCAL.desktop = window.claude && claude.use ? await claude.use("desktop").catch(() => null) : null);
+    if (d && d.childProcess) {
+      let st = await d.permissions.state("full-access");
+      if (st === "prompt" && interactive) st = (await d.permissions.request(["full-access"]))["full-access"];
+      if (st === "granted") {
+        LOCAL.platform = await d.os.platform(); const win = LOCAL.platform === "win32"; LOCAL.langs = {};
+        await Promise.all(Object.entries(CK.LOCAL_LANGS).map(async ([id, l]) => { try { const r = await d.childProcess.exec(localCmd(l, "probe", win), { timeout: 8000 }); if (r.code === 0) LOCAL.langs[id] = { label: l.label, version: String(r.stdout || r.stderr || "").trim().split("\n")[0].slice(0, 80) }; } catch (e) {} }));
+        LOCAL.provider = "desktop"; localSet("ready", ""); try { localStorage.setItem("ck-local", "desktop"); } catch (e) {} return true;
+      }
+      if (st === "denied") { localSet("off", "Running programs is turned off for this app. Turn it on in the app's Permissions."); return false; }
+    }
+    const m = LOCAL.mcp || (LOCAL.mcp = window.claude && claude.use ? await claude.use("mcp").catch(() => null) : null);
+    if (m && (interactive || LOCAL.remembered === "mcp")) {
+      try { const r = await m.callTool("host:coursekit", "runner_info", {}); const p = r && r.payload;
+        if (p && p.languages) { LOCAL.langs = p.languages; LOCAL.platform = p.platform; LOCAL.provider = "mcp"; localSet("ready", ""); try { localStorage.setItem("ck-local", "mcp"); } catch (e) {} return true; } }
+      catch (e) { LOCAL.lastError = e && (e.code || e.message); }
+    }
+    localSet("off", ""); return false;
+  } catch (e) { localSet("off", String(e && e.message || e)); return false; }
+}
+/* What to offer the learner: "install" (make this player a desktop app), "allow" (app is installed, ask permission), "runner" (needs the runner in the Claude desktop app). */
+async function localOffer() {
+  const d = LOCAL.desktop || (LOCAL.desktop = window.claude && claude.use ? await claude.use("desktop").catch(() => null) : null);
+  if (d && d.childProcess) return "allow";
+  if (d && d.install) { try { if ((await d.install.state()) === "available") return "install"; } catch (e) {} }
+  return "runner";
+}
+function localEngine(lang) {
+  const spaces = new Map();
+  async function run(code, o) {
+    o = o || {};
+    if (!LOCAL.allowed()) return { ok: false, error: "This course is not yet allowed to run programs on this computer. Use the note at the top of the course to allow it.", boot: true, out: "", imgs: [] };
+    if (LOCAL.state !== "ready" && !(await localConnect(false))) return { ok: false, error: "This lesson runs " + CK.LOCAL_LANGS[lang].label + " on your own computer, and this page is not connected to it. Use the note at the top of the course.", boot: true, out: "", imgs: [] };
+    if (!LOCAL.langs[lang]) return { ok: false, error: CK.LOCAL_LANGS[lang].label + " is not installed on this computer (the runner tried: " + CK.LOCAL_LANGS[lang].probe + "). Install it, then reload this page.", boot: true, out: "", imgs: [] };
+    if (o.onStatus) o.onStatus("Running on this computer…");
+    const prior = o.ns ? spaces.get(o.ns) : null; const full = prior ? prior.code + "\n" + code : code;
+    let r; try { r = await (LOCAL.provider === "desktop" ? desktopExec : mcpExec)(lang, full, o); }
+    catch (e) { const msg = e && e.code === "cancelled" ? "You did not allow this run." : "The runner could not be reached: " + (e && (e.message || e.code) || e); return { ok: false, error: msg, out: "", imgs: [] }; }
+    let out = String(r.out || "");
+    if (prior && out.startsWith(prior.out)) out = out.slice(prior.out.length);
+    if (o.ns && r.ok) spaces.set(o.ns, { code: full, out: String(r.out || "") });
+    if (o.onOut) o.onOut(out);
+    return { ok: !!r.ok, error: r.ok ? null : String(r.err || "Error").trim(), out, imgs: [] };
+  }
+  return { kind: "local", run, boot: () => localConnect(false), kill: () => {}, put: async () => ({ ok: false }), reset: async ns => { spaces.delete(ns); return { ok: true }; }, has: async ns => spaces.has(ns),
+    get state() { return LOCAL.state === "ready" ? "ready" : "off"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); } };
+}
+try { LOCAL.remembered = localStorage.getItem("ck-local"); } catch (e) {}
+const LOCALS = new Map();
+
 /* ---------- registry ---------- */
 let PY = null; const JS = { e: null }; const FRAMES = new Map();
 const overrides = {}; // tests may register stand-in engines
@@ -1626,6 +1728,7 @@ function engineFor(rt) {
   if (!rt) return null;
   if (overrides[rt.engine]) return overrides[rt.engine];
   if (rt.engine === "pyodide") return PY || (PY = pyodideEngine());
+  if (rt.engine === "local") { if (!LOCALS.has(rt.lang)) LOCALS.set(rt.lang, localEngine(rt.lang)); return LOCALS.get(rt.lang); }
   if (rt.engine === "js") return JS.e || (JS.e = frameEngine("js", JS_RUNNER));
   if (rt.engine === "frame") { const key = rt.lang + ":" + (rt.html || "").length + ":" + hash(rt.html || ""); if (!FRAMES.has(key)) FRAMES.set(key, frameEngine("frame", rt.html)); return FRAMES.get(key); }
   return null;
@@ -1734,7 +1837,7 @@ function streamlit(host, src, files, onStatus) {
   return { apply, restart: start, get ran() { return C.ran; }, get err() { return C.err; }, get state() { return C.state; }, stop() { clearInterval(C.poll); try { const k = ctl(); if (k) k.unmount(); } catch (e) {} host.replaceChildren(); } };
 }
 
-const api = { PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
+const api = { local: { get state() { return LOCAL.state; }, get langs() { return LOCAL.langs; }, get provider() { return LOCAL.provider; }, get note() { return LOCAL.note; }, get lastError() { return LOCAL.lastError; }, connect: localConnect, offer: localOffer, install: async () => { const d = LOCAL.desktop; return d && d.install ? d.install.request() : "unavailable"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); }, setAllowed: f => { LOCAL.allowed = f; }, uses: course => Object.entries((course && course.runtimes) || {}).filter(([, r]) => r && r.engine === "local").map(([k]) => k) }, PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
 root.CKRun = api;
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1819,9 +1922,12 @@ function modsFromDocs(docs) {
 /* The runtimes of the open course. */
 function RT() { const c = S.courses[S.cid]; if (!c) return CKRun.forCourse(null); if (!S.rtFor || S.rtFor.c !== c.runtimes || S.rtFor.f !== c.files) S.rtFor = { c: c.runtimes, f: c.files, rt: CKRun.forCourse(c) }; return S.rtFor.rt; }
 function put(key, body) { return S.store.put(key, body); }
+function localAllowed(cid) { if (!cid) return false; if (S.localOk && S.localOk[cid]) return true; try { return localStorage.getItem("ck-local-ok:" + cid) === "1"; } catch (e) { return false; } }
 
 async function boot() {
   CKRun.onPack(() => { try { renderBanners(); } catch (e) {} });
+  CKRun.local.on(() => { try { renderBanners(); } catch (e) {} });
+  CKRun.local.setAllowed(() => localAllowed(S.cid));
   render();
   let cap = {};
   if (window.claude && claude.use) {
@@ -2011,6 +2117,23 @@ function renderBanners() {
     else if (b.op === "ask") items.push(banner("Your project asks: " + (b.text || ""), [["Do it", () => { doneCmd(id); if (b.course && S.route.cid !== b.course) go("#/c/" + b.course); setTimeout(() => { openAsk(); sendAsk(b.text, { from: "project" }); }, 60); }], ["Dismiss", () => doneCmd(id, "dismissed")]]));
     else if (b.op === "write") items.push(banner(b.text || "Your project queued lessons to be written.", [["Write them", () => { doneCmd(id); startWriter(b.course); }], ["Later", () => doneCmd(id, "dismissed")]]));
   }
+  { const c = S.courses[S.route && S.route.cid]; const langs = c ? CKRun.local.uses(c) : [];
+    if (c && langs.length && !(S.localDismissed || {})[c.id]) {
+      const names = langs.map(l => CK.LOCAL_LANGS[l].label).join(", "); const L = CKRun.local;
+      const missing = L.state === "ready" ? langs.filter(l => !L.langs[l]) : [];
+      if (L.state === "ready" && localAllowed(c.id) && missing.length) items.push(banner(missing.map(l => CK.LOCAL_LANGS[l].label).join(", ") + " is not installed on this computer yet. Install it, then reload this page.", [["OK", () => { S.localDismissed = Object.assign({}, S.localDismissed, { [c.id]: true }); render(); }]]));
+      else if (!(L.state === "ready" && localAllowed(c.id))) {
+        const offer = S.localOffer || "runner"; if (!S.localOfferAsked) { S.localOfferAsked = true; L.offer().then(o => { S.localOffer = o; renderBanners(); }); }
+        const text = "This course runs " + names + " on your own computer. " + (L.state === "ready" ? "Allow it only for a course you trust: its code runs with your own access to this computer, and only when you press Run."
+          : offer === "install" ? "Install this player as an app and it can run your code here, with nothing else to set up."
+          : offer === "allow" ? "Allow this app to run programs and your code runs here, only when you press Run."
+          : "Open this player in the Claude desktop app with the Coursekit runner on (it comes with the Coursekit plugin), then press Connect. Without it, lessons still work and you run code yourself and paste the output." + (L.lastError && S.localTried ? " (Last try: " + L.lastError + ")" : ""));
+        const act = L.state === "ready" ? ["Allow for this course", () => { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); render(); }]
+          : offer === "install" ? ["Install as app", async () => { const r = await L.install().catch(() => "failed"); if (r !== "installed") toast("The app was not installed."); }]
+          : [offer === "allow" ? "Allow running programs" : "Connect", async () => { S.localTried = true; const ok = await L.connect(true); if (ok) { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); toast("Connected. " + Object.keys(L.langs).length + " languages found on this computer."); } else toast(L.note || "This page could not reach your computer."); render(); }];
+        items.push(banner(text, [act, ["Not now", () => { S.localDismissed = Object.assign({}, S.localDismissed, { [c.id]: true }); render(); }]]));
+      }
+    } }
   { const c = S.courses[S.route && S.route.cid]; if (c) for (const name of CKRun.packsFor(c)) if (CKRun.packState(name) === "missing" && !(S.packDismissed || {})[name])
       items.push(banner("This course runs " + CKRun.PACKS[name].title.toLowerCase().replace("python", "Python").replace("streamlit", "Streamlit") + " in the page, and that is not installed in this player yet. In Claude, with the Coursekit plugin, say: “" + CKRun.PACKS[name].ask + "”, then reload. Until then, lessons and written practice work, and code can be run on your own computer.", [["OK", () => { S.packDismissed = Object.assign({}, S.packDismissed, { [name]: true }); render(); }]])); }
   const w = S.writer;
@@ -2134,7 +2257,7 @@ const OUTLINE_SHAPE = `{"title": string, "subtitle": string, "description": "1-2
  "tutor": {"name": "a short name that fits the course", "persona": "2-3 sentences: how this tutor teaches"},
  "design": <design object>,
  "paced": true when the units are weeks of a study plan (any course of two weeks or more), false for a short topic,
- "runtime": "python" | "js" | "" (a language the learner writes and runs in the page; "" when the subject has no code),
+ "runtime": "python" | "js" | "" (a language the learner writes and runs in the page; "" when the subject has no code)@LOCAL@,
  "tracks": {"short-id": "Strand of the subject"} (2-8 strands, e.g. theory, practice, tools),
  "phases": [{"title": string, "goal": "what is true at the end of this phase", "weeks": [1,2,3]}] (1-4, only when paced),
  "units": [{"title": string, "goal": "what the learner can do after it", "lessons": [{"title": string, "summary": "what it teaches and what its practice must prove, 1-2 sentences", "minutes": 10-40, "track": "track id", "code": true when the learner must write runnable code in it}]}],
@@ -2151,6 +2274,7 @@ async function createCourse({ topic, about, intake, files, log }) {
   for (const f of files || []) { log("Reading " + f.name + "…"); const t = await fileText(f); source += "\n\n===== " + f.name + " =====\n" + t; names.push(f.name); }
   source = source.trim();
   if (source.length > 600000) { log("Your files are long; Claude will use the first 600,000 characters."); source = source.slice(0, 600000); }
+  const localLangs = CKRun.local.state === "ready" ? Object.keys(CKRun.local.langs) : [];
   log("Planning the whole programme: weeks, lessons, projects, checkpoints and design…");
   const weeksLeft = intake.deadline ? Math.max(1, Math.floor((new Date(intake.deadline + "T00:00:00") - new Date(todayIso() + "T00:00:00")) / (7 * 864e5))) : 0;
   const hours = intake.hours || 0;
@@ -2176,7 +2300,7 @@ async function createCourse({ topic, about, intake, files, log }) {
 - Facts you are not certain of (dates, fees, rules, eligibility) must not be stated as certain: put them on a page with a "note" telling the learner to confirm them at the official source, and say which source.
 - Never plan filler: no "Introduction", "Overview", "Conclusion" or "Summary" lessons.`,
     CK.DESIGN_DOC,
-    "Reply with only JSON of this shape:\n" + OUTLINE_SHAPE,
+    "Reply with only JSON of this shape:\n" + OUTLINE_SHAPE.replace("@LOCAL@", localLangs.length ? ". This learner's computer is connected and can also run: " + localLangs.join(", ") + " (use that name as the runtime when the course teaches one of them)" : ""),
   ].filter(Boolean).join("\n\n");
   let plan = null, lastErr = null;
   for (let attempt = 0; attempt < 2 && !plan; attempt++) {
@@ -2185,9 +2309,9 @@ async function createCourse({ topic, about, intake, files, log }) {
   }
   if (!plan) throw lastErr || new Error("Claude's plan could not be read. Try again.");
   if (!Array.isArray(plan.units) || !plan.units.length) throw new Error("Claude's plan had no units. Try again.");
-  const bp = blueprintOf(plan, intake);
+  const bp = blueprintOf(plan, intake, localLangs);
   for (const u of plan.units) for (const l of u.lessons || []) l.pending = true;
-  if (bp.runtime) plan.runtimes = bp.runtime === "python" ? { python: { engine: "pyodide" } } : { js: { engine: "js" } };
+  if (bp.runtime) plan.runtimes = bp.runtime === "python" ? { python: { engine: "pyodide" } } : bp.runtime === "js" ? { js: { engine: "js" } } : { [bp.runtime]: { engine: "local" } };
   if (bp.paced) plan.schedule = { unitDays: 7, start: todayIso() };
   let imp;
   try { imp = CK.importCourse({ course: plan, lessons: [] }, { lenient: true }); }
@@ -2208,12 +2332,12 @@ async function createCourse({ topic, about, intake, files, log }) {
   return cid;
 }
 /* The parts of Claude's plan that are not lessons, cleaned to plain data. */
-function blueprintOf(plan, intake) {
+function blueprintOf(plan, intake, localLangs) {
   const str = (v, n) => String(v == null ? "" : v).slice(0, n).trim();
   const nUnits = plan.units.length; const wk = v => CK.clamp(Math.round(Number(v) || 1), 1, nUnits);
   const proof = x => ({ proof: ["link", "number", "text", "check"].includes(x && x.proof) ? x.proof : "text", proofLabel: str(x && x.proofLabel, 200), min: Number(x && x.min), max: Number(x && x.max), unit: str(x && x.unit, 30) });
   return {
-    v: 1, paced: plan.paced !== false && nUnits >= 2, runtime: ["python", "js"].includes(plan.runtime) ? plan.runtime : "",
+    v: 1, paced: plan.paced !== false && nUnits >= 2, runtime: ["python", "js"].includes(plan.runtime) ? plan.runtime : (localLangs || []).includes(CK.langOf(plan.runtime)) ? CK.langOf(plan.runtime) : "",
     intake: { hours: intake.hours || 0, deadline: intake.deadline || "", level: intake.level || "" },
     phases: (Array.isArray(plan.phases) ? plan.phases : []).slice(0, 6).map(p => ({ title: str(p && p.title, 120), goal: str(p && p.goal, 600), weeks: (Array.isArray(p && p.weeks) ? p.weeks : []).map(Number).filter(n => n >= 1 && n <= nUnits) })).filter(p => p.title && p.weeks.length),
     projects: (Array.isArray(plan.projects) ? plan.projects : []).slice(0, 8).map((p, i) => ({ id: String(i + 1), title: str(p && p.title, 140) || "Project " + (i + 1), what: str(p && p.what, 500),
@@ -2298,7 +2422,9 @@ function outlineText(c, markId) {
    the code of each predict and output block, and each drill's solution against its tests.
    Returns what failed, in words Claude can act on. Nothing is reported when the runtime cannot load. */
 async function verifyLesson(c, lesson, drills) {
-  const rt = CKRun.forCourse(c); const bad = []; let ran = 0, dead = false;
+  const rt0 = CKRun.forCourse(c); const bad = []; let ran = 0, dead = false;
+  // Code is never sent to the learner's own computer without their click, so local runtimes are not test-run here.
+  const rt = Object.assign({}, rt0, { has: lang => rt0.has(lang) && rt0.engine(lang).kind !== "local" });
   const short = t => String(t || "").trim().slice(0, 500);
   const run = async (lang, code, test, expect) => { const r = await rt.check(lang, code, test, expect); if (r.boot || /did not load|cannot run|not installed/i.test(r.err || "")) dead = true; ran++; return r; };
   const say = (what, r, expect) => r.reachedTests === false ? what + ": the model solution itself fails with: " + short(r.err) : r.err ? what + ": the test code fails with: " + short(r.err) : what + ": the solution with the test prints\n" + short(r.testOut) + "\nbut \"expect\" says\n" + expect.join("\n");
@@ -2344,7 +2470,7 @@ async function writeLesson(cid, l, ctl) {
   const prev = idx > 0 ? S.lessons[order[idx - 1]] : null;
   const rewriting = !!l.rewrite && !l.pending;
   const bp = S.mods.blueprint || null; const info = (bp && bp.lessons && bp.lessons[l.id]) || {};
-  const langs = Object.keys(c.runtimes || {}); const runnable = langs.length > 0; const extras = !!bp && !rewriting;
+  const langs = Object.keys(c.runtimes || {}); const runnable = langs.length > 0; const onlyLocal = runnable && langs.every(x => c.runtimes[x].engine === "local"); const extras = !!bp && !rewriting;
   const base = [
     "You are writing one lesson of the Coursekit course “" + c.title + "”. " + (c.description || ""),
     CK.DESIGN_RULES,
@@ -2361,7 +2487,8 @@ async function writeLesson(cid, l, ctl) {
 - Teach first, in depth: 600-1200 words of explanation across md and callout blocks. Start from why the idea matters for this learner's goal, explain it step by step, show at least one fully worked example, and name the mistake people actually make. Use a table, a formula or a small widget where it explains better than prose. Never pad.
 - Then 4-7 practice blocks of at least 2 types, ordered from easy to hard. Each tests understanding of this lesson, not recall of a sentence. Every block has a "why" (or a solution) that teaches. Wrong options must be the plausible mistakes.
 - End with one cards block of 3-6 recall cards: each card one fact or one step worth remembering in a month.` +
-    (runnable ? `
+    (runnable && onlyLocal ? `
+- The learner runs ${langs.map(x => CK.LOCAL_LANGS[x] ? CK.LOCAL_LANGS[x].label : x).join(" and ")} on their own computer from this page, as one source file per run. ${info.code ? "Include 1-3 \"run\" blocks: the learner writes a function or a few lines, and \"test\" is source code appended to theirs that prints results which \"expect\" lists exactly (for C, C++, Rust, Go or Java the learner writes the functions and the test holds main)." : "Use \"run\" or \"predict\" blocks where code helps."} Your code is NOT run before the lesson is saved, so trace every output by hand, keep tests small and deterministic, and use only the standard library.` : runnable ? `
 - The page runs ${langs.join(" and ")}. ${info.code ? "Include 1-3 \"run\" blocks: the learner writes a function or a few lines, and \"test\" calls it and prints results that \"expect\" lists exactly." : "Use \"run\" or \"predict\" blocks where code helps."} Your code is executed before the lesson is saved: every "solution" is run with its "test" and must print exactly "expect"; the code inside each predict block is run and must print exactly its "expect". So work every output out carefully, keep tests deterministic (fixed inputs, no randomness without a seed, no time, no network, no input()), print rounded numbers, and never let the starter code pass the test.` : info.code ? `
 - The page cannot run this lesson's language. Show real code in "code" blocks, practise with "predict" (what does this print) and "task" (do it on your machine, with the solution).` : ""),
     extras ? `Also write, for this lesson:
@@ -3398,6 +3525,7 @@ function courseTools(c, tx, changes) {
     }),
     T("run_code", "Runs code in one of the course's runtimes in a fresh namespace and returns its output (and errors). Use it to check an example, a solution or a test before you give or save it.", { lang: { type: "string" }, code: { type: "string" } }, ["lang", "code"], async i => {
       if (!RT().has(i.lang)) throw new Error("This course has no runtime for " + i.lang + ".");
+      if (RT().engine(i.lang).kind === "local") throw new Error(i.lang + " runs on the learner's own computer, and only when they press Run. You cannot run it. Reason about the code instead, or ask the learner to run it and tell you the output.");
       const r = await RT().run(i.lang, String(i.code), { limitMs: 60000 });
       return { ok: r.ok, output: String(r.out || "").slice(-8000), value: r.value, error: r.error, figures: (r.imgs || []).length };
     }),

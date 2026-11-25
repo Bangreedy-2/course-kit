@@ -1,0 +1,95 @@
+<title>Get Coursekit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* layout: one column. A large statement, then the setup as a three-step rail where step 2 is the single primary button. */
+:root { --bg:#f3f1fb; --surface:#ffffff; --ink:#17132b; --muted:#5b567a; --line:#dcd8ee; --accent:#4b2fd6; --on-accent:#ffffff; --mark:#ffd84d; --ok:#11734f;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#100d1f; --surface:#1a1630; --ink:#efecff; --muted:#a9a3cc; --line:#2d2850; --accent:#9d8bff; --on-accent:#120e26; --mark:#ffd84d; --ok:#5fd3a4; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#100d1f; --surface:#1a1630; --ink:#efecff; --muted:#a9a3cc; --line:#2d2850; --accent:#9d8bff; --on-accent:#120e26; --mark:#ffd84d; --ok:#5fd3a4; color-scheme: dark }
+body { background:var(--bg); color:var(--ink); font:17px/1.55 var(--body); padding-block:3rem 4rem; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)) }
+main { max-width:46rem; margin:0 auto; display:flex; flex-direction:column; gap:2.5rem }
+.brand { font:800 1rem var(--display); letter-spacing:.02em; display:flex; align-items:center; gap:.5rem }
+.brand i { width:.9rem; height:.9rem; background:var(--accent); transform:rotate(45deg); border-radius:2px; display:inline-block }
+h1 { font:800 clamp(2.3rem, 7vw, 4rem)/1.02 var(--display); margin:0; text-wrap:balance; letter-spacing:-.02em }
+h1 mark { background:linear-gradient(transparent 62%, var(--mark) 62%); color:inherit }
+.lede { font-size:1.15rem; color:var(--muted); max-width:36rem; margin:0 }
+h2 { font:600 1.35rem var(--display); margin:0 0 .25rem }
+.steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1rem; counter-reset:s }
+.steps > li { counter-increment:s; display:grid; grid-template-columns:2.5rem 1fr; gap:1rem; align-items:start }
+.steps > li::before { content:counter(s); font:800 1.5rem/2.5rem var(--display); width:2.5rem; height:2.5rem; text-align:center; border-radius:50%; border:2px solid var(--ink) }
+.steps > li.main::before { background:var(--accent); color:var(--on-accent); border-color:var(--accent) }
+.steps > li > div { min-width:0; display:flex; flex-direction:column; gap:.6rem }
+.steps p { margin:0; color:var(--muted) } .steps b { color:var(--ink) }
+.go { display:inline-flex; align-items:center; gap:.6rem; align-self:flex-start; background:var(--accent); color:var(--on-accent); font:600 1.15rem var(--body); padding:.95rem 1.5rem; border-radius:999px; text-decoration:none; border:0; cursor:pointer }
+.go:hover { filter:brightness(1.08) } .go:focus-visible, .copy:focus-visible { outline:3px solid var(--mark); outline-offset:3px }
+.chip { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:.5rem .6rem .5rem .9rem; align-self:flex-start; max-width:100% }
+.chip code { font:500 .95rem var(--mono); overflow-wrap:anywhere } .copy { font:600 .85rem var(--body); background:transparent; color:var(--accent); border:1px solid var(--line); border-radius:8px; padding:.35rem .7rem; cursor:pointer }
+.small { font-size:.9rem }
+.get { display:grid; grid-template-columns:repeat(auto-fit, minmax(13rem, 1fr)); gap:1.25rem 2rem; margin:0; padding:0; list-style:none }
+.get li { min-width:0 } .get b { display:block; font:600 1.05rem var(--display); margin-bottom:.15rem } .get span { color:var(--muted); font-size:.95rem }
+hr { border:0; border-top:1px solid var(--line); margin:0 }
+details { border-top:1px solid var(--line); padding:.8rem 0 } details:last-of-type { border-bottom:1px solid var(--line) }
+summary { font-weight:600; cursor:pointer } details p { color:var(--muted); margin:.5rem 0 0; max-width:38rem }
+a { color:var(--accent) }
+@media (prefers-reduced-motion: no-preference) { .go { transition:filter .15s } }
+</style>
+<main>
+  <div class="brand"><i></i>Coursekit</div>
+  <div style="display:flex;flex-direction:column;gap:1rem">
+    <h1>Tell Claude what you want to learn. Get a <mark>whole course</mark> that checks your work.</h1>
+    <p class="lede">Coursekit is a course player that lives in your own Claude account. It plans a week-by-week programme around your time and deadline, teaches it, runs your code, drills you from memory and keeps your place on every device.</p>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:1rem">
+    <h2>Set it up in about two minutes</h2>
+    <ol class="steps">
+      <li><div>
+        <p><b>Add the Coursekit plugin.</b> In Claude, open <b>Customize</b>, then <b>Plugins</b>, choose <b>Add marketplace</b> and paste this:</p>
+        <div class="chip"><code id="repo">Bangreedy-2/course-kit</code><button class="copy" id="copy" type="button">Copy</button></div>
+        <p class="small">Then pick Coursekit in the list and press Add. You do this once.</p>
+      </div></li>
+      <li class="main"><div>
+        <p><b>Press the button.</b> It opens Claude with the request already written. Press send, and approve when Claude asks to publish your player.</p>
+        <a class="go" id="go" href="https://claude.ai/new" target="_blank" rel="noopener">Set up Coursekit <span aria-hidden="true">→</span></a>
+        <p class="small">Claude publishes your private player, adds Python, checks it and gives you the link.</p>
+      </div></li>
+      <li><div>
+        <p><b>Start learning.</b> Open your player, press <b>New course</b> and say what you want: “Linear algebra for machine learning, 6 hours a week, exam on 12 March.”</p>
+      </div></li>
+    </ol>
+    <p class="small" style="color:var(--muted);margin:0">Needs a paid Claude plan. Everything stays in your Claude account: no other sign-up, no keys.</p>
+  </section>
+
+  <hr>
+  <section style="display:flex;flex-direction:column;gap:1.25rem">
+    <h2>What you get</h2>
+    <ul class="get">
+      <li><b>A plan sized to you</b><span>Weeks, projects with proof and timed checkpoints, built around your hours and your deadline.</span></li>
+      <li><b>Lessons that check you</b><span>Every lesson ends in practice the page marks, and recall cards that come back on a schedule.</span></li>
+      <li><b>Real code, really run</b><span>Python and JavaScript run in the page. Answers are tested, not eyeballed.</span></li>
+      <li><b>A tutor that sees your place</b><span>Ask in the lesson you are on. The tutor can also reshape the course when you ask.</span></li>
+      <li><b>Your own notes become a course</b><span>Add a PDF or notes and Claude teaches from them, in their order.</span></li>
+      <li><b>Same progress everywhere</b><span>Laptop and phone show the same courses and the same streak.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:.75rem">Questions</h2>
+    <details><summary>Can I learn Elixir, C, Rust or use my GPU?</summary><p>Yes. Those run on your own computer. On Mac and Windows, open your player in the Claude desktop app and press “Install as app” when a course asks. On Linux, or in Cowork and Claude Code, the plugin's runner does it and the course shows a Connect button. Code is sent only when you press Run.</p></details>
+    <details><summary>Who can see my courses?</summary><p>Only you. Your player is a private page in your account, and your courses and progress are stored with it.</p></details>
+    <details><summary>Can I share a course with a friend?</summary><p>Export it from your player as a file and send it. Your friend sets up their own Coursekit and imports the file. It becomes their copy.</p></details>
+    <details><summary>The button did not write anything in Claude</summary><p>Type this to Claude yourself: <b id="plain"></b></p></details>
+  </section>
+</main>
+<script>
+const PROMPT = "Set up Coursekit for me. Use the Coursekit plugin's setup skill: publish my private Coursekit player, add Python, check it and give me the link. If the Coursekit plugin is not installed, tell me to add it first: Customize, Plugins, Add marketplace, Bangreedy-2/course-kit.";
+document.getElementById("go").href = "https://claude.ai/new?q=" + encodeURIComponent(PROMPT);
+document.getElementById("plain").textContent = "Set up Coursekit for me.";
+document.getElementById("copy").addEventListener("click", e => {
+  const b = e.currentTarget, t = document.getElementById("repo").textContent;
+  const done = () => { b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy"; }, 1600); };
+  const select = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById("repo")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; };
+  try { navigator.clipboard.writeText(t).then(done, select); } catch (err) { select(); }
+});
+</script>

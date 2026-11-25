@@ -363,9 +363,28 @@ function checkLessonShape(o) {
      js      = JavaScript in a sandboxed frame,
      frame   = a runner the course brings: one HTML document (same rules as widgets) that runs code
                it receives by postMessage. This is how a course adds any other language (SQL, Lua, R in wasm...). */
-const ENGINES = ["pyodide", "js", "frame"];
-const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js" };
-const langOf = l => { const s = slug(l || "", 20); return LANG_ALIAS[s] || s; };
+const ENGINES = ["pyodide", "js", "frame", "local"];
+/* Languages the "local" engine can run on the learner's own computer, through the Coursekit runner.
+   {file} is the source file, {exe} a path for a compiled program. "win" overrides the command on Windows. */
+const LOCAL_LANGS = {
+  python: { label: "Python", ext: "py", cmd: "python3 {file}", win: "python {file}", probe: "python3 --version", winProbe: "python --version" },
+  js: { label: "JavaScript (Node)", ext: "js", cmd: "node {file}", probe: "node --version" },
+  elixir: { label: "Elixir", ext: "exs", cmd: "elixir {file}", probe: "elixir --version" },
+  c: { label: "C", ext: "c", cmd: "cc {file} -o {exe} -lm && {exe}", win: "gcc {file} -o {exe} && {exe}", probe: "cc --version", winProbe: "gcc --version" },
+  cpp: { label: "C++", ext: "cpp", cmd: "c++ -std=c++17 {file} -o {exe} && {exe}", win: "g++ -std=c++17 {file} -o {exe} && {exe}", probe: "c++ --version", winProbe: "g++ --version" },
+  rust: { label: "Rust", ext: "rs", cmd: "rustc -O {file} -o {exe} && {exe}", probe: "rustc --version" },
+  go: { label: "Go", ext: "go", cmd: "go run {file}", probe: "go version" },
+  java: { label: "Java", ext: "java", cmd: "java {file}", probe: "java -version" },
+  ruby: { label: "Ruby", ext: "rb", cmd: "ruby {file}", probe: "ruby --version" },
+  bash: { label: "Bash", ext: "sh", cmd: "bash {file}", probe: "bash --version" },
+  r: { label: "R", ext: "R", cmd: "Rscript {file}", probe: "Rscript --version" },
+  julia: { label: "Julia", ext: "jl", cmd: "julia {file}", probe: "julia --version" },
+  haskell: { label: "Haskell", ext: "hs", cmd: "runghc {file}", probe: "runghc --version" },
+  lua: { label: "Lua", ext: "lua", cmd: "lua {file}", probe: "lua -v" },
+  php: { label: "PHP", ext: "php", cmd: "php {file}", probe: "php --version" },
+};
+const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js", "c-plus-plus": "cpp", cxx: "cpp", golang: "go", sh: "bash", shell: "bash", rs: "rust", ex: "elixir", exs: "elixir", rb: "ruby", hs: "haskell" };
+const langOf = l => { const s = slug(String(l || "").replace(/\+\+/g, "pp"), 20); return LANG_ALIAS[s] || s; };
 function runtimeFor(runtimes, lang) { const l = langOf(lang); return runtimes && runtimes[l] ? Object.assign({ lang: l }, runtimes[l]) : null; }
 function normalizeRuntimes(v) {
   const out = {};
@@ -376,7 +395,8 @@ function normalizeRuntimes(v) {
     const r = r0 && typeof r0 === "object" ? r0 : {};
     const engine = str(r.engine || (lang === "python" ? "pyodide" : lang === "js" ? "js" : "")).toLowerCase();
     if (!ENGINES.includes(engine)) fail("runtime \"" + lang + "\" needs an engine: " + ENGINES.join(", ") + ".");
-    const o = { engine, label: str(r.label, 40).trim() || (lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
+    if (engine === "local" && !LOCAL_LANGS[lang]) fail("the local engine cannot run \"" + lang + "\". It runs: " + Object.keys(LOCAL_LANGS).join(", ") + ".");
+    const o = { engine, label: str(r.label, 40).trim() || (engine === "local" ? LOCAL_LANGS[lang].label : lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
     if (engine === "frame") o.html = checkWidgetHtml(r.html);
     if (r.packages && typeof r.packages === "object") { o.packages = {}; for (const [a, b] of Object.entries(r.packages).slice(0, 60)) o.packages[slug(a, 40).replace(/-/g, "_")] = str(b, 60).trim(); }
     if (r.apps) o.apps = true; // python: notebook cells tagged "app" run as Streamlit apps
@@ -695,7 +715,7 @@ function scoreCourse(stats, ref) {
 }
 const MODULES_DOC =
 `Course modules (all optional; add the ones the subject needs):
-- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. {"elixir":{"engine":"local"}} runs the language on the learner's own computer through the Coursekit runner (languages: ${Object.keys(LOCAL_LANGS).join(", ")}); use it only when the learner has the runner, and never for code the learner has not seen. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
 - files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
 - labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
 - tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
@@ -939,7 +959,7 @@ const api = {
   hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
-  ENGINES, MODULE_KEYS, normalizePages, lessonDepth, lessonIssues, growModules, courseStats, scoreCourse, REF_STATS, normalizeDrill, normalizeQuiz, AUTO_CHECKED, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  ENGINES, LOCAL_LANGS, MODULE_KEYS, normalizePages, lessonDepth, lessonIssues, growModules, courseStats, scoreCourse, REF_STATS, normalizeDrill, normalizeQuiz, AUTO_CHECKED, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
   normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
   normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };
