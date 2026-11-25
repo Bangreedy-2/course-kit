@@ -1,6 +1,4 @@
 /* Coursekit player: one page that holds every course as data. */
-(function () {
-"use strict";
 const { md, esc } = CKmd;
 
 /* ================= state ================= */
@@ -8,6 +6,7 @@ const S = {
   store: null, mode: "starting", uid: null, sample: null, downloads: null, assets: null, user: null, tools: false,
   courses: {}, stats: {}, cmds: [],
   cid: null, lessons: {}, progress: {}, unsubCourse: [], courseLoaded: false,
+  mods: {}, g: null, rtFor: null,
   chat: {}, writer: null, ask: { open: false, busy: false, ctl: null, attach: null, draft: "" },
   banner: [], view: null, katex: false,
 };
@@ -65,7 +64,17 @@ const sampleError = e => {
 const K = {
   course: c => "c~" + c, lesson: (c, l) => "l~" + c + "~" + l, prog: (c, l) => "p~" + c + "~" + l, stats: c => "s~" + c,
   chat: c => "h~" + c, rev: c => "v~" + c + "~" + now().toString(36), src: (c, n) => "src~" + c + "~" + n, log: d => "log~" + d,
+  mod: (c, part) => "x~" + c + "~" + part, pst: c => "g~" + c, nbw: (c, id) => "n~" + c + "~" + id,
 };
+/* Modules are stored one record per part: plan, drills, checkpoints, nb.<id> (one per notebook). */
+const modParts = mods => { const out = {}; for (const k of ["plan", "drills", "checkpoints"]) if (mods[k] != null) out[k] = mods[k]; for (const [id, n] of Object.entries(mods.notebooks || {})) out["nb." + id] = n; return out; };
+function modsFromDocs(docs) {
+  const m = { notebooks: {} };
+  for (const d of docs) { const b = d.body; if (!b || b.data == null) continue; if (b.part.startsWith("nb.")) m.notebooks[b.part.slice(3)] = b.data; else m[b.part] = b.data; }
+  return m;
+}
+/* The runtimes of the open course. */
+function RT() { const c = S.courses[S.cid]; if (!c) return CKRun.forCourse(null); if (!S.rtFor || S.rtFor.c !== c.runtimes || S.rtFor.f !== c.files) S.rtFor = { c: c.runtimes, f: c.files, rt: CKRun.forCourse(c) }; return S.rtFor.rt; }
 function put(key, body) { return S.store.put(key, body); }
 
 async function boot() {
@@ -103,9 +112,22 @@ function watchLibrary() {
 
 function openCourse(cid) {
   if (S.cid === cid) return;
+  if (S.gPending && S.cid) { clearTimeout(gTimer); flushG(S.cid); }
   S.unsubCourse.forEach(u => u()); S.unsubCourse = [];
   S.cid = cid; S.lessons = {}; S.progress = {}; S.courseLoaded = false; S.lessonsLoaded = false; S.progLoaded = false;
+  S.mods = { notebooks: {} }; S.g = null; S.modsLoaded = false; S.gLoaded = false; S.nbw = {};
   if (!cid) return;
+  S.unsubCourse.push(S.store.watch({ kind: "module", course: cid }, docs => {
+    const m = modsFromDocs(docs);
+    if (S.txn && S.txn.cid === cid) for (const k of S.txn.touched) if (k.startsWith("x~")) { const part = k.split("~")[2]; const v = modGet(part); if (v == null) continue; if (part.startsWith("nb.")) m.notebooks[part.slice(3)] = v; else m[part] = v; }
+    const sig = JSON.stringify(m); if (sig !== S.modsJson || !S.modsLoaded) { S.modsJson = sig; S.mods = m; S.modsRev = (S.modsRev || 0) + 1; }
+    S.modsLoaded = true; render();
+  }));
+  S.unsubCourse.push(S.store.watch({ kind: "pstate", course: cid }, docs => {
+    const b = docs[0] && docs[0].body;
+    if (S.gLoaded && (gDirty() || (b && b.updated === S.gSavedAt))) return; // our own write coming back, or ours is newer
+    S.g = normG(b, cid); S.gLoaded = true; S.gRev = (S.gRev || 0) + 1; render();
+  }));
   S.unsubCourse.push(S.store.watch({ kind: "lesson", course: cid }, docs => {
     const n = {}; for (const d of docs) n[d.body.id] = d.body;
     // Keep this page's own uncommitted edits.
@@ -124,7 +146,11 @@ function openCourse(cid) {
 /* ================= routing ================= */
 function parseRoute() {
   const p = (location.hash || "#/").slice(2).split("/").map(decodeURIComponent);
-  if (p[0] === "c" && p[1]) return { name: p[2] === "l" && p[3] ? "lesson" : p[2] === "review" ? "review" : p[2] === "history" ? "history" : "course", cid: p[1], lid: p[3] };
+  if (p[0] === "c" && p[1]) {
+    const v = { l: "lesson", d: "drill", x: "exam", q: "quiz", n: "notebook", t: "course" }[p[2]];
+    if (v && p[3]) return { name: v, cid: p[1], lid: v === "lesson" ? p[3] : undefined, id: p[3], tab: v === "course" ? p[3] : undefined };
+    return { name: p[2] === "review" ? "review" : p[2] === "history" ? "history" : "course", cid: p[1] };
+  }
   if (p[0] === "new") return { name: "new" };
   return { name: "library" };
 }
@@ -136,6 +162,7 @@ function onRoute() {
   S.view = null; render(true);
   window.scrollTo(0, 0);
   if (S.route.name === "lesson") logEvent("open", { c: S.route.cid, l: S.route.lid });
+  stopTimers();
 }
 
 /* ================= render ================= */
@@ -157,12 +184,16 @@ function doRender() {
   else if (r.name === "library") { key = "lib:" + libSig(); build = viewLibrary; }
   else if (r.name === "new") { key = "new"; build = viewNew; }
   else if (!course) { key = "nocourse:" + !!S.libLoaded; build = () => h("div", { class: "empty" }, S.libLoaded ? [h("h2", null, "This course is not in your library"), h("p", null, h("a", { href: "#/" }, "Back to your courses"))] : h("p", { class: "muted" }, "Loading…")); }
-  else if (r.name === "course") { key = "course:" + courseSig(course); build = () => viewCourse(course); }
+  else if (r.name === "course") { key = "course:" + courseSig(course) + ":" + (r.tab || "") + ":" + modSig(); build = () => viewCourse(course, r.tab); }
+  else if (r.name === "drill") { key = "drill:" + r.cid + ":" + r.id + ":" + modSig(); build = () => viewDrill(course, r.id); }
+  else if (r.name === "exam") { key = "exam:" + r.cid + ":" + r.id + ":" + modSig() + ":" + !!(S.g && S.g.examRun); build = () => viewExam(course, r.id); }
+  else if (r.name === "quiz") { key = "quiz:" + r.cid + ":" + r.id + ":" + S.modsLoaded; build = () => viewQuiz(course, +r.id); }
+  else if (r.name === "notebook") { key = "nb:" + r.cid + ":" + r.id + ":" + S.modsLoaded + ":" + S.gLoaded; build = () => viewNotebook(course, r.id); }
   else if (r.name === "lesson") { const l = S.lessons[r.lid]; key = "lesson:" + r.cid + ":" + r.lid + ":" + (l ? (l.updated || 0) + ":" + !!l.pending + ":" + !!l.rewrite : "none") + ":" + course.updated + ":" + writerSig(); build = () => viewLesson(course, r.lid); }
   else if (r.name === "review") { key = "review:" + r.cid + ":" + S.courseLoaded; build = () => viewReview(course); }
   else if (r.name === "history") { key = "history:" + r.cid + ":" + (S.revs ? S.revs.length : -1); build = () => viewHistory(course); }
   if (S.view !== key) {
-    S.view = key; rc(main, build());
+    S.view = key; rc(main, build()); main.className = "v-" + r.name;
     if (r.name === "lesson") refreshProgress();
   }
   if (S.ask.open) renderAskHead();
@@ -170,6 +201,7 @@ function doRender() {
 }
 const libSig = () => JSON.stringify([Object.values(S.courses).map(c => [c.id, c.updated, c.archivedAt]), Object.values(S.stats).map(s => [s.course, s.learned, s.updated]), S.libLoaded, S.slow, S.libError, S.showArchived]);
 const courseSig = c => [c.id, c.updated, S.courseLoaded, Object.values(S.lessons).map(l => l.id + (l.pending ? "p" : "") + (l.rewrite ? "r" : "") + (l.updated || 0)).join(","), Object.values(S.progress).map(p => p.lesson + (p.done ? "d" : "")).join(","), writerSig(), S.courseMenu].join("|");
+const modSig = () => [S.modsRev || 0, S.gRev || 0, !!S.modsLoaded, !!S.gLoaded].join(".");
 const writerSig = () => S.writer ? S.writer.cid + ":" + S.writer.current + ":" + S.writer.running : "";
 
 function renderStatus() {
@@ -386,6 +418,7 @@ async function saveImported(imp, opts) {
   delete meta.designNotes;
   S.courses[cid] = meta;
   for (const l of imp.lessons) await put(K.lesson(cid, l.id), Object.assign({}, l, { kind: "lesson", course: cid, updated: at }));
+  for (const [part, data] of Object.entries(modParts(imp.mods || {}))) await put(K.mod(cid, part), { kind: "module", course: cid, part, data, updated: at });
   if (opts.source) { const CH = 200000; for (let i = 0, n = 0; i < opts.source.length && n < 5; i += CH, n++) await put(K.src(cid, n), { kind: "source", course: cid, n, text: opts.source.slice(i, i + CH) }); }
   await put(K.course(cid), meta);
   render();
@@ -508,7 +541,7 @@ function dueCards(c) {
   return out;
 }
 
-function viewCourse(c) {
+function classicHome(c) {
   const ls = orderedLessons(c), total = ls.length;
   const learned = ls.filter(l => lessonStatus(l.id) === "learned").length;
   const nxt = S.courseLoaded ? nextLesson(c) : null; const due = S.courseLoaded ? dueCards(c).length : 0;
@@ -590,8 +623,9 @@ function viewLesson(c, lid) {
   const unit = c.units.find(u => u.lessons.includes(lid));
   const body = h("article", { class: "lesson", id: "lesson" },
     h("header", null,
-      h("p", { class: "eyebrow" }, unit ? unit.title : "", l.minutes ? " · " + l.minutes + " min" : ""),
+      h("p", { class: "eyebrow" }, [l.week ? unitWord(c) + " " + l.week : unit ? unit.title : "", l.track && c.tracks && c.tracks[l.track] ? c.tracks[l.track] : "", l.minutes ? l.minutes + " min" : ""].filter(Boolean).join(" · ")),
       h("h1", null, l.title), l.summary ? h("p", { class: "lede" }, l.summary) : null,
+      lessonDrillsNote(c, l),
       l.archived ? h("p", { class: "note" }, "This lesson is archived. It stays here with your progress but is hidden from the course.") : null));
   if (l.pending || (l.rewrite && !l.blocks?.length)) {
     const w = S.writer && S.writer.running;
@@ -666,23 +700,96 @@ function refreshProgress() {
 const blockState = {};
 
 /* ---------- blocks ---------- */
-function renderBlock(c, l, b) {
-  delete blockState[b.id];
-  const box = h("section", { class: "blk blk-" + b.t + (b.kind ? " co-" + b.kind : ""), id: "b-" + b.id, "data-block": b.id });
+/* ex (optional): {ans, key, num} renders the block as a checkpoint item: answers go to ans[key], nothing is revealed. */
+function renderBlock(c, l, b, ex) {
+  if (!ex) delete blockState[b.id];
+  const box = h("section", { class: "blk blk-" + b.t + (b.kind ? " co-" + b.kind : ""), id: ex ? null : "b-" + b.id, "data-block": b.id });
   const mark = h("span", { class: "pmark", "aria-hidden": "true" });
+  const saved = ex ? (ex.ans[ex.key] || null) : ((S.progress[l.id] || {}).b || {})[b.id] || null;
   const record = (ok, a) => {
+    if (ex) { ex.ans[ex.key] = { ok: !!ok, a: typeof a === "string" ? a.slice(0, 20000) : a }; saveG(); return; }
     const p = prog(l.id); const cur = p.b[b.id] || { n: 0 };
-    cur.n = (cur.n || 0) + 1; if (ok) cur.ok = true; if (a !== undefined) cur.a = typeof a === "string" ? a.slice(0, 2000) : a;
+    cur.n = (cur.n || 0) + 1; if (ok) cur.ok = true; if (a !== undefined) cur.a = typeof a === "string" ? a.slice(0, 20000) : a;
     p.b[b.id] = cur; logEvent("check", { c: S.cid, l: l.id, b: b.id, ok: !!ok }); updateLearned(l.id);
   };
+  const keep = a => { if (ex) { ex.ans[ex.key] = Object.assign(ex.ans[ex.key] || {}, { a }); saveGSoon(); return; } const p = prog(l.id); const cur = p.b[b.id] || { n: 0 }; cur.a = a; p.b[b.id] = cur; saveProg(l.id); };
   const feedback = h("div", { class: "fb", "aria-live": "polite" });
-  const showWhy = (ok, extra) => { rc(feedback, h("p", { class: ok ? "ok" : "bad" }, ok ? "Right." : "Not yet. Try again."), ok && b.why ? mdEl(b.why) : null, extra || null); };
+  const showWhy = (ok, extra) => { if (ex) { rc(feedback, h("p", { class: "muted" }, "Answer saved. It is marked when you submit.")); return; } rc(feedback, h("p", { class: ok ? "ok" : "bad" }, ok ? "Right." : "Not yet. Try again."), ok && b.why ? mdEl(b.why) : null, extra || null); };
+  if (ex) ap(box, h("p", { class: "qnum" }, ex.num));
   switch (b.t) {
     case "md": ap(box, mdEl(b.md)); break;
     case "callout": ap(box, b.title ? h("p", { class: "co-title" }, b.title) : null, mdEl(b.md)); break;
     case "code": {
       const pre = h("pre", { "data-lang": b.lang }, h("code", null, b.src));
-      ap(box, pre, h("div", { class: "row" }, b.caption ? h("p", { class: "muted small" }, b.caption) : null, h("button", { class: "link small", onclick: () => copy(b.src) }, "Copy")));
+      const runnable = b.run !== false && RT().has(b.lang);
+      const bar = h("div", { class: "row" }, b.caption ? h("p", { class: "muted small" }, b.caption) : null,
+        runnable ? h("button", { class: "btn small run-btn", onclick: () => { const cell = codeCell(b.src, b.lang, "lesson:" + l.id, { onClose: () => { cell.replaceWith(pre); bar.hidden = false; } }); pre.replaceWith(cell); bar.hidden = true; cell.querySelector("textarea").focus(); } }, "▶ Run this code") : null,
+        runnable ? h("span", { class: "muted small" }, "Runs in real " + RT().label(b.lang) + " here; snippets in this lesson share variables.") : null,
+        h("button", { class: "link small", onclick: () => copy(b.src) }, "Copy"));
+      ap(box, pre, bar);
+      break;
+    }
+    case "run": {
+      const ta = codeArea(saved && typeof saved.a === "string" ? saved.a : (b.starter || ""), b.lang);
+      ta.addEventListener("input", () => keep(ta.value));
+      const out = h("div", { class: "runout" });
+      const solBox = h("div");
+      const can = RT().has(b.lang);
+      const btns = h("div", { class: "row" },
+        h("button", { class: "btn small primary", disabled: !can, onclick: async e => {
+          const btn = e.currentTarget; btn.disabled = true; rc(out, statusLine("Running your code and the hidden tests…"));
+          const r = await RT().check(b.lang, ta.value, b.test, b.expect, { onStatus: t => rc(out, statusLine(t)) });
+          btn.disabled = false;
+          rc(out, runOutput({ out: r.own, error: r.err, imgs: r.imgs }, "(your code printed nothing)"));
+          if (ex) { record(r.pass, ta.value); ap(out, h("p", { class: "muted" }, r.pass ? "Tests pass. Answer saved." : "Tests do not pass yet. Answer saved.")); return; }
+          record(r.pass, ta.value);
+          if (r.pass) { rc(feedback, h("p", { class: "ok" }, "All tests pass."), b.why ? mdEl(b.why) : null); rc(solBox, modelCode(b.solution, b.lang, "Model answer")); }
+          else rc(feedback, h("p", { class: "bad" }, r.err ? (r.reachedTests ? "The tests raised an error." : "Your code raised an error.") : "The test output does not match."),
+            r.reachedTests && !r.err ? h("div", null, h("p", { class: "small" }, "Tests printed:"), h("pre", { class: "out" }, r.testOut || "(nothing)"), h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n"))) : null);
+        } }, "Run and check"),
+        h("button", { class: "btn small", disabled: !can, onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput(r, "(no output)")); } }, "Run only"),
+        ex ? null : h("button", { class: "btn small ghost", onclick: () => rc(solBox, modelCode(b.solution, b.lang, "Model answer"), h("p", { class: "muted small" }, "Close it, then type your own version. Rebuilding it teaches more than copying.")) }, "Show model answer"));
+      ap(box, h("p", { class: "co-title" }, "Write and run · " + RT().label(b.lang)), h("div", { class: "q" }, mdEl(b.q)), ta, can ? null : h("p", { class: "note" }, "This course has no " + b.lang + " runtime here, so the code cannot be checked."), btns, out, feedback, solBox);
+      if (!ex) blockState[b.id] = st => { if (st && typeof st.a === "string" && !ta.dataset.touched && ta.value !== st.a) { ta.value = st.a; fitArea(ta); } if (st && st.ok && !solBox.childElementCount) rc(solBox, modelCode(b.solution, b.lang, "Model answer")); box.classList.toggle("solved", !!(st && st.ok)); };
+      ta.addEventListener("input", () => { ta.dataset.touched = "1"; });
+      break;
+    }
+    case "predict": {
+      const multi = b.expect.length > 1;
+      const inp = multi ? h("textarea", { class: "code", rows: Math.min(10, b.expect.length + 1), "aria-label": "The exact output", spellcheck: "false" }) : h("input", { type: "text", "aria-label": "The exact output", autocomplete: "off", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") inp.value = saved.a;
+      let wrong = 0;
+      const check = () => {
+        const ok = CK.checkAnswer(b, inp.value); if (!ok) wrong++;
+        if (ex) { record(ok, inp.value); showWhy(ok); return; }
+        showWhy(ok, !ok && wrong >= 2 ? h("div", null, h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n")), b.why ? mdEl(b.why) : null, h("p", { class: "small muted" }, "Type it in to continue.")) : null);
+        record(ok, inp.value);
+      };
+      if (!multi) inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+      ap(box, h("p", { class: "co-title" }, "Predict the output"), h("div", { class: "q" }, mdEl(b.q)), h("div", { class: multi ? "" : "row" }, inp, h("button", { class: "btn small", onclick: check }, "Check")), feedback);
+      break;
+    }
+    case "output": {
+      const can = b.code && RT().has(b.lang);
+      const paste = h("textarea", { class: "code", rows: 6, placeholder: "Paste the output here", "aria-label": "The output", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") paste.value = saved.a;
+      paste.addEventListener("input", () => keep(paste.value));
+      const check = () => {
+        const v = paste.value; const n = v.split("\n").filter(x => x.trim()).length;
+        const miss = (b.expect || []).filter(e => !CK.normLine(v).toLowerCase().includes(CK.normLine(e).toLowerCase()));
+        const ok = CK.checkAnswer(b, v); record(ok, v);
+        if (ex) return showWhy(ok);
+        if (ok) rc(feedback, h("p", { class: "ok" }, "Output accepted."), b.why ? mdEl(b.why) : null);
+        else rc(feedback, h("p", { class: "bad" }, n < (b.min || 1) ? "Paste at least " + b.min + " lines of output." : "The output is missing: " + miss.join(", ")));
+      };
+      ap(box, h("p", { class: "co-title" }, "Run it" + (can ? "" : " on your computer")), h("div", { class: "q" }, mdEl(b.q)));
+      if (can) {
+        const ta = codeArea(b.code, b.lang); const out = h("div", { class: "runout" });
+        ap(box, h("p", { class: "muted small" }, "Runs here in real " + RT().label(b.lang) + ". Edit it if you like; the output is pasted and checked for you."), ta,
+          h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput({ imgs: r.imgs, error: r.error, out: "" }, null)); paste.value = (r.out || "").replace(/\s+$/, ""); keep(paste.value); if (!r.error) check(); } }, "Run here and check")), out,
+          h("p", { class: "muted small" }, "Or run it on your own machine and paste the output:"));
+      }
+      ap(box, paste, h("div", { class: "row" }, h("button", { class: "btn small", onclick: check }, "Check the output")), feedback);
       break;
     }
     case "math": { const d = h("div", { class: "math" }); d.innerHTML = mathHtml(b.tex, true); ap(box, d, b.caption ? h("p", { class: "muted small" }, b.caption) : null); break; }
@@ -699,7 +806,7 @@ function renderBlock(c, l, b) {
       const opts = order.map(i => h("button", { class: "opt", "aria-pressed": "false", onclick: e => {
         if (multi) { chosen.has(i) ? chosen.delete(i) : chosen.add(i); e.currentTarget.setAttribute("aria-pressed", String(chosen.has(i))); return; }
         opts.forEach(o => o.setAttribute("aria-pressed", "false")); e.currentTarget.setAttribute("aria-pressed", "true");
-        const ok = CK.checkAnswer(b, i); e.currentTarget.classList.add(ok ? "right" : "wrong"); showWhy(ok); record(ok, b.options[i]);
+        const ok = CK.checkAnswer(b, i); if (!ex) e.currentTarget.classList.add(ok ? "right" : "wrong"); showWhy(ok); record(ok, b.options[i]);
       } }, mdInline(b.options[i])));
       ap(box, h("div", { class: "q" }, mdEl(b.q)), h("div", { class: "opts" }, opts));
       if (multi) ap(box, h("p", { class: "muted small" }, "Choose every right option."), h("button", { class: "btn small", onclick: () => { const ok = CK.checkAnswer(b, [...chosen]); showWhy(ok); record(ok, [...chosen].map(i => b.options[i]).join(" | ")); } }, "Check"));
@@ -737,6 +844,7 @@ function renderBlock(c, l, b) {
       ap(box, h("div", { class: "q" }, mdEl(b.q)), ta, h("div", { class: "row" }, count, h("button", { class: "btn small", onclick: () => {
         const ok = CK.checkAnswer(b, ta.value);
         if (!ok) { rc(feedback, h("p", { class: "bad" }, "Write at least " + b.min + " words first.")); return; }
+        if (ex) { record(true, ta.value); showWhy(true); return; }
         rc(feedback, h("p", { class: "ok" }, "Saved. Compare with the model answer" + (S.sample ? ", or ask for feedback." : "."))); model.hidden = false; tutorBtn.hidden = !S.sample; record(true, ta.value);
       } }, "Submit"), tutorBtn), model, feedback);
       blockState[b.id] = st => { if (st && st.a && !ta.value) { ta.value = typeof st.a === "string" ? st.a : ""; upd(); } if (st && st.ok) { model.hidden = false; tutorBtn.hidden = !S.sample; if (st.fb && !feedback.childElementCount) rc(feedback, mdEl(st.fb)); } box.classList.toggle("solved", !!(st && st.ok)); };
@@ -746,11 +854,12 @@ function renderBlock(c, l, b) {
       const sol = h("details", { class: "model", hidden: true }, h("summary", null, "Solution"), b.lang ? h("pre", { "data-lang": b.lang }, h("code", null, b.solution)) : mdEl(b.solution));
       ap(box, h("p", { class: "co-title" }, "Task"), mdEl(b.q), b.starter ? h("pre", { "data-lang": b.lang || "" }, h("code", null, b.starter)) : null,
         h("div", { class: "row" }, b.starter ? h("button", { class: "link small", onclick: () => copy(b.starter) }, "Copy starter") : null,
-          h("button", { class: "btn small", onclick: () => { sol.hidden = false; record(true, "done"); } }, "I did it")), sol, feedback);
+          h("button", { class: "btn small", onclick: () => { if (!ex) sol.hidden = false; record(true, "done"); showWhy(true); } }, "I did it")), sol, feedback);
       blockState[b.id] = st => { if (st && st.ok) sol.hidden = false; box.classList.toggle("solved", !!(st && st.ok)); };
       break;
     }
   }
+  if (ex) { box.classList.add("practice", "exam-item"); return box; }
   if (CK.PRACTICE.includes(b.t) || (b.t === "widget" && b.graded)) {
     box.classList.add("practice"); box.prepend(mark);
     if (!blockState[b.id]) blockState[b.id] = st => {
@@ -762,6 +871,33 @@ function renderBlock(c, l, b) {
   }
   box.addEventListener("focusin", () => { S.focusBlock = { l: l.id, b: b.id }; });
   return box;
+}
+/* ---------- code editing and running ---------- */
+function fitArea(ta) { ta.style.height = "auto"; ta.style.height = Math.min(640, Math.max(70, ta.scrollHeight + 4)) + "px"; }
+function codeArea(value, lang) {
+  const ta = h("textarea", { class: "code", spellcheck: "false", autocapitalize: "off", autocomplete: "off", "aria-label": (lang || "Code") + " editor" });
+  ta.value = value || "";
+  ta.addEventListener("keydown", e => {
+    if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); const a = ta.selectionStart, z = ta.selectionEnd; ta.value = ta.value.slice(0, a) + "    " + ta.value.slice(z); ta.selectionStart = ta.selectionEnd = a + 4; ta.dispatchEvent(new Event("input")); }
+  });
+  ta.addEventListener("input", () => fitArea(ta)); setTimeout(() => fitArea(ta), 0);
+  return ta;
+}
+const statusLine = t => h("pre", { class: "out muted" }, t);
+function figures(imgs) { return (imgs || []).map(p => h("img", { class: "fig", alt: "Plot made by the code", src: "data:image/png;base64," + String(p).replace(/[^A-Za-z0-9+/=]/g, "") })); }
+function runOutput(r, empty) {
+  const txt = (r.out || "") + (r.value != null && r.value !== "" ? r.value : "");
+  const pre = txt || r.error ? h("pre", { class: "out" }, txt, r.error ? h("span", { class: "err" }, (txt ? "\n" : "") + r.error) : null) : empty ? h("pre", { class: "out muted" }, empty) : null;
+  return h("div", { class: "outwrap" }, pre, figures(r.imgs));
+}
+const modelCode = (src, lang, title) => h("details", { class: "model", open: true }, h("summary", null, title || "Model answer"), h("pre", { "data-lang": lang || "" }, h("code", null, src || "")));
+/* An editable, runnable cell (used for "Run this code" in lessons). */
+function codeCell(src, lang, ns, o) {
+  o = o || {};
+  const ta = codeArea(src, lang); const out = h("div", { class: "runout" });
+  const go = async () => { rc(out, statusLine("Running…")); const r = await RT().run(lang, ta.value, { ns, onStatus: t => rc(out, statusLine(t)), onOut: t => rc(out, h("pre", { class: "out" }, t)) }); rc(out, runOutput(r, "(no output)")); logEvent("run", { c: S.cid }); };
+  ta.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey || e.shiftKey)) { e.preventDefault(); go(); } });
+  return h("div", { class: "cell" }, ta, h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: go }, "Run"), o.onClose ? h("button", { class: "btn small ghost", onclick: o.onClose }, "Close") : null, h("span", { class: "muted small" }, "Ctrl/⌘ + Enter runs")), out);
 }
 const mdInline = s => { const sp = h("span"); sp.innerHTML = CKmd.inline(s, mathHtml); return sp; };
 function copy(text) { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast("Copied."), () => toast("Could not copy here. Select the text instead.")); }
@@ -851,6 +987,7 @@ async function undoRev(cid, r) {
   await withTxn(cid, "Undid: " + (r.body.label || "a change"), "you", async tx => {
     for (const [key, body] of Object.entries(before)) {
       tx.touchKey(key);
+      if (key.startsWith("x~")) { modSet(key.split("~")[2], body); if (body == null) tx.deleted.add(key); continue; }
       if (body == null) { if (key.startsWith("l~")) delete S.lessons[key.split("~")[2]]; tx.deleted.add(key); }
       else if (key.startsWith("c~")) S.courses[cid] = body;
       else if (key.startsWith("l~")) S.lessons[body.id] = body;
@@ -865,9 +1002,10 @@ async function withTxn(cid, label, by, fn) {
   const tx = S.txn = { cid, label, by, touched: new Set(), before: {}, deleted: new Set(), notes: [] };
   tx.touchKey = key => {
     if (tx.touched.has(key)) return; tx.touched.add(key);
-    const cur = key.startsWith("c~") ? S.courses[cid] : S.lessons[key.split("~")[2]];
-    tx.before[key] = cur ? CK.clone(cur) : null;
+    const cur = key.startsWith("c~") ? S.courses[cid] : key.startsWith("x~") ? modGet(key.split("~")[2]) : S.lessons[key.split("~")[2]];
+    tx.before[key] = cur != null ? CK.clone(cur) : null;
   };
+  tx.touchMod = part => tx.touchKey(K.mod(cid, part));
   tx.touchCourse = () => tx.touchKey(K.course(cid));
   tx.touchLesson = lid => tx.touchKey(K.lesson(cid, lid));
   try { return await fn(tx); }
@@ -879,6 +1017,7 @@ async function commitTxn(tx) {
   for (const key of tx.touched) {
     if (tx.deleted.has(key)) { await S.store.del(key); continue; }
     if (key.startsWith("c~")) { const m = S.courses[cid]; if (!m) continue; m.updated = at; delete m.designNotes; await put(key, m); }
+    else if (key.startsWith("x~")) { const part = key.split("~")[2]; const v = modGet(part); if (v == null) await S.store.del(key); else await put(key, { kind: "module", course: cid, part, data: v, updated: at }); }
     else { const lid = key.split("~")[2]; const l = S.lessons[lid]; if (!l) continue; l.updated = at; await put(key, l); }
   }
   let before = tx.before; if (JSON.stringify(before).length > 240000) before = Object.fromEntries(Object.entries(before).filter(([k]) => k.startsWith("c~")));
@@ -886,10 +1025,16 @@ async function commitTxn(tx) {
   logEvent("edit", { c: cid, label: String(tx.label).slice(0, 120), by: tx.by });
   S.view = null; render();
 }
+function modGet(part) { return part.startsWith("nb.") ? (S.mods.notebooks || {})[part.slice(3)] : S.mods[part]; }
+function modSet(part, v) {
+  if (part.startsWith("nb.")) { S.mods.notebooks = S.mods.notebooks || {}; if (v == null) delete S.mods.notebooks[part.slice(3)]; else S.mods.notebooks[part.slice(3)] = v; }
+  else if (v == null) delete S.mods[part]; else S.mods[part] = v;
+  S.modsJson = JSON.stringify(S.mods); S.modsRev = (S.modsRev || 0) + 1;
+}
 async function saveMeta(cid, fn, label) { return withTxn(cid, label, "you", async tx => { tx.touchCourse(); fn(S.courses[cid]); }); }
 
 async function deleteCourse(cid) {
-  const kinds = ["lesson", "progress", "rev", "source", "chat", "stats"];
+  const kinds = ["lesson", "progress", "rev", "source", "chat", "stats", "module", "pstate", "nbwork"];
   for (const kind of kinds) { const docs = await S.store.query({ kind, course: cid }).catch(() => []); for (const d of docs) await S.store.del(d.key); }
   await S.store.del(K.chat(cid)); await S.store.del(K.stats(cid)); await S.store.del(K.course(cid));
   delete S.courses[cid]; toast("Deleted."); go("#/");
@@ -911,7 +1056,7 @@ async function importFile(data, opts) {
 }
 async function exportCourseFile(cid) {
   const c = S.courses[cid]; if (cid !== S.cid) return;
-  const file = CK.exportCourse(c, orderedLessons(c, true).filter(l => !l.archived));
+  const file = CK.exportCourse(c, orderedLessons(c, true).filter(l => !l.archived), S.mods);
   const data = JSON.stringify(file, null, 1); const name = c.id + ".coursekit.json";
   if (S.downloads) { try { await S.downloads.save({ filename: name, data }); return; } catch (e) { if (e && e.code === "cancelled") return; } }
   const ta = h("textarea", { rows: 8, readonly: true }, data);
@@ -925,13 +1070,15 @@ function logEvent(e, data) {
   const d = today();
   if (!logBuf || logBuf.date !== d) { logBuf = { kind: "log", date: d, events: [], loaded: false }; S.store.get(K.log(d)).then(b => { if (b && Array.isArray(b.events) && logBuf.date === d) { logBuf.events = b.events.concat(logBuf.events).slice(-400); } logBuf.loaded = true; }).catch(() => { logBuf.loaded = true; }); }
   logBuf.events.push(Object.assign({ at: new Date().toISOString().slice(11, 19), e }, data));
+  const w = { check: 1, learned: 3, review: 1, run: 1, drill: 2, quiz: 2, exam: 5, nbrun: 1, nbcheck: 2, task: 1 }[e];
+  if (w && data && data.c && data.c === S.cid) bumpDay(w);
   if (logBuf.events.length > 400) logBuf.events.splice(0, logBuf.events.length - 400);
   clearTimeout(logTimer);
   logTimer = setTimeout(() => { if (logBuf && logBuf.loaded) put(K.log(logBuf.date), { kind: "log", date: logBuf.date, events: logBuf.events, updated: new Date().toISOString() }); }, 5000);
 }
 
 /* ================= Ask ================= */
-function toggleAsk() { S.ask.open ? closeAsk() : openAsk(); }
+function toggleAsk() { if (!S.ask.open && S.route && S.route.name === "exam" && S.g && S.g.examRun) { toast("Ask is off during a timed checkpoint. Submit it first."); return; } S.ask.open ? closeAsk() : openAsk(); }
 function openAsk() { S.ask.open = true; $("#ask").hidden = false; document.body.classList.add("asking"); renderAsk(); setTimeout(() => $("#ask-input") && $("#ask-input").focus(), 30); $("#top").dataset.sig = ""; render(); }
 function closeAsk() { S.ask.open = false; $("#ask").hidden = true; document.body.classList.remove("asking"); $("#top").dataset.sig = ""; render(); }
 const chatKey = () => S.route && S.route.cid && S.courses[S.route.cid] ? S.route.cid : "_lib";
@@ -1021,6 +1168,25 @@ async function sendAsk(text, opts) {
   if (c && pendingLessons(c.id).length && changes.length) startWriter(c.id);
 }
 
+/* What the learner is looking at outside lessons, for the tutor. */
+function viewContext(c) {
+  const r = S.route || {}; const g = S.g || {};
+  if (r.name === "drill") { const d = drillById(r.id); if (d) return "The learner is on the drill \"" + d.title + "\" (from memory; give hints, not the answer, unless they ask after trying):\n" + d.prompt + "\n\nTheir draft:\n" + String((g.drafts || {})["d:" + d.id] || "(empty)").slice(0, 6000) + "\n\nModel solution (for you): " + d.solution.slice(0, 4000); }
+  if (r.name === "notebook") { const T = nbOf(r.id); const nb = S.nbw && S.nbw[r.id]; if (T && nb) return "The learner is in the notebook \"" + T.title + "\". Checks: " + T.checks.map(x => x.label).join(" | ") + "\nTheir status: " + JSON.stringify((g.nb || {})[r.id] || null) + "\nCells:\n" + nb.cells.map((x, i) => "[" + i + " " + x.t + (x.tag ? " " + x.tag : "") + "]\n" + String(x.src).slice(0, 3000) + (x.out && x.out.err ? "\nERROR: " + String(x.out.err).slice(0, 1500) : x.out && x.out.text ? "\nOUTPUT: " + String(x.out.text).slice(-1200) : "")).join("\n").slice(0, 60000); }
+  if (r.name === "quiz") return "The learner is taking the self-check quiz of " + unitWord(c).toLowerCase() + " " + r.id + ". Do not give answers to it.";
+  if (r.name === "course" && planOf()) { const w = planOf().weeks[curWeek(c) - 1]; return "The learner is on the course dashboard (" + (r.tab || "home") + "). This " + unitWord(c).toLowerCase() + " (" + curWeek(c) + "): " + w.title + ". Tasks: " + w.tasks.map(t => t.title + " " + Math.round(taskProg(Object.assign({ week: w.n }, t)) * 100) + "%").join("; ") + "."; }
+  return "The learner is on the course's home page.";
+}
+function modulesSummary(c) {
+  const out = [];
+  if (c.runtimes && Object.keys(c.runtimes).length) out.push("Runtimes: " + Object.entries(c.runtimes).map(([k, r]) => k + " (" + r.engine + ")").join(", ") + ". You can run code with run_code to check something before you say it.");
+  if (c.files && c.files.length) out.push("Data files: " + c.files.map(f => f.name).join(", "));
+  const p = planOf(); if (p && S.gLoaded) out.push("Plan: " + p.weeks.length + " " + unitWord(c).toLowerCase() + "s; now " + unitWord(c).toLowerCase() + " " + curWeek(c) + "; core work " + Math.round(overall() * 100) + "% done; streak " + streak() + " days.");
+  if (drillsOf().length && S.gLoaded) out.push("Drills: " + drillsOf().length + " (" + dueDrills().length + " due). Ids: " + drillsOf().map(d => d.id).join(", ").slice(0, 3000));
+  if (cpsOf().length && S.gLoaded) out.push("Checkpoints: " + cpsOf().map(x => x.id + " " + x.title + " best " + ((G().exams[x.id] || {}).best ?? "none")).join("; "));
+  const nbs = Object.keys(S.mods.notebooks || {}); if (nbs.length) out.push("Notebooks: " + nbs.join(", "));
+  return out.length ? "Course modules (read them with read_module, change them with write_module):\n" + out.join("\n") : "This course has no plan, drills, checkpoints or notebooks yet; add them with write_module when the subject needs them.";
+}
 function buildAskInput(c, history, userTurn, attach) {
   let ctx;
   if (c) {
@@ -1031,11 +1197,12 @@ function buildAskInput(c, history, userTurn, attach) {
       (S.tools ? "You can also change the course with the tools. Change it when the learner asks for a change or when their request clearly needs one (add a lesson, more practice, a widget, a new design, a different order). Make the change fully, then say in one or two sentences what you changed. For many lessons at once, use rewrite_lessons or add_lesson without blocks: they are written in the background. Never change the course for a plain question." : "You cannot change the course in this view; if the learner asks for a change, say that this view cannot change it."),
       "Give hints before answers for practice the learner has not solved yet; give the answer when they ask for it after trying. Reply in Markdown, concise, in the course's language (" + c.language + ").",
       CK.DESIGN_RULES,
-      S.tools ? CK.BLOCK_DOC + "\n\n" + CK.DESIGN_DOC : "",
+      S.tools ? CK.BLOCK_DOC + "\n\n" + CK.MODULES_DOC + "\n\n" + CK.DESIGN_DOC : "",
       "Course description: " + (c.description || "") + (c.origin && c.origin.about ? "\nAbout the learner: " + c.origin.about : ""),
       "Course outline (lesson ids in brackets):\n" + outlineText(c, l && l.id),
       "Progress: " + progressSummary(c),
-      l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : "The learner is on the course's home page.",
+      l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : viewContext(c),
+      modulesSummary(c),
     ];
   } else {
     const list = Object.values(S.courses).filter(x => !x.archivedAt).map(x => "- " + x.title + " [" + x.id + "]: " + (S.stats[x.id]?.learned || 0) + " learned of " + x.units.reduce((n, u) => n + u.lessons.length, 0));
@@ -1081,12 +1248,12 @@ function courseTools(c, tx, changes) {
       for (const l of Object.values(S.lessons)) for (const b of l.blocks || []) { const t = JSON.stringify(b).toLowerCase(); if (q.every(w => t.includes(w))) hits.push({ lesson: l.id, block: b.id, t: b.t, text: (b.q || b.md || b.title || "").slice(0, 160) }); if (hits.length > 30) break; }
       return hits;
     }),
-    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona} and/or design (any part of the design object). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" } }, [], i => {
+    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
       tx.touchCourse(); const m = meta();
       const design = i.design ? Object.assign({}, i.design, { palette: Object.assign({}, m.design.palette, i.design.palette || {}), fonts: Object.assign({}, m.design.fonts, i.design.fonts || {}) }) : undefined;
-      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design }, m);
+      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
       Object.assign(m, next); const notes = m.designNotes || []; delete m.designNotes;
-      changes.push(i.design ? "design" : "course details");
+      changes.push(i.design ? "design" : i.runtimes || i.files || i.labels || i.tracks || i.schedule ? "course settings" : "course details");
       return notes.length ? "Saved. The rules adjusted: " + notes.join("; ") : "Saved.";
     }),
     T("upsert_unit", "Creates a unit (omit unit) or changes one (give unit id). position is the 0-based place among units.", { unit: { type: "string" }, title: { type: "string" }, goal: { type: "string" }, position: { type: "number" } }, [], i => {
@@ -1096,11 +1263,11 @@ function courseTools(c, tx, changes) {
       if (i.position != null) { m.units.splice(m.units.indexOf(u), 1); m.units.splice(CK.clamp(Math.round(Number(i.position)), 0, m.units.length), 0, u); }
       changes.push("unit " + u.title); return { unit: u.id };
     }),
-    T("add_lesson", "Adds a lesson to a unit, after the lesson id in 'after' (or at the unit's end). With blocks, it is saved now and checked against the rules; without blocks it is written in the background from title and summary.", { unit: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, after: { type: "string" }, blocks: blocksSchema }, ["unit", "title"], i => {
+    T("add_lesson", "Adds a lesson to a unit, after the lesson id in 'after' (or at the unit's end). With blocks, it is saved now and checked against the rules; without blocks it is written in the background from title and summary.", { unit: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, track: { type: "string" }, week: { type: "number" }, after: { type: "string" }, blocks: blocksSchema }, ["unit", "title"], i => {
       const u = U(i.unit); const m = meta();
       const total = m.units.reduce((n, x) => n + x.lessons.length, 0); if (total >= CK.LIMITS.lessons) throw new Error("A course holds at most " + CK.LIMITS.lessons + " lessons.");
       const hasBlocks = Array.isArray(i.blocks) && i.blocks.length;
-      const norm = CK.normalizeLesson({ title: i.title, summary: i.summary, minutes: i.minutes, blocks: hasBlocks ? i.blocks : [], pending: !hasBlocks }, { widgets: m.widgets });
+      const norm = CK.normalizeLesson({ title: i.title, summary: i.summary, minutes: i.minutes, track: i.track, week: i.week, blocks: hasBlocks ? i.blocks : [], pending: !hasBlocks }, { widgets: m.widgets, runtimes: m.runtimes || {} });
       const taken = new Set(Object.keys(S.lessons)); m.units.forEach(x => x.lessons.forEach(id => taken.add(id)));
       const id = CK.uniqueId(CK.slug(i.title, 40), taken);
       tx.touchCourse(); tx.touchLesson(id);
@@ -1110,8 +1277,9 @@ function courseTools(c, tx, changes) {
       changes.push("new lesson " + norm.title);
       return { lesson: id, written: !!hasBlocks };
     }),
-    T("update_lesson", "Changes a lesson's title, summary, minutes, and/or replaces all its blocks. To keep a block, include it with its id. Removing blocks the learner already answered needs drop_worked: true.", { lesson: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, blocks: blocksSchema, drop_worked: { type: "boolean" } }, ["lesson"], i => {
+    T("update_lesson", "Changes a lesson's title, summary, minutes, track, week, sub (eyebrow line), and/or replaces all its blocks (to keep a block, include it with its id; removing blocks the learner answered needs drop_worked: true). archived: true hides the lesson and keeps its progress; false restores it.", { lesson: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, track: { type: "string" }, week: { type: "number" }, sub: { type: "string" }, archived: { type: "boolean" }, blocks: blocksSchema, drop_worked: { type: "boolean" } }, ["lesson"], i => {
       const l = L(i.lesson); const m = meta();
+      if (i.archived != null && Object.keys(i).filter(k => k !== "lesson" && k !== "archived").length === 0) { tx.touchLesson(l.id); if (i.archived) l.archived = new Date().toISOString(); else delete l.archived; changes.push((i.archived ? "archived " : "restored ") + l.title); return "Done."; }
       const oldIds = new Set((l.blocks || []).map(b => b.id));
       let blocks = l.blocks;
       if (Array.isArray(i.blocks)) {
@@ -1120,16 +1288,17 @@ function courseTools(c, tx, changes) {
         const lost = [...oldIds].filter(id => !kept.has(id) && worked(l.id, id));
         if (lost.length && !i.drop_worked) throw new Error("The learner has answered blocks " + lost.join(", ") + ". Keep them (include them with their ids) or pass drop_worked: true if the learner asked to remove them.");
       }
-      const norm = CK.normalizeLesson({ title: i.title || l.title, summary: i.summary != null ? i.summary : l.summary, minutes: i.minutes || l.minutes, blocks }, { widgets: m.widgets, keepId: true });
+      const norm = CK.normalizeLesson({ title: i.title || l.title, summary: i.summary != null ? i.summary : l.summary, minutes: i.minutes || l.minutes, track: i.track != null ? i.track : l.track, week: i.week || l.week, sub: i.sub != null ? i.sub : l.sub, blocks }, { widgets: m.widgets, keepId: true, runtimes: m.runtimes || {} });
       norm.blocks.forEach((b, k) => { b.id = blocks[k].id; });
       tx.touchLesson(l.id);
       Object.assign(l, norm); delete l.pending; delete l.rewrite;
+      if (i.archived === true) l.archived = new Date().toISOString(); else if (i.archived === false) delete l.archived;
       changes.push("lesson " + l.title); return "Saved.";
     }),
     T("insert_blocks", "Inserts blocks into a lesson after block id 'after' ('start' for the top; omitted = end). Returns the new block ids.", { lesson: { type: "string" }, after: { type: "string" }, blocks: blocksSchema }, ["lesson", "blocks"], i => {
       const l = L(i.lesson); const m = meta();
       if (l.pending) throw new Error("This lesson is not written yet; use update_lesson with all its blocks, or rewrite_lessons.");
-      const nb = (Array.isArray(i.blocks) ? i.blocks : []).map((b, k) => { try { return CK.normalizeBlock(b, { widgets: m.widgets }); } catch (e) { throw new Error("block " + (k + 1) + ": " + e.message); } });
+      const nb = (Array.isArray(i.blocks) ? i.blocks : []).map((b, k) => { try { return CK.normalizeBlock(b, { widgets: m.widgets, runtimes: m.runtimes || {} }); } catch (e) { throw new Error("block " + (k + 1) + ": " + e.message); } });
       if (!nb.length) throw new Error("No blocks given.");
       const blocks = l.blocks.slice(); const at = i.after === "start" ? 0 : i.after ? blocks.findIndex(b => b.id === String(i.after)) + 1 : blocks.length;
       if (i.after && i.after !== "start" && at === 0) throw new Error("No block " + i.after + " in this lesson.");
@@ -1138,30 +1307,26 @@ function courseTools(c, tx, changes) {
       tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push(nb.length + " block" + (nb.length > 1 ? "s" : "") + " in " + l.title);
       return { added: nb.map(b => b.id) };
     }),
-    T("update_block", "Changes fields of one block (give only the fields to change; 't' may change too). The block keeps its id.", { lesson: { type: "string" }, block: { type: "string" }, fields: { type: "object" } }, ["lesson", "block", "fields"], i => {
+    T("update_block", "Changes fields of one block (give only the fields to change; 't' may change too); the block keeps its id. With remove: true it removes the block instead (blocks the learner answered also need force: true, only when the learner asked).", { lesson: { type: "string" }, block: { type: "string" }, fields: { type: "object" }, remove: { type: "boolean" }, force: { type: "boolean" } }, ["lesson", "block"], i => {
       const l = L(i.lesson); const m = meta(); const k = l.blocks.findIndex(b => b.id === String(i.block)); if (k < 0) throw new Error("No block " + i.block + " in this lesson.");
+      if (i.remove) {
+        if (worked(l.id, l.blocks[k].id) && !i.force) throw new Error("The learner has answered this block. Keep it, or pass force: true if they asked to remove it.");
+        const blocks = l.blocks.filter((_, j) => j !== k); const ids = blocks.map(b => b.id);
+        const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: m.widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
+        tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("removed a block in " + l.title); return "Removed.";
+      }
+      if (!i.fields) throw new Error("Give fields to change, or remove: true.");
       const merged = Object.assign({}, l.blocks[k], i.fields || {});
-      const nb = CK.normalizeBlock(merged, { widgets: m.widgets }); nb.id = l.blocks[k].id;
+      const nb = CK.normalizeBlock(merged, { widgets: m.widgets, runtimes: m.runtimes || {} }); nb.id = l.blocks[k].id;
       const blocks = l.blocks.slice(); blocks[k] = nb; const ids = blocks.map(b => b.id);
       const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: m.widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
       tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("a block in " + l.title); return "Saved.";
-    }),
-    T("remove_block", "Removes one block from a lesson. Blocks the learner already answered need force: true (only when the learner asked).", { lesson: { type: "string" }, block: { type: "string" }, force: { type: "boolean" } }, ["lesson", "block"], i => {
-      const l = L(i.lesson); const k = l.blocks.findIndex(b => b.id === String(i.block)); if (k < 0) throw new Error("No block " + i.block + ".");
-      if (worked(l.id, l.blocks[k].id) && !i.force) throw new Error("The learner has answered this block. Keep it, or pass force: true if they asked to remove it.");
-      const blocks = l.blocks.filter((_, j) => j !== k); const ids = blocks.map(b => b.id);
-      const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: meta().widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
-      tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("removed a block in " + l.title); return "Removed.";
     }),
     T("move_lesson", "Moves a lesson to a unit, after lesson id 'after' (omitted = the unit's start).", { lesson: { type: "string" }, unit: { type: "string" }, after: { type: "string" } }, ["lesson", "unit"], i => {
       const l = L(i.lesson); const u = U(i.unit); tx.touchCourse(); tx.touchLesson(l.id);
       for (const x of meta().units) x.lessons = x.lessons.filter(id => id !== l.id);
       const at = i.after ? u.lessons.indexOf(String(i.after)) + 1 : 0; u.lessons.splice(Math.max(0, at), 0, l.id); l.unit = u.id;
       changes.push("moved " + l.title); return "Moved.";
-    }),
-    T("archive_lesson", "Archives a lesson (hidden, progress kept) or restores it with restore: true.", { lesson: { type: "string" }, restore: { type: "boolean" } }, ["lesson"], i => {
-      const l = L(i.lesson); tx.touchLesson(l.id); if (i.restore) delete l.archived; else l.archived = new Date().toISOString();
-      changes.push((i.restore ? "restored " : "archived ") + l.title); return "Done.";
     }),
     T("set_widget", "Adds or replaces a reusable widget in the course's widget library. Use {\"t\":\"widget\",\"widget\":id} blocks to place it. Returns its id.", { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, height: { type: "number" } }, ["title", "html"], i => {
       const m = meta(); m.widgets = m.widgets || {};
@@ -1176,6 +1341,27 @@ function courseTools(c, tx, changes) {
       for (const id of ids) { const l = L(id); tx.touchLesson(id); l.rewrite = String(i.instruction).slice(0, 1500); }
       changes.push(ids.length + " lesson" + (ids.length > 1 ? "s" : "") + " queued for rewriting"); return "Queued " + ids.length + ". They are written after this reply.";
     }),
+    T("read_module", "Returns one course module as JSON: plan, drills, checkpoints, or nb.<id> for a notebook (\"notebooks\" lists notebook ids).", { part: { type: "string" } }, ["part"], i => {
+      const part = String(i.part); if (part === "notebooks") return Object.keys(S.mods.notebooks || {});
+      const v = modGet(part); return v == null ? "This course has no " + part + " yet." : JSON.stringify(v).slice(0, 120000);
+    }),
+    T("write_module", "Replaces one course module (plan, drills, checkpoints, or nb.<id>) with data in the module format; data null removes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, data: {} }, ["part"], i => {
+      const part = String(i.part || "");
+      if (!/^(plan|drills|checkpoints|nb\.[a-z0-9-]{1,40})$/.test(part)) throw new Error("part must be plan, drills, checkpoints or nb.<id>.");
+      let v = i.data;
+      if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { throw new Error("data must be JSON."); } }
+      if (v != null) v = part === "plan" ? CK.normalizePlan(v) : part === "drills" ? CK.normalizeDrills(v) : part === "checkpoints" ? CK.normalizeCheckpoints(v) : CK.normalizeNotebook(part.slice(3), v);
+      const next = Object.assign({}, S.mods, { notebooks: Object.assign({}, S.mods.notebooks) });
+      if (part.startsWith("nb.")) { if (v == null) delete next.notebooks[part.slice(3)]; else next.notebooks[part.slice(3)] = v; } else if (v == null) delete next[part]; else next[part] = v;
+      const probs = CK.checkModuleRefs(next, S.lessons); if (probs.length) throw new Error("Not saved: " + probs.slice(0, 8).join("; ") + ".");
+      tx.touchMod(part); modSet(part, v); changes.push(part.startsWith("nb.") ? "notebook " + part.slice(3) : part);
+      return "Saved.";
+    }),
+    T("run_code", "Runs code in one of the course's runtimes in a fresh namespace and returns its output (and errors). Use it to check an example, a solution or a test before you give or save it.", { lang: { type: "string" }, code: { type: "string" } }, ["lang", "code"], async i => {
+      if (!RT().has(i.lang)) throw new Error("This course has no runtime for " + i.lang + ".");
+      const r = await RT().run(i.lang, String(i.code), { limitMs: 60000 });
+      return { ok: r.ok, output: String(r.out || "").slice(-8000), value: r.value, error: r.error, figures: (r.imgs || []).length };
+    }),
     T("open_lesson", "Shows a lesson to the learner (navigates the page).", { lesson: { type: "string" } }, ["lesson"], i => { const l = L(i.lesson); setTimeout(() => go("#/c/" + cid + "/l/" + l.id), 50); return "opened"; }),
   ];
 }
@@ -1185,5 +1371,4 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && S.ask.open
 window.__ck = S; // for debugging in the browser console
 window.__ckKatex = () => { if (S.route && S.route.name === "lesson") { S.view = null; render(); } };
 if (window.katex) S.katex = true;
-boot();
-})();
+

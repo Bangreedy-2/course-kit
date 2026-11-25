@@ -46,12 +46,29 @@
     "goal": "Spell triads of every quality, use Roman numerals, and recognise the four cadences. Pass the final checkpoint."
    }
   ],
-  "widgets": {}
+  "widgets": {},
+  "labels": {
+   "unit": "Week",
+   "projects": "Projects",
+   "project": "Project",
+   "projectsIntro": "Apply what you learned to real music you like. Each counts as done when its written answers are in."
+  },
+  "tracks": {
+   "read": "Reading music",
+   "rhythm": "Rhythm",
+   "harmony": "Scales and harmony"
+  },
+  "schedule": {
+   "unitDays": 7
+  }
  },
  "lessons": [
   {
    "id": "pitch",
    "unit": "w1",
+   "week": 1,
+   "track": "read",
+   "sub": "About 20 min reading · No instrument needed, but a piano app helps",
    "title": "Pitch, note names and the staff",
    "summary": "No instrument needed, but a piano app helps",
    "minutes": 20,
@@ -179,22 +196,15 @@
       }
      ],
      "id": "b0tgwroi0d"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: Both clefs from memory. Without looking, write the notes on the **lines** and in the **spaces** of the treble clef and the bass clef, bottom to top. Then name the two pairs of neighbouring white keys that are a half step apart.",
-       "a": "Treble lines: E G B D F\nTreble spaces: F A C E\nBass lines: G B D F A\nBass spaces: A C E G\nHalf-step pairs: E–F and B–C"
-      }
-     ],
-     "id": "b0s2yr7n0e"
     }
    ]
   },
   {
    "id": "rhythm",
    "unit": "w1",
+   "week": 1,
+   "track": "rhythm",
+   "sub": "About 25 min reading · Clap along to check yourself",
    "title": "Note values, rests and time signatures",
    "summary": "Clap along to check yourself",
    "minutes": 25,
@@ -339,74 +349,15 @@
       }
      ],
      "id": "b0ksdcsp0g"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: Counting beats. In quarter-note beats, write the length of: a whole note, a half note, a dotted half note, a dotted quarter note, an eighth note, and a sixteenth note. Then write how many beats per bar, and which note gets the beat, in 3/4 and in 6/8.",
-       "a": "Whole 4, half 2, dotted half 3, dotted quarter 1.5, eighth 0.5, sixteenth 0.25.\n3/4: three beats, each a quarter note.\n6/8: two beats, each a dotted quarter (three eighths)."
-      }
-     ],
-     "id": "b0kidr3q0h"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: Which white-key pairs are a half step apart?",
-     "options": [
-      "C–D and F–G",
-      "E–F and B–C",
-      "D–E and A–B",
-      "G–A and C–D"
-     ],
-     "answer": 1,
-     "why": "There is no black key between E and F or between B and C.",
-     "id": "b0nk9dqf0i"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: The bottom line of the treble clef is:",
-     "options": [
-      "G",
-      "F",
-      "E",
-      "C"
-     ],
-     "answer": 2,
-     "why": "Treble lines are E G B D F.",
-     "id": "b0na9s1g0j"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: A dotted quarter note lasts:",
-     "options": [
-      "1 beat",
-      "1.5 beats",
-      "2 beats",
-      "0.75 beats"
-     ],
-     "answer": 1,
-     "why": "1 + half of 1 = 1.5 quarter-note beats.",
-     "id": "b1oqggl00k"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: 6/8 time is:",
-     "options": [
-      "Simple triple",
-      "Compound duple",
-      "Simple duple",
-      "Compound triple"
-     ],
-     "answer": 1,
-     "why": "Two beats, each a dotted quarter split into three.",
-     "id": "b1p0g29z0l"
     }
    ]
   },
   {
    "id": "scales",
    "unit": "w2",
+   "week": 2,
+   "track": "harmony",
+   "sub": "About 25 min reading · Uses half and whole steps from lesson 1",
    "title": "Major scales and key signatures",
    "summary": "Uses half and whole steps from lesson 1",
    "minutes": 25,
@@ -550,22 +501,15 @@
       }
      ],
      "id": "b0qjox1p0f"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: Major scales and signatures. From memory: write the order of sharps and the order of flats. Then spell the major scales of **A**, **E♭** and **B**, and give how many sharps or flats each has.",
-       "a": "Order of sharps: F C G D A E B. Order of flats: B E A D G C F.\nA major: A B C♯ D E F♯ G♯ (3 sharps).\nE♭ major: E♭ F G A♭ B♭ C D (3 flats).\nB major: B C♯ D♯ E F♯ G♯ A♯ (5 sharps)."
-      }
-     ],
-     "id": "b0ppq3ys0g"
     }
    ]
   },
   {
    "id": "intervals",
    "unit": "w2",
+   "week": 2,
+   "track": "harmony",
+   "sub": "About 25 min reading · Uses the major scale from lesson 3",
    "title": "Intervals: number and quality",
    "summary": "Uses the major scale from lesson 3",
    "minutes": 25,
@@ -722,74 +666,15 @@
       }
      ],
      "id": "b1phrnux0g"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: Intervals by half steps. Write the half-step count of each interval: m2, M2, m3, M3, P4, tritone, P5, m6, M6, m7, M7, P8. Then name these intervals: C–A♭, D–F♯, G–F.",
-       "a": "m2 1, M2 2, m3 3, M3 4, P4 5, tritone 6, P5 7, m6 8, M6 9, m7 10, M7 11, P8 12.\nC–A♭: minor sixth. D–F♯: major third. G–F: minor seventh."
-      }
-     ],
-     "id": "b1p7s25y0h"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: What is the major scale pattern?",
-     "options": [
-      "W H W W H W W",
-      "W W H W W W H",
-      "W W W H W W H",
-      "H W W W W H W"
-     ],
-     "answer": 1,
-     "why": "Half steps fall between degrees 3–4 and 7–8.",
-     "id": "b1s9nosn0i"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: Two sharps in a key signature are:",
-     "options": [
-      "F♯ and G♯",
-      "B♭ and E♭",
-      "F♯ and C♯",
-      "C♯ and G♯"
-     ],
-     "answer": 2,
-     "why": "Sharps always come in the order F C G D A E B, so two sharps are F♯ and C♯: the key of D major.",
-     "id": "b1rzo33o0j"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: C up to E♭ is a:",
-     "options": [
-      "major third",
-      "minor third",
-      "augmented second",
-      "diminished third"
-     ],
-     "answer": 1,
-     "why": "Three letters (a third), a half step smaller than C–E, so minor.",
-     "id": "b0ueqpo40k"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: How many half steps in a perfect fourth?",
-     "options": [
-      "4",
-      "5",
-      "6",
-      "7"
-     ],
-     "answer": 1,
-     "why": "C–F is 5 half steps.",
-     "id": "b0uoqbd30l"
     }
    ]
   },
   {
    "id": "chords",
    "unit": "w3",
+   "week": 3,
+   "track": "harmony",
+   "sub": "About 25 min reading · Uses thirds and fifths from lesson 4",
    "title": "Triads and the chords of a key",
    "summary": "Uses thirds and fifths from lesson 4",
    "minutes": 25,
@@ -935,22 +820,15 @@
       }
      ],
      "id": "b0wdb3890f"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: The triads of a key. Write the Roman-numeral pattern of the triads in a major key. Then spell all seven triads of **G major** with their chord symbols.",
-       "a": "I ii iii IV V vi vii°.\nG major: G (G B D), Am (A C E), Bm (B D F♯), C (C E G), D (D F♯ A), Em (E G B), F♯° (F♯ A C)."
-      }
-     ],
-     "id": "b0vjca5c0g"
     }
    ]
   },
   {
    "id": "progressions",
    "unit": "w3",
+   "week": 3,
+   "track": "harmony",
+   "sub": "About 25 min reading · Listen for these in songs you know",
    "title": "Chord progressions and cadences",
    "summary": "Listen for these in songs you know",
    "minutes": 25,
@@ -1093,69 +971,617 @@
       }
      ],
      "id": "b0f2rtir0e"
-    },
-    {
-     "t": "cards",
-     "cards": [
-      {
-       "q": "From memory: Cadences and progressions. Name the four cadences with their chords. Then write I–IV–V–I and I–V–vi–IV in **D major** as chord symbols.",
-       "a": "Authentic V–I, plagal IV–I, half (any chord)–V, deceptive V–vi.\nD major I–IV–V–I: D G A D. I–V–vi–IV: D A Bm G."
-      }
-     ],
-     "id": "b0ess7ts0f"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: A minor triad is built from:",
-     "options": [
-      "M3 + m3",
-      "m3 + M3",
-      "m3 + m3",
-      "M3 + M3"
-     ],
-     "answer": 1,
-     "why": "Minor third at the bottom, major third on top; the outer interval is a perfect fifth.",
-     "id": "b0fmr0wp0g"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: In a major key, ii is:",
-     "options": [
-      "major",
-      "minor",
-      "diminished",
-      "augmented"
-     ],
-     "answer": 1,
-     "why": "I ii iii IV V vi vii°: lower case is minor.",
-     "id": "b0fcrf7q0h"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: V → vi is a:",
-     "options": [
-      "authentic cadence",
-      "plagal cadence",
-      "half cadence",
-      "deceptive cadence"
-     ],
-     "answer": 3,
-     "why": "The ear expects I and hears vi instead.",
-     "id": "b0ien1uf0i"
-    },
-    {
-     "t": "choice",
-     "q": "Week check: I–IV–V–I in A major is:",
-     "options": [
-      "A–D–E–A",
-      "A–C♯–E–A",
-      "A–B–C♯–A",
-      "A–E–D–A"
-     ],
-     "answer": 0,
-     "why": "A major: degree 4 is D and degree 5 is E.",
-     "id": "b0i4ng5g0j"
     }
+   ]
+  }
+ ],
+ "plan": {
+  "phases": [
+   {
+    "id": "p1",
+    "title": "Phase 1 · Reading music",
+    "goal": "Name notes on both clefs and count rhythms in simple and compound time.",
+    "weeks": [
+     1
+    ]
+   },
+   {
+    "id": "p2",
+    "title": "Phase 2 · Harmony",
+    "goal": "Build major scales, name intervals, spell the chords of a key and recognise cadences. Pass the final checkpoint with 70% or more.",
+    "weeks": [
+     2,
+     3
+    ]
+   }
+  ],
+  "weeks": [
+   {
+    "title": "Notes and rhythm",
+    "goal": "Read notes in treble and bass clef, use sharps and flats, and count note values in 2/4, 3/4, 4/4 and 6/8.",
+    "tasks": [
+     {
+      "id": "w1-pitch",
+      "title": "Pitch, note names and the staff",
+      "desc": "Letter names, octaves, half and whole steps, sharps and flats, and the two clefs.",
+      "track": "read",
+      "core": true,
+      "h": 1,
+      "lessons": [
+       "pitch"
+      ],
+      "res": [
+       [
+        "musictheory.net lessons",
+        "https://www.musictheory.net/lessons"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "pitch"
+       },
+       {
+        "t": "drill",
+        "id": "d-staff"
+       }
+      ]
+     },
+     {
+      "id": "w1-rhythm",
+      "title": "Note values, rests and time signatures",
+      "desc": "How long each note lasts, dots and ties, and simple vs compound time.",
+      "track": "rhythm",
+      "core": true,
+      "h": 1,
+      "lessons": [
+       "rhythm"
+      ],
+      "res": [
+       [
+        "musictheory.net lessons",
+        "https://www.musictheory.net/lessons"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "rhythm"
+       },
+       {
+        "t": "drill",
+        "id": "d-beats"
+       }
+      ]
+     },
+     {
+      "id": "w1-habit",
+      "title": "Daily reviews and the weekly self-check",
+      "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+      "track": "read",
+      "core": true,
+      "h": 0.5,
+      "crit": [
+       {
+        "t": "days",
+        "n": 3,
+        "w": 1
+       },
+       {
+        "t": "quiz",
+        "w": 1,
+        "max": 1
+       }
+      ]
+     },
+     {
+      "id": "w1-keys",
+      "title": "Find middle C on a keyboard",
+      "desc": "Open any piano app or a real keyboard. Find every C, then middle C (C4), then play C up to the next C on white keys only.",
+      "track": "read",
+      "core": false,
+      "h": 0.5,
+      "crit": [
+       {
+        "t": "check",
+        "label": "I found middle C and played the C major scale"
+       }
+      ]
+     }
+    ],
+    "quiz": [
+     {
+      "q": "Which white-key pairs are a half step apart?",
+      "o": [
+       "C–D and F–G",
+       "E–F and B–C",
+       "D–E and A–B",
+       "G–A and C–D"
+      ],
+      "a": 1,
+      "why": "There is no black key between E and F or between B and C."
+     },
+     {
+      "q": "The bottom line of the treble clef is:",
+      "o": [
+       "G",
+       "F",
+       "E",
+       "C"
+      ],
+      "a": 2,
+      "why": "Treble lines are E G B D F."
+     },
+     {
+      "q": "A dotted quarter note lasts:",
+      "o": [
+       "1 beat",
+       "1.5 beats",
+       "2 beats",
+       "0.75 beats"
+      ],
+      "a": 1,
+      "why": "1 + half of 1 = 1.5 quarter-note beats."
+     },
+     {
+      "q": "6/8 time is:",
+      "o": [
+       "Simple triple",
+       "Compound duple",
+       "Simple duple",
+       "Compound triple"
+      ],
+      "a": 1,
+      "why": "Two beats, each a dotted quarter split into three."
+     }
+    ],
+    "quizMax": 1
+   },
+   {
+    "title": "Scales and intervals",
+    "goal": "Spell any major scale, read key signatures, and name intervals by number and quality.",
+    "tasks": [
+     {
+      "id": "w2-scales",
+      "title": "Major scales and key signatures",
+      "desc": "The W W H W W W H pattern, the spelling rule, and the orders of sharps and flats.",
+      "track": "harmony",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "scales"
+      ],
+      "res": [
+       [
+        "musictheory.net lessons",
+        "https://www.musictheory.net/lessons"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "scales"
+       },
+       {
+        "t": "drill",
+        "id": "d-scale"
+       }
+      ]
+     },
+     {
+      "id": "w2-intervals",
+      "title": "Intervals: number and quality",
+      "desc": "Count letters, then compare with the lower note's major scale.",
+      "track": "harmony",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "intervals"
+      ],
+      "res": [
+       [
+        "musictheory.net lessons",
+        "https://www.musictheory.net/lessons"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "intervals"
+       },
+       {
+        "t": "drill",
+        "id": "d-intervals"
+       }
+      ]
+     },
+     {
+      "id": "pr1",
+      "title": "Project 1: the key of a song",
+      "desc": "Pick a song you like and find its sheet music or chords online. Find its key signature (or work out the key from the chords), spell that major scale, and name three intervals from the first line of the melody.",
+      "track": "harmony",
+      "core": true,
+      "h": 1,
+      "project": "1",
+      "crit": [
+       {
+        "t": "text",
+        "label": "Song, key, and its major scale spelled out",
+        "min": 15
+       },
+       {
+        "t": "text",
+        "label": "Three intervals from the melody, each with how you named it",
+        "min": 40
+       }
+      ]
+     },
+     {
+      "id": "w2-habit",
+      "title": "Daily reviews and the weekly self-check",
+      "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+      "track": "read",
+      "core": true,
+      "h": 0.5,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 2
+       },
+       {
+        "t": "quiz",
+        "w": 2,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quiz": [
+     {
+      "q": "What is the major scale pattern?",
+      "o": [
+       "W H W W H W W",
+       "W W H W W W H",
+       "W W W H W W H",
+       "H W W W W H W"
+      ],
+      "a": 1,
+      "why": "Half steps fall between degrees 3–4 and 7–8."
+     },
+     {
+      "q": "Two sharps in a key signature are:",
+      "o": [
+       "F♯ and G♯",
+       "B♭ and E♭",
+       "F♯ and C♯",
+       "C♯ and G♯"
+      ],
+      "a": 2,
+      "why": "Sharps always come in the order F C G D A E B, so two sharps are F♯ and C♯: the key of D major."
+     },
+     {
+      "q": "C up to E♭ is a:",
+      "o": [
+       "major third",
+       "minor third",
+       "augmented second",
+       "diminished third"
+      ],
+      "a": 1,
+      "why": "Three letters (a third), a half step smaller than C–E, so minor."
+     },
+     {
+      "q": "How many half steps in a perfect fourth?",
+      "o": [
+       "4",
+       "5",
+       "6",
+       "7"
+      ],
+      "a": 1,
+      "why": "C–F is 5 half steps."
+     }
+    ],
+    "quizMax": 1
+   },
+   {
+    "title": "Chords and progressions",
+    "goal": "Spell triads of every quality, use Roman numerals, and recognise the four cadences. Pass the final checkpoint.",
+    "tasks": [
+     {
+      "id": "w3-chords",
+      "title": "Triads and the chords of a key",
+      "desc": "Four triad qualities, I ii iii IV V vi vii°, inversions and V7.",
+      "track": "harmony",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "chords"
+      ],
+      "res": [
+       [
+        "musictheory.net lessons",
+        "https://www.musictheory.net/lessons"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "chords"
+       },
+       {
+        "t": "drill",
+        "id": "d-triads"
+       }
+      ]
+     },
+     {
+      "id": "w3-prog",
+      "title": "Chord progressions and cadences",
+      "desc": "Chord functions, common progressions and how phrases end.",
+      "track": "harmony",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "progressions"
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "progressions"
+       },
+       {
+        "t": "drill",
+        "id": "d-cadences"
+       }
+      ]
+     },
+     {
+      "id": "pr2",
+      "title": "Project 2: analyse a progression",
+      "desc": "Take the chords of a song you like (any chord site works). Write them out, convert them to Roman numerals in the song's key, mark the tonic, predominant and dominant chords, and find at least one cadence.",
+      "track": "harmony",
+      "core": true,
+      "h": 1.5,
+      "project": "2",
+      "crit": [
+       {
+        "t": "text",
+        "label": "The chords and their Roman numerals",
+        "min": 20
+       },
+       {
+        "t": "text",
+        "label": "Functions and the cadence you found, with the chords that make it",
+        "min": 40
+       }
+      ]
+     },
+     {
+      "id": "w3-cp",
+      "title": "Final checkpoint (30 minutes)",
+      "desc": "A timed mix of exercises and drills from all three weeks. Retake as often as you like; the best score counts.",
+      "track": "harmony",
+      "core": true,
+      "h": 1,
+      "crit": [
+       {
+        "t": "checkpoint",
+        "id": "cp1"
+       }
+      ]
+     },
+     {
+      "id": "w3-habit",
+      "title": "Daily reviews and the weekly self-check",
+      "desc": "Open Today on most days: recall cards and drill reviews first, then the new lesson. Finish the week with the self-check quiz.",
+      "track": "read",
+      "core": true,
+      "h": 0.5,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 3
+       },
+       {
+        "t": "quiz",
+        "w": 3,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quiz": [
+     {
+      "q": "A minor triad is built from:",
+      "o": [
+       "M3 + m3",
+       "m3 + M3",
+       "m3 + m3",
+       "M3 + M3"
+      ],
+      "a": 1,
+      "why": "Minor third at the bottom, major third on top; the outer interval is a perfect fifth."
+     },
+     {
+      "q": "In a major key, ii is:",
+      "o": [
+       "major",
+       "minor",
+       "diminished",
+       "augmented"
+      ],
+      "a": 1,
+      "why": "I ii iii IV V vi vii°: lower case is minor."
+     },
+     {
+      "q": "V → vi is a:",
+      "o": [
+       "authentic cadence",
+       "plagal cadence",
+       "half cadence",
+       "deceptive cadence"
+      ],
+      "a": 3,
+      "why": "The ear expects I and hears vi instead."
+     },
+     {
+      "q": "I–IV–V–I in A major is:",
+      "o": [
+       "A–D–E–A",
+       "A–C♯–E–A",
+       "A–B–C♯–A",
+       "A–E–D–A"
+      ],
+      "a": 0,
+      "why": "A major: degree 4 is D and degree 5 is E."
+     }
+    ],
+    "quizMax": 1
+   }
+  ]
+ },
+ "drills": [
+  {
+   "id": "d-staff",
+   "lesson": "pitch",
+   "track": "read",
+   "week": 1,
+   "level": 1,
+   "mins": 4,
+   "format": "text",
+   "title": "Both clefs from memory",
+   "prompt": "Without looking, write the notes on the **lines** and in the **spaces** of the treble clef and the bass clef, bottom to top. Then name the two pairs of neighbouring white keys that are a half step apart.",
+   "hints": [
+    "Treble lines: Every Good Boy Deserves Fruit.",
+    "Bass spaces: All Cows Eat Grass."
+   ],
+   "starter": "Treble lines:\nTreble spaces:\nBass lines:\nBass spaces:\nHalf-step pairs:",
+   "solution": "Treble lines: E G B D F\nTreble spaces: F A C E\nBass lines: G B D F A\nBass spaces: A C E G\nHalf-step pairs: E–F and B–C"
+  },
+  {
+   "id": "d-beats",
+   "lesson": "rhythm",
+   "track": "rhythm",
+   "week": 1,
+   "level": 1,
+   "mins": 5,
+   "format": "text",
+   "title": "Counting beats",
+   "prompt": "In quarter-note beats, write the length of: a whole note, a half note, a dotted half note, a dotted quarter note, an eighth note, and a sixteenth note. Then write how many beats per bar, and which note gets the beat, in 3/4 and in 6/8.",
+   "hints": [
+    "Each value halves the one before.",
+    "A dot adds half the note's own value."
+   ],
+   "starter": "",
+   "solution": "Whole 4, half 2, dotted half 3, dotted quarter 1.5, eighth 0.5, sixteenth 0.25.\n3/4: three beats, each a quarter note.\n6/8: two beats, each a dotted quarter (three eighths)."
+  },
+  {
+   "id": "d-scale",
+   "lesson": "scales",
+   "track": "harmony",
+   "week": 2,
+   "level": 2,
+   "mins": 8,
+   "format": "text",
+   "title": "Major scales and signatures",
+   "prompt": "From memory: write the order of sharps and the order of flats. Then spell the major scales of **A**, **E♭** and **B**, and give how many sharps or flats each has.",
+   "hints": [
+    "Pattern W W H W W W H, each letter once.",
+    "Sharps: Father Charles Goes Down And Ends Battle."
+   ],
+   "starter": "",
+   "solution": "Order of sharps: F C G D A E B. Order of flats: B E A D G C F.\nA major: A B C♯ D E F♯ G♯ (3 sharps).\nE♭ major: E♭ F G A♭ B♭ C D (3 flats).\nB major: B C♯ D♯ E F♯ G♯ A♯ (5 sharps)."
+  },
+  {
+   "id": "d-intervals",
+   "lesson": "intervals",
+   "track": "harmony",
+   "week": 2,
+   "level": 2,
+   "mins": 6,
+   "format": "text",
+   "title": "Intervals by half steps",
+   "prompt": "Write the half-step count of each interval: m2, M2, m3, M3, P4, tritone, P5, m6, M6, m7, M7, P8. Then name these intervals: C–A♭, D–F♯, G–F.",
+   "hints": [
+    "P5 is 7 half steps; work outwards from there.",
+    "Count letters first for the names."
+   ],
+   "starter": "",
+   "solution": "m2 1, M2 2, m3 3, M3 4, P4 5, tritone 6, P5 7, m6 8, M6 9, m7 10, M7 11, P8 12.\nC–A♭: minor sixth. D–F♯: major third. G–F: minor seventh."
+  },
+  {
+   "id": "d-triads",
+   "lesson": "chords",
+   "track": "harmony",
+   "week": 3,
+   "level": 2,
+   "mins": 8,
+   "format": "text",
+   "title": "The triads of a key",
+   "prompt": "Write the Roman-numeral pattern of the triads in a major key. Then spell all seven triads of **G major** with their chord symbols.",
+   "hints": [
+    "Major, minor, minor, major, major, minor, diminished.",
+    "G major has one sharp: F♯."
+   ],
+   "starter": "",
+   "solution": "I ii iii IV V vi vii°.\nG major: G (G B D), Am (A C E), Bm (B D F♯), C (C E G), D (D F♯ A), Em (E G B), F♯° (F♯ A C)."
+  },
+  {
+   "id": "d-cadences",
+   "lesson": "progressions",
+   "track": "harmony",
+   "week": 3,
+   "level": 2,
+   "mins": 5,
+   "format": "text",
+   "title": "Cadences and progressions",
+   "prompt": "Name the four cadences with their chords. Then write I–IV–V–I and I–V–vi–IV in **D major** as chord symbols.",
+   "hints": [
+    "Authentic, plagal, half, deceptive.",
+    "D major: D E F♯ G A B C♯."
+   ],
+   "starter": "",
+   "solution": "Authentic V–I, plagal IV–I, half (any chord)–V, deceptive V–vi.\nD major I–IV–V–I: D G A D. I–V–vi–IV: D A Bm G."
+  }
+ ],
+ "checkpoints": [
+  {
+   "id": "cp1",
+   "title": "Final checkpoint",
+   "week": 3,
+   "minutes": 30,
+   "pass": 70,
+   "lessons": [
+    "pitch",
+    "rhythm",
+    "scales",
+    "intervals",
+    "chords",
+    "progressions"
+   ],
+   "items": [
+    "pitch:b1t0ezl608",
+    "pitch:b0t6x5zj0a",
+    "rhythm:b1xis5b109",
+    "rhythm:b0lmc5vm0d",
+    "rhythm:b0k8e5er0e",
+    "scales:b1d7bcb609",
+    "scales:b0p5qwku0a",
+    "scales:b0pfqi9t0b",
+    "intervals:b1q1qv8v0a",
+    "intervals:b1prr9jw0b",
+    "intervals:b1qlq2mt0c",
+    "chords:b1t4guo108",
+    "chords:b0xh9i050b",
+    "chords:b0wxaam70d",
+    "progressions:b0rtttur07",
+    "progressions:b0g6q8an0a",
+    "progressions:b0fwqmlo0b",
+    "drill:d-scale",
+    "drill:d-triads"
    ]
   }
  ]

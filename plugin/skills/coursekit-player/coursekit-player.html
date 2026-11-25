@@ -242,6 +242,140 @@ figure{margin:0}figcaption{color:var(--muted);font-size:14px;margin-top:6px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* ===== course dashboard ===== */
+.dash{display:flex;flex-direction:column;gap:calc(18px * var(--k))}
+.dhero{align-items:center}
+.dhero h1{margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin:6px 0 12px}
+.stat{display:flex;flex-direction:column;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
+.stat .k{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stat b{font:700 22px/1.2 var(--font-d)}
+.stat small{color:var(--muted);font-size:12.5px}
+.timeline{display:flex;gap:4px;align-items:flex-end;height:38px;margin:0 0 12px}
+.timeline .tl{flex:1;height:100%;display:flex;align-items:flex-end;border-radius:4px;background:var(--line);overflow:hidden;position:relative}
+.timeline .tl i{display:block;width:100%;background:rgba(var(--accent-rgb),.55)}
+.timeline .tl.done i{background:var(--ok)}
+.timeline .tl.cur{outline:2px solid var(--accent);outline-offset:1px}
+.dtabs{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:10;display:flex;gap:4px;overflow-x:auto;padding:6px;border:1px solid var(--line);border-radius:calc(var(--radius) + 4px);background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);scrollbar-width:none}
+.dtabs a{flex:0 0 auto;padding:8px 16px;border-radius:var(--radius);color:var(--muted);text-decoration:none;font-weight:600;white-space:nowrap}
+.dtabs a:hover{color:var(--ink);background:var(--soft)}
+.dtabs a.on{background:var(--accent);color:var(--on-accent)}
+.dpanel{display:flex;flex-direction:column;gap:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column;gap:8px;min-width:0}
+.card.flush{padding:0;gap:0}
+.card.list{padding:4px 14px;gap:0}
+.pad{padding:12px 18px 0}
+.between{justify-content:space-between}
+.grow{flex:1}
+.sec-h{font:600 12.5px var(--font-b);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.q-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink);text-decoration:none}
+.q-item:hover{border-color:var(--accent)}
+.q-item.now{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.q-item .ic{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--radius);background:var(--soft);color:var(--accent);font:700 14px var(--font-m)}
+.q-item .qt{display:flex;flex-direction:column;min-width:0}
+.q-item .qt small{color:var(--muted);font-size:13.5px}
+.mini-task{display:flex;gap:10px;align-items:center;font-size:15px}
+.ring{width:26px;height:26px;flex:0 0 26px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;background:var(--line);color:var(--ink);white-space:nowrap}
+.pill.acc{background:var(--soft);color:var(--accent)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.pill.due{background:color-mix(in srgb,var(--accent2) 18%,transparent);color:var(--ink)}
+.big-num{text-align:right}.big-num b{display:block;font:700 28px var(--font-d)}.big-num small{color:var(--muted)}
+/* plan */
+.week{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.week.cur{border-color:var(--accent)}
+.week summary{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;cursor:pointer;list-style:none}
+.week summary::-webkit-details-marker{display:none}
+.wk-n{display:flex;flex-direction:column;align-items:center;line-height:1}
+.wk-n small{font-size:10px;letter-spacing:.1em;color:var(--muted)}.wk-n b{font:700 24px var(--font-d)}
+.wk-t{display:flex;flex-direction:column;min-width:0}.wk-t b{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.wk-side{display:flex;align-items:center;gap:8px}.wk-side .bar{width:90px}
+.wk-goal{padding:0 16px 10px}
+.task{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:14px 16px;border-top:1px solid var(--line)}
+.task h4{font-size:16px}
+.task-b{display:flex;flex-direction:column;gap:8px;min-width:0}
+.task .desc{font-size:15px;color:var(--muted)}
+.crit{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--radius);background:color-mix(in srgb,var(--bg) 60%,var(--surface))}
+.crit .c{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:start;font-size:14.5px}
+.crit .dot,.nbcklist .dot{width:12px;height:12px;margin-top:5px;border-radius:50%;border:2px solid var(--muted)}
+.crit .c.done .dot,.nbcklist li.ok .dot{background:var(--ok);border-color:var(--ok)}
+.nbcklist li.no .dot{border-color:var(--bad)}
+.crit .c-b{display:flex;flex-direction:column;gap:6px;min-width:0}
+.crit input[type=url],.crit input[type=number]{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface)}
+.res a{margin-right:8px}
+.lib-l{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.lib-l:first-child{border-top:0}
+.lib-l .n{font:600 13px var(--font-m);color:var(--muted)}
+.lib-l small{display:block}
+.boxes{display:inline-flex;gap:3px;vertical-align:middle}
+.boxes i{width:10px;height:10px;border-radius:3px;background:var(--line)}
+.boxes i.on{background:var(--accent)}
+.trk{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.scroll-x{overflow-x:auto}
+table.list{width:100%;border-collapse:collapse;font-size:14.5px}
+table.list th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 8px}
+table.list td{padding:8px;border-top:1px solid var(--line);vertical-align:middle}
+.heat{display:grid;grid-template-rows:repeat(7,14px);grid-auto-flow:column;grid-auto-columns:14px;gap:3px;overflow-x:auto}
+.heat i{border-radius:3px;background:var(--line)}
+.heat i.l1{background:rgba(var(--accent-rgb),.35)}.heat i.l2{background:rgba(var(--accent-rgb),.65)}.heat i.l3{background:var(--accent)}
+input[type=date]{padding:6px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+/* exercises that run code */
+textarea.code{font:14px/1.55 var(--font-m);tab-size:4;white-space:pre;overflow-x:auto;min-height:70px;background:color-mix(in srgb,var(--surface) 80%,var(--bg))}
+.prosebox{min-height:120px}
+.runout:empty{display:none}
+pre.out{white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;background:color-mix(in srgb,var(--bg) 50%,var(--surface))}
+pre.out.wrap{white-space:pre-wrap}
+pre.out.stale{opacity:.6}
+pre.out .err{color:var(--bad)}
+.outwrap{display:flex;flex-direction:column;gap:8px}
+img.fig{display:block;max-width:100%;background:#fff;border-radius:var(--radius);border:1px solid var(--line)}
+.cell{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px dashed var(--accent);border-radius:var(--radius)}
+.run-btn{order:-1}
+.timer{font:700 18px var(--font-m);padding:4px 12px;border-radius:var(--radius);background:var(--soft)}
+.timer.over{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.hintbox{padding:10px 14px;border-left:4px solid var(--accent2);background:var(--surface);border-radius:0 var(--radius) var(--radius) 0}
+.exam-bar{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:9;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;background:var(--bg)}
+.qnum{font:700 13px var(--font-m);color:var(--accent)}
+.crumbs{font-size:14px;color:var(--muted)}
+/* notebooks */
+.nbwrap{display:flex;flex-direction:column;gap:12px;max-width:920px;margin:0 auto}
+.nbbar{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:9;display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--line);border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(6px)}
+.nbfiles{gap:6px}
+.nbck summary{cursor:pointer}
+.nbcklist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.nbcklist li{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;font-size:14.5px}
+.nbcells{display:flex;flex-direction:column;gap:10px}
+.nbcell{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.nbcell.answer{border-left:4px solid var(--accent2)}
+.nbcell.app{border-left:4px solid var(--accent)}
+.nbcell.running{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.nbhead{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nbn{font:600 13px var(--font-m);color:var(--muted);min-width:34px}
+.nbtools{margin-left:auto;display:flex;gap:4px;align-items:center;opacity:.55}
+.nbcell:hover .nbtools,.nbcell:focus-within .nbtools{opacity:1}
+.nbtools .icon{min-width:30px;min-height:30px}
+.nbout:empty{display:none}
+.stov{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--bg)}
+.stbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.stbody{flex:1;min-height:0;overflow:auto;background:#fff}
+.stframe{width:100%;height:100%;border:0;display:block}
+@media (max-width:860px){
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .week summary{grid-template-columns:44px minmax(0,1fr)}
+  .wk-side{grid-column:2}
+  .dtabs{top:calc(54px + env(safe-area-inset-top,0px))}
+}
+@media (max-width:520px){
+  .q-item{grid-template-columns:36px minmax(0,1fr)}
+  .q-item .btn{display:none}
+  .q-item .ic{width:36px;height:36px}
+  .task{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style>
 <header id="top"></header>
 <div id="banners"></div>
@@ -419,7 +553,7 @@ const LIMITS = {
   widgetsLib: 40, lessonBytes: 200000,
 };
 const CALLOUTS = ["note", "tip", "warn", "key", "example", "story"];
-const PRACTICE = ["choice", "answer", "order", "match", "write", "task"];
+const PRACTICE = ["choice", "answer", "order", "match", "write", "task", "run", "predict", "output"];
 const BLOCK_TYPES = ["md", "callout", "code", "math", "image", "widget", "cards", ...PRACTICE];
 
 const BLOCK_DOC =
@@ -437,8 +571,20 @@ Practice blocks (the learner must get each one right for the lesson to count as 
 - {"t":"order","q":"instruction","items":["first","second","third"],"why":"explanation"} items in the CORRECT order (the page shuffles them), 3-8 items.
 - {"t":"match","q":"instruction","pairs":[["left","right"],["left","right"]],"why":"explanation"} 3-8 pairs.
 - {"t":"write","q":"prompt","min":40,"model":"model answer","rubric":"what a good answer contains"} a written answer of at least "min" words; the tutor grades it against the rubric.
-- {"t":"task","q":"what to do (markdown)","lang":"optional","starter":"optional","solution":"model solution or what done looks like"} hands-on work done outside the page; the learner marks it done and compares with the solution.`;
+- {"t":"task","q":"what to do (markdown)","lang":"optional","starter":"optional","solution":"model solution or what done looks like"} hands-on work done outside the page; the learner marks it done and compares with the solution.
+Code practice (only for languages the course declares in "runtimes"; the page runs the code, so the check is real):
+- {"t":"run","q":"what to write (markdown)","lang":"python","starter":"optional starting code","test":"code run after the learner's code that prints results","expect":["line printed by the test", "..."],"solution":"model code","why":"optional"} the learner writes code; it passes when the test prints exactly the expected lines (numbers match to the shown decimals).
+- {"t":"predict","q":"markdown, usually with a code listing","expect":["exact output line", "..."],"alts":["other accepted answer"],"why":"explanation"} the learner types what the code prints.
+- {"t":"output","q":"what to run (markdown)","lang":"python","code":"runnable code","expect":["text the output must contain"],"min":1,"why":"optional"} the learner runs code (here, or on their own machine and pastes the output); it passes when the output contains every expected piece.
+Code blocks ({"t":"code"}) in a language the course runs get a Run button; snippets in one lesson share variables.`;
 
+/* Expected output lines: an array of lines or one string with newlines. Empty lines are kept inside, trimmed at the ends. */
+function lines(v) {
+  const a = Array.isArray(v) ? v.map(x => str(x, 2000)) : v == null ? [] : str(v, 20000).replace(/\r/g, "").split("\n");
+  while (a.length && !a[a.length - 1].trim()) a.pop();
+  while (a.length && !a[0].trim()) a.shift();
+  return a.slice(0, 200);
+}
 function normStrList(v, max, each) { return (Array.isArray(v) ? v : []).map(x => str(x, each).trim()).filter(Boolean).slice(0, max); }
 
 /* Normalise one block. Throws RuleError with a message Claude can act on. */
@@ -502,7 +648,28 @@ function normalizeBlock(b, ctx) {
       const st = str(b.starter, LIMITS.code); if (st.trim()) o.starter = st;
       o.solution = str(b.solution, LIMITS.code); if (!o.solution.trim()) fail("task block needs a \"solution\" (or a description of what done looks like)."); break;
     }
+    case "run": {
+      o.q = q(); o.lang = slug(b.lang || "python", 20);
+      const st = str(b.starter, LIMITS.code); if (st.trim()) o.starter = st;
+      o.test = str(b.test || b.tests, LIMITS.code); o.expect = lines(b.expect);
+      if (!o.expect.length) fail("run block needs \"expect\": the lines its test prints when the code is right.");
+      o.solution = str(b.solution, LIMITS.code); if (!o.solution.trim()) fail("run block needs a model \"solution\".");
+      if (ctx.runtimes && !runtimeFor(ctx.runtimes, o.lang)) fail("run block uses \"" + o.lang + "\", but the course has no runtime for it. Declare one in the course's runtimes first.");
+      break;
+    }
+    case "predict": {
+      o.q = q(); o.expect = lines(b.expect); if (!o.expect.length) fail("predict block needs \"expect\": the exact output lines.");
+      o.alts = normStrList(b.alts, 12, 400); if (!o.alts.length) delete o.alts; break;
+    }
+    case "output": {
+      o.q = q(); o.lang = slug(b.lang || "python", 20);
+      const code = str(b.code, LIMITS.code); if (code.trim()) o.code = code;
+      o.expect = normStrList(b.expect, 20, 400); o.min = clamp(Math.round(Number(b.min) || 1), 1, 200);
+      if (!o.expect.length && o.min < 2) fail("output block needs \"expect\" (text the output must contain) or \"min\" lines.");
+      break;
+    }
   }
+  if (t === "code" && b.run === false) o.run = false;
   return o;
 }
 
@@ -526,6 +693,9 @@ function normalizeLesson(l, ctx) {
   o.summary = str(l.summary, LIMITS.summary).trim();
   o.minutes = clamp(Math.round(Number(l.minutes) || 0), 0, 240) || undefined;
   if (o.minutes === undefined) delete o.minutes;
+  if (l.track) o.track = slug(l.track, 20);
+  if (l.week) o.week = clamp(Math.round(Number(l.week) || 1), 1, 200);
+  const sub = str(l.sub, 200).trim(); if (sub) o.sub = sub;
   if (l.pending && !(Array.isArray(l.blocks) && l.blocks.length)) { o.pending = true; o.blocks = []; return o; }
   const raw = Array.isArray(l.blocks) ? l.blocks : [];
   if (!raw.length) fail("lesson \"" + o.title + "\" has no blocks.");
@@ -552,6 +722,210 @@ function checkLessonShape(o) {
   if (first && PRACTICE.includes(first.t)) fail("a lesson must open with teaching, not with a practice block.");
 }
 
+
+/* ---------- course modules (every one optional; any course may declare them) ---------- */
+/* runtimes: languages the page can run, each on an engine:
+     pyodide = CPython in the browser (numpy, pandas, scikit-learn, matplotlib... from the page's own copy),
+     js      = JavaScript in a sandboxed frame,
+     frame   = a runner the course brings: one HTML document (same rules as widgets) that runs code
+               it receives by postMessage. This is how a course adds any other language (SQL, Lua, R in wasm...). */
+const ENGINES = ["pyodide", "js", "frame"];
+const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js" };
+const langOf = l => { const s = slug(l || "", 20); return LANG_ALIAS[s] || s; };
+function runtimeFor(runtimes, lang) { const l = langOf(lang); return runtimes && runtimes[l] ? Object.assign({ lang: l }, runtimes[l]) : null; }
+function normalizeRuntimes(v) {
+  const out = {};
+  if (v == null) return out;
+  const list = Array.isArray(v) ? v.map(x => typeof x === "string" ? [x, {}] : [x && x.lang, x]) : Object.entries(v);
+  for (const [k, r0] of list.slice(0, 8)) {
+    const lang = langOf(k); if (!lang || lang === "x") fail("each runtime needs a language name.");
+    const r = r0 && typeof r0 === "object" ? r0 : {};
+    const engine = str(r.engine || (lang === "python" ? "pyodide" : lang === "js" ? "js" : "")).toLowerCase();
+    if (!ENGINES.includes(engine)) fail("runtime \"" + lang + "\" needs an engine: " + ENGINES.join(", ") + ".");
+    const o = { engine, label: str(r.label, 40).trim() || (lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
+    if (engine === "frame") o.html = checkWidgetHtml(r.html);
+    if (r.packages && typeof r.packages === "object") { o.packages = {}; for (const [a, b] of Object.entries(r.packages).slice(0, 60)) o.packages[slug(a, 40).replace(/-/g, "_")] = str(b, 60).trim(); }
+    if (r.apps) o.apps = true; // python: notebook cells tagged "app" run as Streamlit apps
+    out[lang] = o;
+  }
+  return out;
+}
+const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
+function normalizeFiles(v) {
+  return (Array.isArray(v) ? v : []).slice(0, 100).map(f => {
+    const name = str(f && f.name).trim(); if (!FILE_NAME.test(name)) fail("file name \"" + str(name, 40) + "\" must be letters, digits, dot, dash or underscore.");
+    const url = str(f && f.url).trim();
+    if (!/^\/_blob\/[0-9a-f]{32}$/.test(url) && !/^[a-z0-9][a-z0-9._/-]{0,200}$/i.test(url) || url.includes("..")) fail("file \"" + name + "\" needs a url: an uploaded asset (/_blob/<id>) or a file published with the page.");
+    const o = { name, url }; if (f.size) o.size = clamp(Math.round(Number(f.size) || 0), 0, 1e9); const n = str(f.note, 200).trim(); if (n) o.note = n; return o;
+  });
+}
+const LABEL_KEYS = ["unit", "lessons", "drills", "projects", "project", "checkpoint", "checkpoints", "projectsIntro", "today", "plan", "record"];
+function normalizeLabels(v) { const o = {}; if (v && typeof v === "object") for (const k of LABEL_KEYS) if (v[k] != null && str(v[k]).trim()) o[k] = str(v[k], k === "projectsIntro" ? 400 : 40).trim(); return o; }
+function normalizeTracks(v) { const o = {}; if (v && typeof v === "object") for (const [k, x] of Object.entries(v).slice(0, 30)) o[slug(k, 20)] = str(x, 60).trim() || k; return o; }
+function normalizeSchedule(v) {
+  if (!v || typeof v !== "object") return null;
+  const o = { unitDays: clamp(Math.round(Number(v.unitDays) || 7), 1, 31) };
+  if (v.start && /^\d{4}-\d{2}-\d{2}$/.test(str(v.start))) o.start = str(v.start);
+  return o;
+}
+const CRIT = { L: "lesson", D: "drill", QZ: "quiz", X: "checkpoint", DAYS: "days", U: "link", T: "text", N: "number", C: "check" };
+const CRIT_TYPES = Object.values(CRIT);
+function normalizeCrit(c) {
+  if (!c || typeof c !== "object") fail("each done-when criterion must be an object with \"t\".");
+  const t = CRIT[str(c.t)] || str(c.t).toLowerCase();
+  if (!CRIT_TYPES.includes(t)) fail("criterion type \"" + str(c.t, 20) + "\" must be one of " + CRIT_TYPES.join(", ") + ".");
+  const o = { t }; const label = str(c.label, 300).trim(); if (label) o.label = label;
+  const num = (v, a, b, d) => clamp(Number(v) == null || isNaN(Number(v)) ? d : Number(v), a, b);
+  switch (t) {
+    case "lesson": case "drill": case "checkpoint": o.id = slug(c.id, 40); if (!c.id) fail(t + " criterion needs \"id\"."); break;
+    case "quiz": o.w = Math.round(num(c.w, 1, 200, 1)); o.max = Math.round(num(c.max, 0, 50, 1)); break;
+    case "days": if (c.w != null) o.w = Math.round(num(c.w, 1, 200, 1)); o.n = Math.round(num(c.n, 1, 31, 3)); break;
+    case "link": o.hosts = normStrList(c.hosts, 10, 80).map(x => x.toLowerCase()); if (!o.label) o.label = "Link to your work"; break;
+    case "text": if (c.min) o.min = Math.round(num(c.min, 0, 5000, 0)); if (c.lines) o.lines = Math.round(num(c.lines, 0, 500, 0)); const ex = normStrList(c.expect, 20, 200); if (ex.length) o.expect = ex; if (c.mono) o.mono = true; if (!o.label) o.label = "Your answer"; break;
+    case "number": o.min = Number(c.min); o.max = Number(c.max); if (isNaN(o.min) || isNaN(o.max) || o.min > o.max) fail("number criterion needs min <= max."); const u = str(c.unit, 40).trim(); if (u) o.unit = u; if (!o.label) o.label = "Your result"; break;
+    case "check": if (!o.label) fail("check criterion needs a \"label\" saying what to do."); break;
+  }
+  return o;
+}
+function normalizeTask(t, taken) {
+  if (!t || typeof t !== "object") fail("each task must be an object.");
+  const o = { id: uniqueId(slug(t.id || t.title, 40), taken) };
+  o.title = str(t.title, 140).trim(); if (!o.title) fail("task needs a title.");
+  const d = str(t.desc, 3000).trim(); if (d) o.desc = d;
+  if (t.track) o.track = slug(t.track, 20);
+  o.core = t.core !== false; o.h = clamp(Number(t.h) || 1, 0.1, 100);
+  const ls = (Array.isArray(t.lessons) ? t.lessons : []).map(x => slug(x, 40)).slice(0, 20); if (ls.length) o.lessons = ls;
+  const res = (Array.isArray(t.res) ? t.res : []).map(r => Array.isArray(r) ? [str(r[0], 120).trim(), str(r[1], 400).trim()] : [str(r && r.label, 120).trim(), str(r && r.url, 400).trim()]).filter(r => r[0] && /^https:\/\//.test(r[1])).slice(0, 10); if (res.length) o.res = res;
+  if (t.due && /^\d{4}-\d{2}-\d{2}$/.test(str(t.due))) o.due = str(t.due);
+  if (t.project != null && str(t.project).trim()) o.project = str(t.project, 20).trim();
+  if (t.notebook) o.notebook = slug(t.notebook, 40);
+  o.crit = (Array.isArray(t.crit) ? t.crit : []).slice(0, 12).map((c, i) => { try { return normalizeCrit(c); } catch (e) { fail("task \"" + o.title + "\" criterion " + (i + 1) + ": " + e.message); } });
+  if (!o.crit.length) fail("task \"" + o.title + "\" needs at least one done-when criterion.");
+  return o;
+}
+function normalizeQuiz(qs) {
+  return (Array.isArray(qs) ? qs : []).slice(0, 30).map((q, i) => {
+    const o = { q: str(q && q.q, LIMITS.q).trim(), o: normStrList(q && (q.o || q.options), 6, LIMITS.opt), a: Number(q && (q.a != null ? q.a : q.answer)), why: str(q && q.why, LIMITS.why).trim() };
+    if (!o.q || o.o.length < 2 || !Number.isInteger(o.a) || o.a < 0 || o.a >= o.o.length) fail("quiz question " + (i + 1) + " needs q, 2-6 options in \"o\" and \"a\", the 0-based index of the right one.");
+    return o;
+  });
+}
+function normalizePlan(p) {
+  if (p == null) return null;
+  if (typeof p !== "object") fail("plan must be an object.");
+  const taken = new Set();
+  const weeks = (Array.isArray(p.weeks) ? p.weeks : []).slice(0, 104).map((w, i) => {
+    const o = { n: i + 1, title: str(w && w.title, 120).trim() || "Week " + (i + 1) };
+    const g = str(w && w.goal, 600).trim(); if (g) o.goal = g; if (w && w.light) o.light = true;
+    o.tasks = (Array.isArray(w && w.tasks) ? w.tasks : []).slice(0, 30).map(t => normalizeTask(t, taken));
+    const qz = normalizeQuiz(w && w.quiz); if (qz.length) { o.quiz = qz; o.quizMax = clamp(Math.round(Number(w.quizMax != null ? w.quizMax : 1)), 0, qz.length); }
+    return o;
+  });
+  if (!weeks.length) fail("plan needs at least one week (or other period) in \"weeks\".");
+  const phases = (Array.isArray(p.phases) ? p.phases : []).slice(0, 20).map(ph => {
+    const o = { id: slug(ph && (ph.id || ph.title), 30), title: str(ph && ph.title, 120).trim() || "Phase" };
+    const g = str(ph && ph.goal, 800).trim(); if (g) o.goal = g;
+    o.weeks = (Array.isArray(ph && ph.weeks) ? ph.weeks : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= weeks.length);
+    return o;
+  }).filter(ph => ph.weeks.length);
+  return { phases, weeks };
+}
+function normalizeDrill(d, taken) {
+  if (!d || typeof d !== "object") fail("each drill must be an object.");
+  const o = { id: uniqueId(slug(d.id || d.title, 40), taken) };
+  o.title = str(d.title, 140).trim(); if (!o.title) fail("drill needs a title.");
+  o.prompt = str(d.prompt || d.q, LIMITS.md).trim(); if (!o.prompt) fail("drill \"" + o.title + "\" needs a prompt.");
+  if (d.lesson) o.lesson = slug(d.lesson, 40);
+  if (d.week) o.week = clamp(Math.round(Number(d.week) || 1), 1, 200);
+  if (d.track) o.track = slug(d.track, 20);
+  if (d.level) o.level = clamp(Math.round(Number(d.level) || 1), 1, 5);
+  o.mins = clamp(Math.round(Number(d.mins) || 10), 1, 180);
+  o.hints = normStrList(d.hints, 8, 600);
+  const st = str(d.starter, LIMITS.code); if (st.trim()) o.starter = st;
+  o.solution = str(d.solution, LIMITS.code); if (!o.solution.trim()) fail("drill \"" + o.title + "\" needs a model solution.");
+  const tests = str(d.tests || d.test, LIMITS.code);
+  if (tests.trim()) { o.tests = tests; o.expect = lines(d.expect); if (!o.expect.length) fail("drill \"" + o.title + "\" has tests but no \"expect\" lines."); o.lang = langOf(d.lang || "python"); }
+  else if (d.lang) o.lang = langOf(d.lang);
+  o.format = d.format === "text" || (!o.tests && !d.lang) ? "text" : "code";
+  return o;
+}
+function normalizeDrills(v) { const taken = new Set(); const a = (Array.isArray(v) ? v : []).slice(0, 400).map(d => normalizeDrill(d, taken)); return a; }
+function normalizeCheckpoints(v) {
+  const taken = new Set();
+  return (Array.isArray(v) ? v : []).slice(0, 40).map(x => {
+    const o = { id: uniqueId(slug(x && (x.id || x.title), 40), taken), title: str(x && x.title, 120).trim() || "Checkpoint" };
+    if (x.week) o.week = clamp(Math.round(Number(x.week) || 1), 1, 200);
+    o.minutes = clamp(Math.round(Number(x.minutes) || 30), 3, 600); o.pass = clamp(Math.round(Number(x.pass) || 70), 1, 100);
+    o.lessons = (Array.isArray(x.lessons) ? x.lessons : []).map(i => slug(i, 40)).slice(0, 200);
+    o.items = (Array.isArray(x.items) ? x.items : []).map(i => str(i, 100).trim()).filter(i => /^(drill:[a-z0-9-]+|[a-z0-9-]+:b[a-z0-9]{6,16})$/.test(i)).slice(0, 100);
+    if (!o.items.length) fail("checkpoint \"" + o.title + "\" needs items: \"<lesson id>:<block id>\" for practice blocks or \"drill:<id>\".");
+    return o;
+  });
+}
+function normalizeNotebook(id, n) {
+  if (!n || typeof n !== "object") fail("notebook " + id + " must be an object.");
+  const o = { title: str(n.title, 160).trim() || id, lang: langOf(n.lang || "python"), v: clamp(Math.round(Number(n.v) || 1), 1, 1000) };
+  const d = str(n.intro, 3000).trim(); if (d) o.intro = d;
+  o.datasets = normStrList(n.datasets, 30, 80).filter(x => FILE_NAME.test(x));
+  o.cells = (Array.isArray(n.cells) ? n.cells : []).slice(0, 200).map(c => {
+    const t = c && (c.t === "md" || c.t === "markdown") ? "md" : "code";
+    const x = { t, src: str(c && c.src, 40000) }; if (c && c.tag) x.tag = slug(c.tag, 20); return x;
+  });
+  if (!o.cells.length) fail("notebook " + id + " needs cells.");
+  o.checks = (Array.isArray(n.checks) ? n.checks : []).slice(0, 60).map((c, i) => {
+    const label = str(c && c.label, 400).trim(); if (!label) fail("notebook " + id + " check " + (i + 1) + " needs a label.");
+    const t = c.test;
+    if (typeof t === "string" && t.trim()) return { label, test: str(t, 4000) };
+    if (t && t.app) return { label, test: { app: true } };
+    if (t && t.figs) return { label, test: { figs: clamp(Math.round(Number(t.figs)), 1, 50) } };
+    if (t && t.md) return { label, test: { md: slug(t.md, 20), words: clamp(Math.round(Number(t.words) || 20), 1, 5000) } };
+    fail("notebook " + id + " check \"" + label + "\" needs a test: a Python expression, {app:true}, {figs:n} or {md:tag, words:n}.");
+  });
+  if (n.fill && typeof n.fill === "object") { o.fill = {}; for (const [k, f] of Object.entries(n.fill).slice(0, 20)) { if (typeof f === "string") o.fill[k] = str(f, 1000); else if (f && f.md) o.fill[k] = { md: slug(f.md, 20) }; } }
+  const pre = str(n.prelude, 20000); if (pre.trim()) o.prelude = pre;
+  if (JSON.stringify(o).length > 230000) fail("notebook " + id + " is too large to store; trim it.");
+  return o;
+}
+function normalizeNotebooks(v) { const o = {}; if (v && typeof v === "object") for (const [k, n] of Object.entries(v).slice(0, 80)) o[slug(k, 40)] = normalizeNotebook(k, n); return o; }
+/* Cross-references between modules and lessons. Returns a list of problems (strings). */
+function checkModuleRefs(mods, lessonsById) {
+  const out = []; const L = lessonsById || {};
+  const drills = new Set((mods.drills || []).map(d => d.id)); const cps = new Set((mods.checkpoints || []).map(x => x.id));
+  const nbs = new Set(Object.keys(mods.notebooks || {}));
+  for (const w of (mods.plan && mods.plan.weeks) || []) for (const t of w.tasks) {
+    for (const id of t.lessons || []) if (!L[id]) out.push("task " + t.id + " lists lesson " + id + ", which does not exist");
+    if (t.notebook && !nbs.has(t.notebook)) out.push("task " + t.id + " uses notebook " + t.notebook + ", which does not exist");
+    for (const c of t.crit) {
+      if (c.t === "lesson" && !L[c.id]) out.push("task " + t.id + " needs lesson " + c.id + ", which does not exist");
+      if (c.t === "drill" && !drills.has(c.id)) out.push("task " + t.id + " needs drill " + c.id + ", which does not exist");
+      if (c.t === "checkpoint" && !cps.has(c.id)) out.push("task " + t.id + " needs checkpoint " + c.id + ", which does not exist");
+      if (c.t === "quiz" && !(mods.plan.weeks[c.w - 1] && mods.plan.weeks[c.w - 1].quiz)) out.push("task " + t.id + " needs the quiz of week " + c.w + ", which has none");
+    }
+  }
+  for (const d of mods.drills || []) if (d.lesson && !L[d.lesson]) out.push("drill " + d.id + " unlocks after lesson " + d.lesson + ", which does not exist");
+  for (const x of mods.checkpoints || []) for (const it of x.items) {
+    if (it.startsWith("drill:")) { if (!drills.has(it.slice(6))) out.push("checkpoint " + x.id + " uses drill " + it.slice(6) + ", which does not exist"); continue; }
+    const [lid, bid] = it.split(":"); const l = L[lid];
+    const b = l && (l.blocks || []).find(z => z.id === bid);
+    if (!b) out.push("checkpoint " + x.id + " uses " + it + ", which does not exist");
+    else if (!PRACTICE.includes(b.t)) out.push("checkpoint " + x.id + " uses " + it + ", which is not a practice block");
+  }
+  return out;
+}
+const MODULES_DOC =
+`Course modules (all optional; add the ones the subject needs):
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
+- labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
+- tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
+- schedule: {"unitDays":7,"start":"YYYY-MM-DD"} enables pace: each plan week lasts unitDays from the learner's start date.
+- plan: {"phases":[{"id","title","goal","weeks":[1,2]}], "weeks":[{"title","goal","light":false,"tasks":[task],"quiz":[{"q","o":["a","b"],"a":0,"why"}],"quizMax":1}]}
+  task: {"id","title","desc":"markdown","track","core":true,"h":1.5,"lessons":["lesson id"],"res":[["label","https://..."]],"project":"3","notebook":"notebook id","crit":[criterion]}
+  criterion (done when): {"t":"lesson","id"} | {"t":"drill","id"} | {"t":"quiz","w":2,"max":1} | {"t":"checkpoint","id"} | {"t":"days","w":2,"n":4} | {"t":"link","label","hosts":["github.com"]} | {"t":"text","label","min":words,"lines":n,"expect":["must contain"],"mono":true} | {"t":"number","label","min","max","unit"} | {"t":"check","label"}
+- drills: [{"id","title","prompt":"markdown","lesson":"unlocks the day after this lesson is learned","week","track","level":1-5,"mins":10,"hints":["..."],"starter","solution","lang":"python","tests":"code printing results","expect":["lines"]}] from-memory practice on a Leitner schedule; with tests they are checked by running, without them the learner compares and grades themselves.
+- checkpoints: [{"id","title","week","minutes":60,"pass":70,"lessons":["lesson ids that must be learned first"],"items":["<lesson id>:<block id>","drill:<id>"]}] timed tests made of existing practice blocks and drills.
+- notebooks: {"id":{"title","lang":"python","datasets":["file names"],"cells":[{"t":"md"|"code","src","tag":"answer|app"}],"checks":[{"label","test":"python expression true when done" | {"figs":1} | {"md":"tag","words":40} | {"app":true}}],"fill":{"<criterion index>":"python expression" | {"md":"tag"}},"prelude":"python run before checks"}} graded notebooks; a task with "notebook" counts its link criterion done when all checks pass.`;
+
 /* ---------- course ---------- */
 function normalizeTutor(t, base) {
   const o = Object.assign({ name: "Tutor", persona: "" }, base || {});
@@ -571,6 +945,12 @@ function normalizeCourseMeta(c, base) {
   o.language = o.language || "en";
   o.tutor = normalizeTutor(c.tutor, o.tutor);
   if (c.design != null || !o.design) { const r = normalizeDesign(c.design, o.design); o.design = r.design; o.designNotes = r.notes; }
+  if (c.runtimes != null) o.runtimes = normalizeRuntimes(c.runtimes);
+  if (c.files != null) o.files = normalizeFiles(c.files);
+  if (c.labels != null) o.labels = normalizeLabels(c.labels);
+  if (c.tracks != null) o.tracks = normalizeTracks(c.tracks);
+  if (c.schedule !== undefined) { const sc = normalizeSchedule(c.schedule); if (sc) o.schedule = sc; else delete o.schedule; }
+  for (const k of ["runtimes", "files", "labels", "tracks"]) if (o[k] && !Object.keys(o[k]).length) delete o[k];
   return o;
 }
 
@@ -603,7 +983,7 @@ function importCourse(file, opts) {
   const errors = [];
   for (const l of lessonList) {
     let norm;
-    try { norm = normalizeLesson(l, { widgets, keepId: opts.keepIds }); }
+    try { norm = normalizeLesson(l, { widgets, keepId: opts.keepIds, runtimes: meta.runtimes || {} }); }
     catch (e) { if (!(e instanceof RuleError) || !opts.lenient) throw e; errors.push(str(l && l.title, 60) + ": " + e.message); norm = { title: str(l && l.title, LIMITS.lessonTitle) || "Lesson", summary: str(l && l.summary, LIMITS.summary), pending: true, blocks: [] }; }
     norm.id = uniqueId(slug(l.id || norm.title, 40), taken);
     const unit = byUnit.get(String(l.unit)) || meta.units[meta.units.length - 1];
@@ -611,10 +991,20 @@ function importCourse(file, opts) {
     lessons.push(norm);
   }
   meta.archived = [];
-  return { meta, lessons, errors };
+  // Modules: top-level in a course file, or inside "course" in Claude's JSON.
+  const pick = k => src[k] != null ? src[k] : c[k];
+  const mods = {};
+  const tryMod = (k, fn) => { const v = pick(k); if (v == null) return; try { const r = fn(v); if (r != null) mods[k] = r; } catch (e) { if (!(e instanceof RuleError) || !opts.lenient) throw e; errors.push(k + ": " + e.message); } };
+  tryMod("plan", normalizePlan); tryMod("drills", normalizeDrills); tryMod("checkpoints", normalizeCheckpoints); tryMod("notebooks", normalizeNotebooks);
+  if (mods.drills && !mods.drills.length) delete mods.drills;
+  if (mods.checkpoints && !mods.checkpoints.length) delete mods.checkpoints;
+  if (mods.notebooks && !Object.keys(mods.notebooks).length) delete mods.notebooks;
+  const refs = checkModuleRefs(mods, Object.fromEntries(lessons.map(l => [l.id, l])));
+  if (refs.length) errors.push(...refs.slice(0, 20));
+  return { meta, lessons, errors, mods };
 }
 
-function exportCourse(meta, lessons) {
+function exportCourse(meta, lessons, mods) {
   const c = clone(meta);
   delete c.designNotes; delete c.rev; delete c.updated; delete c.created; delete c.kind; delete c.origin;
   const order = [];
@@ -623,11 +1013,12 @@ function exportCourse(meta, lessons) {
   const out = { coursekit: FORMAT, exported: new Date().toISOString(), course: Object.assign({}, c, { units: c.units.map(u => ({ id: u.id, title: u.title, goal: u.goal })) }), lessons: [] };
   delete out.course.archived;
   for (const id of order) { const l = byId[id]; if (!l) continue; const L = clone(l); delete L.kind; delete L.course; delete L.updated; out.lessons.push(L); }
+  for (const k of MODULE_KEYS) if (mods && mods[k] != null) out[k] = clone(mods[k]);
   return out;
 }
 
 /* ---------- checking answers ---------- */
-const normAns = s => str(s).normalize("NFKC").toLowerCase().replace(/[\s ]+/g, " ").replace(/^[\s"'“”]+|[\s"'“”.!]+$/g, "").replace(/\s*([,;:])\s*/g, "$1 ").trim();
+const normAns = s => str(s).normalize("NFKC").replace(/♯/g, "#").replace(/♭/g, "b").toLowerCase().replace(/[\s ]+/g, " ").replace(/^[\s"'“”]+|[\s"'“”.!]+$/g, "").replace(/\s*([,;:])\s*/g, "$1 ").trim();
 function checkAnswer(block, value) {
   switch (block.t) {
     case "choice": {
@@ -640,9 +1031,24 @@ function checkAnswer(block, value) {
     case "match": return value && typeof value === "object" && block.pairs.every(p => value[p[0]] === p[1]);
     case "write": return words(value) >= block.min;
     case "task": return !!value;
+    case "run": return !!(value && value.pass);
+    case "predict": { const a = normLine(Array.isArray(value) ? value.join(" ") : value); if (!a) return false; return a === normLine(block.expect.join(" ")) || (block.alts || []).some(x => normLine(x) === a) || outputMatches(String(value || ""), block.expect); }
+    case "output": { const v = str(value); const n = v.split("\n").filter(x => x.trim()).length; if (n < (block.min || 1)) return false; const low = normLine(v).toLowerCase(); return (block.expect || []).every(e => low.includes(normLine(e).toLowerCase())); }
   }
   return false;
 }
+/* Output comparison used by run-checked exercises: line by line, quotes and spaces normalised,
+   numbers equal to the precision the expected line shows. */
+const normLine = s => str(s).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/"/g, "'").replace(/\s+/g, " ").trim();
+const normOut = s => str(s).replace(/\r/g, "").split("\n").map(normLine).filter(x => x !== "");
+const NUM = /-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi;
+function lineMatch(got, exp) {
+  if (got === exp) return true;
+  if (got.replace(NUM, "#") !== exp.replace(NUM, "#")) return false;
+  const gn = got.match(NUM) || [], en = exp.match(NUM) || []; if (gn.length !== en.length) return false;
+  return en.every((e, k) => { const a = parseFloat(gn[k]), b = parseFloat(e); const dec = (e.split(/e/i)[0].split(".")[1] || "").length; const t = dec ? 1.01 * Math.pow(10, -dec) : 1e-9; return Math.abs(a - b) <= t + 1e-9 * Math.abs(b); });
+}
+function outputMatches(out, expect) { const a = normOut(out), b = expect.map(normLine).filter(x => x !== ""); return a.length === b.length && a.every((x, k) => lineMatch(x, b[k])); }
 const isNum = s => /^-?\d+(\.\d+)?(e-?\d+)?$/i.test(str(s).trim());
 const tol = a => { const d = (str(a).split(".")[1] || "").length; return d ? Math.pow(10, -d) / 2 + 1e-12 : 1e-9; };
 
@@ -675,6 +1081,9 @@ function lessonText(lesson, opts) {
       case "match": out.push(tag + " " + b.q + (opts.answers ? " Pairs: " + b.pairs.map(p => p[0] + " = " + p[1]).join("; ") : "")); break;
       case "write": out.push(tag + " " + b.q + " (at least " + b.min + " words)" + (opts.answers ? " Model: " + b.model : "")); break;
       case "task": out.push(tag + " Task: " + b.q + (opts.answers ? " Solution: " + b.solution : "")); break;
+      case "run": out.push(tag + " Write and run (" + b.lang + "): " + b.q + (b.starter ? "\nStarter:\n" + b.starter : "") + (opts.answers ? "\nHidden test:\n" + b.test + "\nExpected test output:\n" + b.expect.join("\n") + "\nModel solution:\n" + b.solution : "")); break;
+      case "predict": out.push(tag + " Predict the output: " + b.q + (opts.answers ? "\nExpected: " + b.expect.join(" ⏎ ") : "")); break;
+      case "output": out.push(tag + " Run and paste the output (" + b.lang + "): " + b.q + (b.code ? "\n```" + b.lang + "\n" + b.code + "\n```" : "") + (opts.answers ? "\nOutput must contain: " + (b.expect || []).join(" | ") : "")); break;
     }
   });
   return out.join("\n\n");
@@ -702,6 +1111,33 @@ bg = page background, surface = cards, ink = text, muted = secondary text, accen
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
 
+
+/* ---------- progress from Coursekit 1 / Sigmoid Prep (lessons keyed by practice index) ---------- */
+function fromV1Progress(old, lessonsById, cid) {
+  const dayMs = d => { const [y, m, dd] = String(d).split("-").map(Number); return new Date(y, m - 1, dd, 12).getTime(); };
+  const pracIds = l => (l.blocks || []).filter(b => PRACTICE.includes(b.t)).map(b => b.id);
+  const progress = []; const refMap = {};
+  for (const [lid, l] of Object.entries(lessonsById || {})) {
+    const ids = pracIds(l); ids.forEach((b, k) => { refMap[lid + "#" + k] = lid + ":" + b; });
+    const pr = (old.prac || {})[lid] || {}; const learnedOn = old.lessons && old.lessons[lid] && old.lessons[lid].learned;
+    const cardsBlock = (l.blocks || []).find(b => b.t === "cards");
+    const p = { kind: "progress", course: cid, lesson: lid, b: {}, cards: {}, w: {} };
+    for (const [k, st] of Object.entries(pr)) {
+      const bid = ids[+k]; if (!bid || !st) continue; const b = l.blocks.find(x => x.id === bid);
+      const a = st.code != null ? st.code : st.ans != null ? st.ans : (st.pick != null && b && b.options ? b.options[st.pick] : undefined);
+      p.b[bid] = { n: st.tries || 1 }; if (st.ok) p.b[bid].ok = true; if (a !== undefined) p.b[bid].a = String(a).slice(0, 20000);
+    }
+    if (learnedOn) p.done = new Date(dayMs(learnedOn)).toISOString();
+    if (cardsBlock) for (const [key, c] of Object.entries(old.cards || {})) { const [cl, ck] = key.split(":"); if (cl !== lid || !c) continue; p.cards[cardsBlock.id + "." + ck] = { box: Math.max(-1, (c.stage || 0) - 1), due: dayMs(c.due) - 12 * 3600e3 }; }
+    if (Object.keys(p.b).length || p.done || Object.keys(p.cards).length) progress.push(p);
+  }
+  const conv = ans => { const o = {}; for (const [ref, v] of Object.entries(ans || {})) { const r = ref.startsWith("D:") ? "drill:" + ref.slice(2) : refMap[ref]; if (!r || !v) continue; o[r] = { ok: !!v.ok }; const a = v.code != null ? v.code : v.ans; if (a != null) o[r].a = a; } return o; };
+  const state = { kind: "pstate", course: cid, v: 1, start: old.start || null, crit: old.crit || {}, quiz: old.quiz || {}, exams: old.exams || {}, drills: old.drills || {}, drafts: old.drafts || {}, days: old.log || {}, nb: old.nb || {},
+    examRun: old.examRun ? Object.assign({}, old.examRun, { ans: conv(old.examRun.ans) }) : null, migrated: new Date().toISOString() };
+  return { progress, state };
+}
+
+const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
 const api = {
   FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
@@ -709,6 +1145,9 @@ const api = {
   hexToRgb, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
+  ENGINES, MODULE_KEYS, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
+  normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.CK = api;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -855,9 +1294,233 @@ const api = { dbStore, localStore };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.CKStore = api;
 })(typeof window !== "undefined" ? window : globalThis);
 
-/* Coursekit player: one page that holds every course as data. */
+/* Coursekit runtimes: run learners' code in the page.
+   Engines:
+     pyodide  CPython compiled to WebAssembly, in a worker (py/ ships with the page)
+     js       JavaScript in a sandboxed frame
+     frame    a runner HTML document the course brings (any language that runs in a browser)
+   A course maps languages to engines in course.runtimes; the rest of the page only
+   calls run(lang, code) and check(lang, code, test, expect). */
+(function (root) {
+"use strict";
+const base = p => { try { return new URL(p, document.baseURI).href; } catch (e) { return p; } };
+
+/* ---------- Pyodide in a worker ---------- */
+function pyodideEngine() {
+  let w = null, seq = 0, pend = {}, state = "off", bootP = null; const listeners = new Set(); const sent = new Map();
+  const setState = s => { state = s; listeners.forEach(f => { try { f(s); } catch (e) {} }); };
+  function start() {
+    try { w = new Worker(base("py/sp-worker.js"), { type: "module" }); } catch (e) { setState("broken"); return false; }
+    w.onmessage = e => { const m = e.data, p = pend[m.id]; if (!p) return; if (m.type === "done") { delete pend[m.id]; p.res(m); } else if (p.on) p.on(m); };
+    w.onerror = e => { const msg = "Python could not start" + (e && e.message ? ": " + e.message : ""); Object.values(pend).forEach(p => p.res({ ok: false, error: msg, boot: true })); pend = {}; w = null; bootP = null; setState("broken"); };
+    return true;
+  }
+  function call(msg, on) { if (!w && !start()) return Promise.resolve({ ok: false, error: "Python is not available in this browser.", boot: true }); const id = ++seq; return new Promise(res => { pend[id] = { res, on }; w.postMessage(Object.assign({ id }, msg)); }); }
+  function boot() {
+    if (state === "ready") return Promise.resolve(true); if (state === "broken") return Promise.resolve(false);
+    if (!bootP) { setState("loading"); bootP = call({ op: "boot" }).then(r => { if (r.ok) { setState("ready"); return true; } setState("broken"); bootP = null; return false; }); }
+    return bootP;
+  }
+  function kill() { sent.clear(); if (w) { w.terminate(); w = null; } Object.values(pend).forEach(p => p.res({ ok: false, error: "Stopped.", stopped: true })); pend = {}; bootP = null; setState("off"); }
+  async function put(name, data) { const ok = await boot(); if (!ok) return { ok: false }; return call({ op: "put", path: name, data }); }
+  async function ensureFiles(code, files) {
+    for (const f of files || []) {
+      if (!String(code).includes(f.name) || sent.get(f.name) === f.url) continue;
+      try { const r = await fetch(base(f.url)); if (!r.ok) continue; const x = await call({ op: "put", path: f.name, data: await r.arrayBuffer() }); if (x.ok) sent.set(f.name, f.url); } catch (e) {}
+    }
+  }
+  async function run(code, o) {
+    o = o || {};
+    if (state !== "ready" && o.onStatus) o.onStatus("Starting Python. The first time this downloads about 45 MB; after that your browser keeps it.");
+    const ok = await boot(); if (!ok) return { ok: false, error: "Python did not load in this browser.", boot: true, out: "", imgs: [] };
+    await ensureFiles(code, o.files);
+    let out = "", timer = null; const imgs = []; const limit = o.limitMs || 60000;
+    const r = await new Promise(res => {
+      call({ op: "run", code, ns: o.ns || null }, m => {
+        if (m.type === "out" || m.type === "err") { out += m.text; if (o.onOut) o.onOut(out); }
+        else if (m.type === "img") imgs.push(m.png);
+        else if (m.type === "status") { if (o.onStatus) o.onStatus(m.text); if (m.text === "Running…" && !timer) timer = setTimeout(() => { kill(); res({ ok: false, error: "Stopped: the code ran longer than " + Math.round(limit / 1000) + " s (is there a loop that never ends?). Python restarts on the next run." }); }, limit); }
+      }).then(res);
+    });
+    clearTimeout(timer);
+    return Object.assign({ out, imgs }, r);
+  }
+  return {
+    kind: "pyodide", run, boot, kill, put,
+    reset: ns => w ? call({ op: "reset", ns }) : Promise.resolve({ ok: true }),
+    has: ns => w && state === "ready" ? call({ op: "has", ns }).then(r => !!r.has) : Promise.resolve(false),
+    get state() { return state; }, on: f => { listeners.add(f); return () => listeners.delete(f); },
+  };
+}
+
+/* ---------- frames: JavaScript and course-supplied runners ---------- */
+const JS_RUNNER = `<!doctype html><meta charset="utf-8"><script>
+(function(){
+  var cur = 0;
+  function fmt(v){ if (typeof v === "string") return v; try { var s = JSON.stringify(v); return s === undefined ? String(v) : s; } catch (e) { return String(v); } }
+  function send(m){ m.ck = 1; parent.postMessage(m, "*"); }
+  ["log","info","warn","error"].forEach(function(k){ console[k] = function(){ send({type:"out", id:cur, text: Array.prototype.map.call(arguments, fmt).join(" ") + "\\n"}); }; });
+  addEventListener("message", function(e){
+    var m = e.data; if (!m || m.ck !== 1 || m.type !== "run") return; cur = m.id;
+    var v;
+    try { v = (0, eval)(m.code); } catch (err) { send({type:"done", id:m.id, ok:false, error: String(err && err.stack || err).split("\\n").slice(0,4).join("\\n")}); return; }
+    Promise.resolve(v).then(function(x){ send({type:"done", id:m.id, ok:true, value: x === undefined ? null : fmt(x)}); }, function(err){ send({type:"done", id:m.id, ok:false, error:String(err)}); });
+  });
+})();
+<\/script>`;
+const frameMsgs = new Map(); // window -> handler
+addEventListener("message", e => { const f = frameMsgs.get(e.source); if (f && e.data && e.data.ck === 1) f(e.data); });
+function frameEngine(kind, html) {
+  const spaces = new Map(); let seq = 0; const pend = {};
+  function make(ns) {
+    const fr = document.createElement("iframe");
+    fr.setAttribute("sandbox", "allow-scripts"); fr.setAttribute("aria-hidden", "true"); fr.tabIndex = -1;
+    fr.style.cssText = "position:fixed;width:1px;height:1px;left:-10px;top:-10px;border:0;opacity:0;pointer-events:none";
+    fr.srcdoc = html; document.body.appendChild(fr);
+    const ready = new Promise(res => fr.addEventListener("load", () => res(), { once: true }));
+    const sp = { fr, ready, win: null };
+    ready.then(() => { sp.win = fr.contentWindow; frameMsgs.set(sp.win, m => { const p = pend[m.id]; if (!p) return; if (m.type === "done") { delete pend[m.id]; p.res(m); } else if (p.on) p.on(m); }); });
+    spaces.set(ns, sp); return sp;
+  }
+  function drop(ns) { const sp = spaces.get(ns); if (!sp) return; if (sp.win) frameMsgs.delete(sp.win); sp.fr.remove(); spaces.delete(ns); }
+  async function run(code, o) {
+    o = o || {}; const ns = o.ns || "_fresh" + (++seq);
+    const sp = spaces.get(ns) || make(ns); await sp.ready;
+    const id = ++seq; let out = ""; const imgs = []; const limit = o.limitMs || 20000;
+    const r = await new Promise(res => {
+      const t = setTimeout(() => { delete pend[id]; drop(ns); res({ ok: false, error: "Stopped: the code ran longer than " + Math.round(limit / 1000) + " s. It starts fresh on the next run." }); }, limit);
+      pend[id] = { res: m => { clearTimeout(t); res(m); }, on: m => { if (m.type === "out") { out += String(m.text || ""); if (o.onOut) o.onOut(out); } else if (m.type === "img" && m.png) imgs.push(String(m.png)); } };
+      sp.win.postMessage({ ck: 1, type: "run", id, code: String(code), files: (o.files || []).map(f => ({ name: f.name, url: base(f.url) })) }, "*");
+    });
+    if (!o.ns) drop(ns);
+    return { ok: !!r.ok, error: r.ok ? null : String(r.error || "Error"), value: r.value != null ? String(r.value) : null, out, imgs };
+  }
+  return { kind, run, boot: () => Promise.resolve(true), kill: () => { for (const k of [...spaces.keys()]) drop(k); }, put: async () => ({ ok: false }),
+    reset: async ns => { drop(ns); return { ok: true }; }, has: async ns => spaces.has(ns), get state() { return "ready"; }, on: () => () => {} };
+}
+
+/* ---------- registry ---------- */
+let PY = null; const JS = { e: null }; const FRAMES = new Map();
+const overrides = {}; // tests may register stand-in engines
+function engineFor(rt) {
+  if (!rt) return null;
+  if (overrides[rt.engine]) return overrides[rt.engine];
+  if (rt.engine === "pyodide") return PY || (PY = pyodideEngine());
+  if (rt.engine === "js") return JS.e || (JS.e = frameEngine("js", JS_RUNNER));
+  if (rt.engine === "frame") { const key = rt.lang + ":" + (rt.html || "").length + ":" + hash(rt.html || ""); if (!FRAMES.has(key)) FRAMES.set(key, frameEngine("frame", rt.html)); return FRAMES.get(key); }
+  return null;
+}
+function hash(s) { let x = 2166136261; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+
+/* One course's view of the runtimes. */
+function forCourse(course) {
+  const rts = (course && course.runtimes) || {};
+  const rt = lang => CK.runtimeFor(rts, lang);
+  const files = () => (course && course.files) || [];
+  const api = {
+    has: lang => !!rt(lang) && !!engineFor(rt(lang)),
+    label: lang => { const r = rt(lang); return r ? r.label : String(lang); },
+    engine: lang => engineFor(rt(lang)),
+    apps: () => !!(rts.python && rts.python.apps),
+    async run(lang, code, o) {
+      const e = engineFor(rt(lang)); if (!e) return { ok: false, error: "This course cannot run " + lang + " code.", out: "", imgs: [] };
+      o = Object.assign({}, o || {}); o.files = o.files || files();
+      const r = await e.run(code, o);
+      return { ok: !!r.ok, error: r.ok ? null : (r.error || "Error"), out: r.out || "", value: r.value != null ? r.value : null, imgs: r.imgs || [], boot: !!r.boot };
+    },
+    /* Runs the learner's code, then the hidden test in the same namespace, and compares what the test prints. */
+    async check(lang, code, test, expect, o) {
+      o = o || {}; const e = engineFor(rt(lang)); const ns = "chk-" + Math.random().toString(36).slice(2, 9);
+      const own = await api.run(lang, code, Object.assign({}, o, { ns }));
+      if (!own.ok) { if (e) e.reset(ns); return { pass: false, own: own.out, err: own.error, reachedTests: false, testOut: "", imgs: own.imgs, boot: own.boot }; }
+      const t = test && test.trim() ? await api.run(lang, test, Object.assign({}, o, { ns, onOut: null })) : { ok: true, out: own.out, imgs: [] };
+      if (e) e.reset(ns);
+      const pass = t.ok && CK.outputMatches(t.out, expect);
+      return { pass, own: own.out, testOut: t.out, err: t.ok ? null : t.error, reachedTests: true, imgs: own.imgs.concat(t.imgs || []) };
+    },
+    reset: (lang, ns) => { const e = engineFor(rt(lang)); return e ? e.reset(ns) : Promise.resolve(); },
+    has_ns: (lang, ns) => { const e = engineFor(rt(lang)); return e ? e.has(ns) : Promise.resolve(false); },
+    put: (lang, name, data) => { const e = engineFor(rt(lang)); return e ? e.put(name, data) : Promise.resolve({ ok: false }); },
+    state: lang => { const e = engineFor(rt(lang)); return e ? e.state : "none"; },
+    on: (lang, f) => { const e = engineFor(rt(lang)); return e ? e.on(f) : () => {}; },
+  };
+  return api;
+}
+
+/* ---------- Streamlit apps (stlite under st/, Python from py/) ---------- */
+const ST = { lock: null };
+async function pkgMap() {
+  if (ST.lock) return ST.lock; const m = {};
+  try { const L = await (await fetch(base("py/pyodide-lock.json"))).json(); Object.entries(L.packages).forEach(([n, p]) => (p.imports || []).forEach(i => { m[i] = n; })); } catch (e) {}
+  return ST.lock = m;
+}
+function imports(src) { const out = new Set(); String(src).replace(/^[ \t]*(?:from[ \t]+([A-Za-z_]\w*)|import[ \t]+([^\n#;]+))/gm, (_, a, b) => { if (a) out.add(a); else b.split(",").forEach(x => { const n = x.trim().split(/[\s.]/)[0]; if (n) out.add(n); }); return ""; }); return [...out]; }
+async function streamlitOptions(src, files) {
+  const map = await pkgMap(); const pk = [...new Set(imports(src).map(i => map[i]).filter(Boolean))];
+  const f = { "app.py": src }; for (const x of files || []) if (src.includes(x.name)) f[x.name] = { url: base(x.url) };
+  return { sig: pk.slice().sort().join(",") + "|" + Object.keys(f).sort().join(","), opts: { entrypoint: "app.py", pyodideUrl: base("py/pyodide.mjs"), requirements: [], prebuiltPackageNames: pk, files: f, streamlitConfig: { "client.toolbarMode": "minimal", "server.runOnSave": true } } };
+}
+/* Mounts a Streamlit app into `host`. Returns a controller: apply(src), restart(src), status(): {state, text}, stop(). */
+function streamlit(host, src, files, onStatus) {
+  const C = { frame: null, ctl: null, direct: false, hello: false, sig: "", state: "starting", ran: false, err: null, poll: null, watched: null, booted: false };
+  const say = (state, text) => { C.state = state; if (onStatus) onStatus(state, text); };
+  async function start(code) {
+    clearInterval(C.poll); try { if (C.ctl) C.ctl.unmount(); } catch (e) {}
+    host.replaceChildren(); C.frame = null; C.ctl = null; C.hello = false; C.ran = false; C.err = null;
+    say("starting", "Starting Python and Streamlit. The first time takes about 20 seconds…");
+    const { sig, opts } = await streamlitOptions(code, files); C.sig = sig;
+    const J = JSON.stringify(opts).replace(/</g, "\\u003c");
+    const fr = document.createElement("iframe"); fr.className = "stframe"; fr.title = "Streamlit app";
+    const tag = "__ck" + Math.random().toString(36).slice(2, 8);
+    window[tag + "hello"] = () => { C.hello = true; }; window[tag + "fail"] = e => say("error", "Streamlit could not load: " + e);
+    fr.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="' + base("st/stlite.css") + '"><style>html,body{margin:0;height:100%}</style></head><body><div id="root"></div><script type="module">try{parent.' + tag + 'hello&&parent.' + tag + 'hello();}catch(e){}import("' + base("st/stlite.js") + '").then(m=>{window.__ctl=m.mount(' + J + ',document.getElementById("root"));}).catch(e=>{try{parent.' + tag + 'fail&&parent.' + tag + 'fail(String(e));}catch(x){}});<\/script></body></html>';
+    host.appendChild(fr); C.frame = fr;
+    setTimeout(() => { if (C.frame === fr && !C.hello) { fr.remove(); C.frame = null; direct(opts); } }, 12000);
+    watch();
+  }
+  function direct(opts) {
+    C.direct = true;
+    if (!document.querySelector("link[data-stlite]")) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = base("st/stlite.css"); l.dataset.stlite = "1"; document.head.appendChild(l); }
+    const div = document.createElement("div"); div.className = "stdirect"; host.appendChild(div);
+    import(base("st/stlite.js")).then(m => { C.ctl = m.mount(opts, div); }).catch(e => say("error", "Streamlit could not load: " + e));
+  }
+  const doc = () => { try { return C.frame ? C.frame.contentDocument : host.querySelector(".stdirect"); } catch (e) { return null; } };
+  const ctl = () => { try { return C.direct ? C.ctl : (C.frame && C.frame.contentWindow && C.frame.contentWindow.__ctl); } catch (e) { return null; } };
+  function watch() {
+    clearInterval(C.poll); let seen = 0;
+    C.poll = setInterval(() => {
+      const d = doc(); if (!d) return; const k = ctl();
+      if (k && k !== C.watched) { C.watched = k; C.booted = false; try { k._kernel.loaded.then(() => { if (ctl() === k) C.booted = true; }); } catch (e) { C.booted = true; } }
+      const txt = (d.body ? d.body.textContent : d.textContent) || "";
+      if (/Error during booting up/.test(txt)) { C.err = true; C.ran = false; return say("error", "Streamlit could not start. Try Restart."); }
+      const boot = txt.match(/(Loading Pyodide|Mounting files|Unpacking archives|Installing packages|Loading streamlit package|Setting up the[^.]*|Mocking some[^.]*)/);
+      if (boot) { seen = 0; return say("starting", "Starting: " + boot[1].replace("Pyodide", "Python") + " (the first time takes about 20 seconds)"); }
+      const ex = d.querySelector('[data-testid="stException"]'); const els = d.querySelectorAll('[data-testid="stElementContainer"]').length; const running = d.querySelector('[data-testid="stStatusWidget"]');
+      if (ex) { C.err = true; C.ran = true; return say("error", "app.py raised an error: see the red box. Fix the code, then Apply."); }
+      if (!C.booted) return say("starting", "Starting Python and Streamlit…");
+      if (els <= 1) { seen = 0; return say("running", "Running your script. The first run imports the libraries…"); }
+      if (!running) { seen++; if (seen >= 2) { C.ran = true; C.err = false; say("ready", "Running. Edit the code, then Apply to see changes."); } }
+      else say("running", "Running your script…");
+    }, 1000);
+  }
+  async function apply(code) {
+    const { sig } = await streamlitOptions(code, files); const k = ctl();
+    if (!k || sig !== C.sig) return start(code);
+    say("running", "Applying your code…"); C.err = null;
+    try { await k.writeFile("app.py", code); } catch (e) { return start(code); }
+    watch();
+  }
+  start(src);
+  return { apply, restart: start, get ran() { return C.ran; }, get err() { return C.err; }, get state() { return C.state; }, stop() { clearInterval(C.poll); try { const k = ctl(); if (k) k.unmount(); } catch (e) {} host.replaceChildren(); } };
+}
+
+const api = { forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
+root.CKRun = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
 (function () {
 "use strict";
+/* Coursekit player: one page that holds every course as data. */
 const { md, esc } = CKmd;
 
 /* ================= state ================= */
@@ -865,6 +1528,7 @@ const S = {
   store: null, mode: "starting", uid: null, sample: null, downloads: null, assets: null, user: null, tools: false,
   courses: {}, stats: {}, cmds: [],
   cid: null, lessons: {}, progress: {}, unsubCourse: [], courseLoaded: false,
+  mods: {}, g: null, rtFor: null,
   chat: {}, writer: null, ask: { open: false, busy: false, ctl: null, attach: null, draft: "" },
   banner: [], view: null, katex: false,
 };
@@ -922,7 +1586,17 @@ const sampleError = e => {
 const K = {
   course: c => "c~" + c, lesson: (c, l) => "l~" + c + "~" + l, prog: (c, l) => "p~" + c + "~" + l, stats: c => "s~" + c,
   chat: c => "h~" + c, rev: c => "v~" + c + "~" + now().toString(36), src: (c, n) => "src~" + c + "~" + n, log: d => "log~" + d,
+  mod: (c, part) => "x~" + c + "~" + part, pst: c => "g~" + c, nbw: (c, id) => "n~" + c + "~" + id,
 };
+/* Modules are stored one record per part: plan, drills, checkpoints, nb.<id> (one per notebook). */
+const modParts = mods => { const out = {}; for (const k of ["plan", "drills", "checkpoints"]) if (mods[k] != null) out[k] = mods[k]; for (const [id, n] of Object.entries(mods.notebooks || {})) out["nb." + id] = n; return out; };
+function modsFromDocs(docs) {
+  const m = { notebooks: {} };
+  for (const d of docs) { const b = d.body; if (!b || b.data == null) continue; if (b.part.startsWith("nb.")) m.notebooks[b.part.slice(3)] = b.data; else m[b.part] = b.data; }
+  return m;
+}
+/* The runtimes of the open course. */
+function RT() { const c = S.courses[S.cid]; if (!c) return CKRun.forCourse(null); if (!S.rtFor || S.rtFor.c !== c.runtimes || S.rtFor.f !== c.files) S.rtFor = { c: c.runtimes, f: c.files, rt: CKRun.forCourse(c) }; return S.rtFor.rt; }
 function put(key, body) { return S.store.put(key, body); }
 
 async function boot() {
@@ -960,9 +1634,22 @@ function watchLibrary() {
 
 function openCourse(cid) {
   if (S.cid === cid) return;
+  if (S.gPending && S.cid) { clearTimeout(gTimer); flushG(S.cid); }
   S.unsubCourse.forEach(u => u()); S.unsubCourse = [];
   S.cid = cid; S.lessons = {}; S.progress = {}; S.courseLoaded = false; S.lessonsLoaded = false; S.progLoaded = false;
+  S.mods = { notebooks: {} }; S.g = null; S.modsLoaded = false; S.gLoaded = false; S.nbw = {};
   if (!cid) return;
+  S.unsubCourse.push(S.store.watch({ kind: "module", course: cid }, docs => {
+    const m = modsFromDocs(docs);
+    if (S.txn && S.txn.cid === cid) for (const k of S.txn.touched) if (k.startsWith("x~")) { const part = k.split("~")[2]; const v = modGet(part); if (v == null) continue; if (part.startsWith("nb.")) m.notebooks[part.slice(3)] = v; else m[part] = v; }
+    const sig = JSON.stringify(m); if (sig !== S.modsJson || !S.modsLoaded) { S.modsJson = sig; S.mods = m; S.modsRev = (S.modsRev || 0) + 1; }
+    S.modsLoaded = true; render();
+  }));
+  S.unsubCourse.push(S.store.watch({ kind: "pstate", course: cid }, docs => {
+    const b = docs[0] && docs[0].body;
+    if (S.gLoaded && (gDirty() || (b && b.updated === S.gSavedAt))) return; // our own write coming back, or ours is newer
+    S.g = normG(b, cid); S.gLoaded = true; S.gRev = (S.gRev || 0) + 1; render();
+  }));
   S.unsubCourse.push(S.store.watch({ kind: "lesson", course: cid }, docs => {
     const n = {}; for (const d of docs) n[d.body.id] = d.body;
     // Keep this page's own uncommitted edits.
@@ -981,7 +1668,11 @@ function openCourse(cid) {
 /* ================= routing ================= */
 function parseRoute() {
   const p = (location.hash || "#/").slice(2).split("/").map(decodeURIComponent);
-  if (p[0] === "c" && p[1]) return { name: p[2] === "l" && p[3] ? "lesson" : p[2] === "review" ? "review" : p[2] === "history" ? "history" : "course", cid: p[1], lid: p[3] };
+  if (p[0] === "c" && p[1]) {
+    const v = { l: "lesson", d: "drill", x: "exam", q: "quiz", n: "notebook", t: "course" }[p[2]];
+    if (v && p[3]) return { name: v, cid: p[1], lid: v === "lesson" ? p[3] : undefined, id: p[3], tab: v === "course" ? p[3] : undefined };
+    return { name: p[2] === "review" ? "review" : p[2] === "history" ? "history" : "course", cid: p[1] };
+  }
   if (p[0] === "new") return { name: "new" };
   return { name: "library" };
 }
@@ -993,6 +1684,7 @@ function onRoute() {
   S.view = null; render(true);
   window.scrollTo(0, 0);
   if (S.route.name === "lesson") logEvent("open", { c: S.route.cid, l: S.route.lid });
+  stopTimers();
 }
 
 /* ================= render ================= */
@@ -1014,12 +1706,16 @@ function doRender() {
   else if (r.name === "library") { key = "lib:" + libSig(); build = viewLibrary; }
   else if (r.name === "new") { key = "new"; build = viewNew; }
   else if (!course) { key = "nocourse:" + !!S.libLoaded; build = () => h("div", { class: "empty" }, S.libLoaded ? [h("h2", null, "This course is not in your library"), h("p", null, h("a", { href: "#/" }, "Back to your courses"))] : h("p", { class: "muted" }, "Loading…")); }
-  else if (r.name === "course") { key = "course:" + courseSig(course); build = () => viewCourse(course); }
+  else if (r.name === "course") { key = "course:" + courseSig(course) + ":" + (r.tab || "") + ":" + modSig(); build = () => viewCourse(course, r.tab); }
+  else if (r.name === "drill") { key = "drill:" + r.cid + ":" + r.id + ":" + modSig(); build = () => viewDrill(course, r.id); }
+  else if (r.name === "exam") { key = "exam:" + r.cid + ":" + r.id + ":" + modSig() + ":" + !!(S.g && S.g.examRun); build = () => viewExam(course, r.id); }
+  else if (r.name === "quiz") { key = "quiz:" + r.cid + ":" + r.id + ":" + S.modsLoaded; build = () => viewQuiz(course, +r.id); }
+  else if (r.name === "notebook") { key = "nb:" + r.cid + ":" + r.id + ":" + S.modsLoaded + ":" + S.gLoaded; build = () => viewNotebook(course, r.id); }
   else if (r.name === "lesson") { const l = S.lessons[r.lid]; key = "lesson:" + r.cid + ":" + r.lid + ":" + (l ? (l.updated || 0) + ":" + !!l.pending + ":" + !!l.rewrite : "none") + ":" + course.updated + ":" + writerSig(); build = () => viewLesson(course, r.lid); }
   else if (r.name === "review") { key = "review:" + r.cid + ":" + S.courseLoaded; build = () => viewReview(course); }
   else if (r.name === "history") { key = "history:" + r.cid + ":" + (S.revs ? S.revs.length : -1); build = () => viewHistory(course); }
   if (S.view !== key) {
-    S.view = key; rc(main, build());
+    S.view = key; rc(main, build()); main.className = "v-" + r.name;
     if (r.name === "lesson") refreshProgress();
   }
   if (S.ask.open) renderAskHead();
@@ -1027,6 +1723,7 @@ function doRender() {
 }
 const libSig = () => JSON.stringify([Object.values(S.courses).map(c => [c.id, c.updated, c.archivedAt]), Object.values(S.stats).map(s => [s.course, s.learned, s.updated]), S.libLoaded, S.slow, S.libError, S.showArchived]);
 const courseSig = c => [c.id, c.updated, S.courseLoaded, Object.values(S.lessons).map(l => l.id + (l.pending ? "p" : "") + (l.rewrite ? "r" : "") + (l.updated || 0)).join(","), Object.values(S.progress).map(p => p.lesson + (p.done ? "d" : "")).join(","), writerSig(), S.courseMenu].join("|");
+const modSig = () => [S.modsRev || 0, S.gRev || 0, !!S.modsLoaded, !!S.gLoaded].join(".");
 const writerSig = () => S.writer ? S.writer.cid + ":" + S.writer.current + ":" + S.writer.running : "";
 
 function renderStatus() {
@@ -1243,6 +1940,7 @@ async function saveImported(imp, opts) {
   delete meta.designNotes;
   S.courses[cid] = meta;
   for (const l of imp.lessons) await put(K.lesson(cid, l.id), Object.assign({}, l, { kind: "lesson", course: cid, updated: at }));
+  for (const [part, data] of Object.entries(modParts(imp.mods || {}))) await put(K.mod(cid, part), { kind: "module", course: cid, part, data, updated: at });
   if (opts.source) { const CH = 200000; for (let i = 0, n = 0; i < opts.source.length && n < 5; i += CH, n++) await put(K.src(cid, n), { kind: "source", course: cid, n, text: opts.source.slice(i, i + CH) }); }
   await put(K.course(cid), meta);
   render();
@@ -1365,7 +2063,7 @@ function dueCards(c) {
   return out;
 }
 
-function viewCourse(c) {
+function classicHome(c) {
   const ls = orderedLessons(c), total = ls.length;
   const learned = ls.filter(l => lessonStatus(l.id) === "learned").length;
   const nxt = S.courseLoaded ? nextLesson(c) : null; const due = S.courseLoaded ? dueCards(c).length : 0;
@@ -1447,8 +2145,9 @@ function viewLesson(c, lid) {
   const unit = c.units.find(u => u.lessons.includes(lid));
   const body = h("article", { class: "lesson", id: "lesson" },
     h("header", null,
-      h("p", { class: "eyebrow" }, unit ? unit.title : "", l.minutes ? " · " + l.minutes + " min" : ""),
+      h("p", { class: "eyebrow" }, [l.week ? unitWord(c) + " " + l.week : unit ? unit.title : "", l.track && c.tracks && c.tracks[l.track] ? c.tracks[l.track] : "", l.minutes ? l.minutes + " min" : ""].filter(Boolean).join(" · ")),
       h("h1", null, l.title), l.summary ? h("p", { class: "lede" }, l.summary) : null,
+      lessonDrillsNote(c, l),
       l.archived ? h("p", { class: "note" }, "This lesson is archived. It stays here with your progress but is hidden from the course.") : null));
   if (l.pending || (l.rewrite && !l.blocks?.length)) {
     const w = S.writer && S.writer.running;
@@ -1523,23 +2222,96 @@ function refreshProgress() {
 const blockState = {};
 
 /* ---------- blocks ---------- */
-function renderBlock(c, l, b) {
-  delete blockState[b.id];
-  const box = h("section", { class: "blk blk-" + b.t + (b.kind ? " co-" + b.kind : ""), id: "b-" + b.id, "data-block": b.id });
+/* ex (optional): {ans, key, num} renders the block as a checkpoint item: answers go to ans[key], nothing is revealed. */
+function renderBlock(c, l, b, ex) {
+  if (!ex) delete blockState[b.id];
+  const box = h("section", { class: "blk blk-" + b.t + (b.kind ? " co-" + b.kind : ""), id: ex ? null : "b-" + b.id, "data-block": b.id });
   const mark = h("span", { class: "pmark", "aria-hidden": "true" });
+  const saved = ex ? (ex.ans[ex.key] || null) : ((S.progress[l.id] || {}).b || {})[b.id] || null;
   const record = (ok, a) => {
+    if (ex) { ex.ans[ex.key] = { ok: !!ok, a: typeof a === "string" ? a.slice(0, 20000) : a }; saveG(); return; }
     const p = prog(l.id); const cur = p.b[b.id] || { n: 0 };
-    cur.n = (cur.n || 0) + 1; if (ok) cur.ok = true; if (a !== undefined) cur.a = typeof a === "string" ? a.slice(0, 2000) : a;
+    cur.n = (cur.n || 0) + 1; if (ok) cur.ok = true; if (a !== undefined) cur.a = typeof a === "string" ? a.slice(0, 20000) : a;
     p.b[b.id] = cur; logEvent("check", { c: S.cid, l: l.id, b: b.id, ok: !!ok }); updateLearned(l.id);
   };
+  const keep = a => { if (ex) { ex.ans[ex.key] = Object.assign(ex.ans[ex.key] || {}, { a }); saveGSoon(); return; } const p = prog(l.id); const cur = p.b[b.id] || { n: 0 }; cur.a = a; p.b[b.id] = cur; saveProg(l.id); };
   const feedback = h("div", { class: "fb", "aria-live": "polite" });
-  const showWhy = (ok, extra) => { rc(feedback, h("p", { class: ok ? "ok" : "bad" }, ok ? "Right." : "Not yet. Try again."), ok && b.why ? mdEl(b.why) : null, extra || null); };
+  const showWhy = (ok, extra) => { if (ex) { rc(feedback, h("p", { class: "muted" }, "Answer saved. It is marked when you submit.")); return; } rc(feedback, h("p", { class: ok ? "ok" : "bad" }, ok ? "Right." : "Not yet. Try again."), ok && b.why ? mdEl(b.why) : null, extra || null); };
+  if (ex) ap(box, h("p", { class: "qnum" }, ex.num));
   switch (b.t) {
     case "md": ap(box, mdEl(b.md)); break;
     case "callout": ap(box, b.title ? h("p", { class: "co-title" }, b.title) : null, mdEl(b.md)); break;
     case "code": {
       const pre = h("pre", { "data-lang": b.lang }, h("code", null, b.src));
-      ap(box, pre, h("div", { class: "row" }, b.caption ? h("p", { class: "muted small" }, b.caption) : null, h("button", { class: "link small", onclick: () => copy(b.src) }, "Copy")));
+      const runnable = b.run !== false && RT().has(b.lang);
+      const bar = h("div", { class: "row" }, b.caption ? h("p", { class: "muted small" }, b.caption) : null,
+        runnable ? h("button", { class: "btn small run-btn", onclick: () => { const cell = codeCell(b.src, b.lang, "lesson:" + l.id, { onClose: () => { cell.replaceWith(pre); bar.hidden = false; } }); pre.replaceWith(cell); bar.hidden = true; cell.querySelector("textarea").focus(); } }, "▶ Run this code") : null,
+        runnable ? h("span", { class: "muted small" }, "Runs in real " + RT().label(b.lang) + " here; snippets in this lesson share variables.") : null,
+        h("button", { class: "link small", onclick: () => copy(b.src) }, "Copy"));
+      ap(box, pre, bar);
+      break;
+    }
+    case "run": {
+      const ta = codeArea(saved && typeof saved.a === "string" ? saved.a : (b.starter || ""), b.lang);
+      ta.addEventListener("input", () => keep(ta.value));
+      const out = h("div", { class: "runout" });
+      const solBox = h("div");
+      const can = RT().has(b.lang);
+      const btns = h("div", { class: "row" },
+        h("button", { class: "btn small primary", disabled: !can, onclick: async e => {
+          const btn = e.currentTarget; btn.disabled = true; rc(out, statusLine("Running your code and the hidden tests…"));
+          const r = await RT().check(b.lang, ta.value, b.test, b.expect, { onStatus: t => rc(out, statusLine(t)) });
+          btn.disabled = false;
+          rc(out, runOutput({ out: r.own, error: r.err, imgs: r.imgs }, "(your code printed nothing)"));
+          if (ex) { record(r.pass, ta.value); ap(out, h("p", { class: "muted" }, r.pass ? "Tests pass. Answer saved." : "Tests do not pass yet. Answer saved.")); return; }
+          record(r.pass, ta.value);
+          if (r.pass) { rc(feedback, h("p", { class: "ok" }, "All tests pass."), b.why ? mdEl(b.why) : null); rc(solBox, modelCode(b.solution, b.lang, "Model answer")); }
+          else rc(feedback, h("p", { class: "bad" }, r.err ? (r.reachedTests ? "The tests raised an error." : "Your code raised an error.") : "The test output does not match."),
+            r.reachedTests && !r.err ? h("div", null, h("p", { class: "small" }, "Tests printed:"), h("pre", { class: "out" }, r.testOut || "(nothing)"), h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n"))) : null);
+        } }, "Run and check"),
+        h("button", { class: "btn small", disabled: !can, onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput(r, "(no output)")); } }, "Run only"),
+        ex ? null : h("button", { class: "btn small ghost", onclick: () => rc(solBox, modelCode(b.solution, b.lang, "Model answer"), h("p", { class: "muted small" }, "Close it, then type your own version. Rebuilding it teaches more than copying.")) }, "Show model answer"));
+      ap(box, h("p", { class: "co-title" }, "Write and run · " + RT().label(b.lang)), h("div", { class: "q" }, mdEl(b.q)), ta, can ? null : h("p", { class: "note" }, "This course has no " + b.lang + " runtime here, so the code cannot be checked."), btns, out, feedback, solBox);
+      if (!ex) blockState[b.id] = st => { if (st && typeof st.a === "string" && !ta.dataset.touched && ta.value !== st.a) { ta.value = st.a; fitArea(ta); } if (st && st.ok && !solBox.childElementCount) rc(solBox, modelCode(b.solution, b.lang, "Model answer")); box.classList.toggle("solved", !!(st && st.ok)); };
+      ta.addEventListener("input", () => { ta.dataset.touched = "1"; });
+      break;
+    }
+    case "predict": {
+      const multi = b.expect.length > 1;
+      const inp = multi ? h("textarea", { class: "code", rows: Math.min(10, b.expect.length + 1), "aria-label": "The exact output", spellcheck: "false" }) : h("input", { type: "text", "aria-label": "The exact output", autocomplete: "off", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") inp.value = saved.a;
+      let wrong = 0;
+      const check = () => {
+        const ok = CK.checkAnswer(b, inp.value); if (!ok) wrong++;
+        if (ex) { record(ok, inp.value); showWhy(ok); return; }
+        showWhy(ok, !ok && wrong >= 2 ? h("div", null, h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n")), b.why ? mdEl(b.why) : null, h("p", { class: "small muted" }, "Type it in to continue.")) : null);
+        record(ok, inp.value);
+      };
+      if (!multi) inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+      ap(box, h("p", { class: "co-title" }, "Predict the output"), h("div", { class: "q" }, mdEl(b.q)), h("div", { class: multi ? "" : "row" }, inp, h("button", { class: "btn small", onclick: check }, "Check")), feedback);
+      break;
+    }
+    case "output": {
+      const can = b.code && RT().has(b.lang);
+      const paste = h("textarea", { class: "code", rows: 6, placeholder: "Paste the output here", "aria-label": "The output", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") paste.value = saved.a;
+      paste.addEventListener("input", () => keep(paste.value));
+      const check = () => {
+        const v = paste.value; const n = v.split("\n").filter(x => x.trim()).length;
+        const miss = (b.expect || []).filter(e => !CK.normLine(v).toLowerCase().includes(CK.normLine(e).toLowerCase()));
+        const ok = CK.checkAnswer(b, v); record(ok, v);
+        if (ex) return showWhy(ok);
+        if (ok) rc(feedback, h("p", { class: "ok" }, "Output accepted."), b.why ? mdEl(b.why) : null);
+        else rc(feedback, h("p", { class: "bad" }, n < (b.min || 1) ? "Paste at least " + b.min + " lines of output." : "The output is missing: " + miss.join(", ")));
+      };
+      ap(box, h("p", { class: "co-title" }, "Run it" + (can ? "" : " on your computer")), h("div", { class: "q" }, mdEl(b.q)));
+      if (can) {
+        const ta = codeArea(b.code, b.lang); const out = h("div", { class: "runout" });
+        ap(box, h("p", { class: "muted small" }, "Runs here in real " + RT().label(b.lang) + ". Edit it if you like; the output is pasted and checked for you."), ta,
+          h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput({ imgs: r.imgs, error: r.error, out: "" }, null)); paste.value = (r.out || "").replace(/\s+$/, ""); keep(paste.value); if (!r.error) check(); } }, "Run here and check")), out,
+          h("p", { class: "muted small" }, "Or run it on your own machine and paste the output:"));
+      }
+      ap(box, paste, h("div", { class: "row" }, h("button", { class: "btn small", onclick: check }, "Check the output")), feedback);
       break;
     }
     case "math": { const d = h("div", { class: "math" }); d.innerHTML = mathHtml(b.tex, true); ap(box, d, b.caption ? h("p", { class: "muted small" }, b.caption) : null); break; }
@@ -1556,7 +2328,7 @@ function renderBlock(c, l, b) {
       const opts = order.map(i => h("button", { class: "opt", "aria-pressed": "false", onclick: e => {
         if (multi) { chosen.has(i) ? chosen.delete(i) : chosen.add(i); e.currentTarget.setAttribute("aria-pressed", String(chosen.has(i))); return; }
         opts.forEach(o => o.setAttribute("aria-pressed", "false")); e.currentTarget.setAttribute("aria-pressed", "true");
-        const ok = CK.checkAnswer(b, i); e.currentTarget.classList.add(ok ? "right" : "wrong"); showWhy(ok); record(ok, b.options[i]);
+        const ok = CK.checkAnswer(b, i); if (!ex) e.currentTarget.classList.add(ok ? "right" : "wrong"); showWhy(ok); record(ok, b.options[i]);
       } }, mdInline(b.options[i])));
       ap(box, h("div", { class: "q" }, mdEl(b.q)), h("div", { class: "opts" }, opts));
       if (multi) ap(box, h("p", { class: "muted small" }, "Choose every right option."), h("button", { class: "btn small", onclick: () => { const ok = CK.checkAnswer(b, [...chosen]); showWhy(ok); record(ok, [...chosen].map(i => b.options[i]).join(" | ")); } }, "Check"));
@@ -1594,6 +2366,7 @@ function renderBlock(c, l, b) {
       ap(box, h("div", { class: "q" }, mdEl(b.q)), ta, h("div", { class: "row" }, count, h("button", { class: "btn small", onclick: () => {
         const ok = CK.checkAnswer(b, ta.value);
         if (!ok) { rc(feedback, h("p", { class: "bad" }, "Write at least " + b.min + " words first.")); return; }
+        if (ex) { record(true, ta.value); showWhy(true); return; }
         rc(feedback, h("p", { class: "ok" }, "Saved. Compare with the model answer" + (S.sample ? ", or ask for feedback." : "."))); model.hidden = false; tutorBtn.hidden = !S.sample; record(true, ta.value);
       } }, "Submit"), tutorBtn), model, feedback);
       blockState[b.id] = st => { if (st && st.a && !ta.value) { ta.value = typeof st.a === "string" ? st.a : ""; upd(); } if (st && st.ok) { model.hidden = false; tutorBtn.hidden = !S.sample; if (st.fb && !feedback.childElementCount) rc(feedback, mdEl(st.fb)); } box.classList.toggle("solved", !!(st && st.ok)); };
@@ -1603,11 +2376,12 @@ function renderBlock(c, l, b) {
       const sol = h("details", { class: "model", hidden: true }, h("summary", null, "Solution"), b.lang ? h("pre", { "data-lang": b.lang }, h("code", null, b.solution)) : mdEl(b.solution));
       ap(box, h("p", { class: "co-title" }, "Task"), mdEl(b.q), b.starter ? h("pre", { "data-lang": b.lang || "" }, h("code", null, b.starter)) : null,
         h("div", { class: "row" }, b.starter ? h("button", { class: "link small", onclick: () => copy(b.starter) }, "Copy starter") : null,
-          h("button", { class: "btn small", onclick: () => { sol.hidden = false; record(true, "done"); } }, "I did it")), sol, feedback);
+          h("button", { class: "btn small", onclick: () => { if (!ex) sol.hidden = false; record(true, "done"); showWhy(true); } }, "I did it")), sol, feedback);
       blockState[b.id] = st => { if (st && st.ok) sol.hidden = false; box.classList.toggle("solved", !!(st && st.ok)); };
       break;
     }
   }
+  if (ex) { box.classList.add("practice", "exam-item"); return box; }
   if (CK.PRACTICE.includes(b.t) || (b.t === "widget" && b.graded)) {
     box.classList.add("practice"); box.prepend(mark);
     if (!blockState[b.id]) blockState[b.id] = st => {
@@ -1619,6 +2393,33 @@ function renderBlock(c, l, b) {
   }
   box.addEventListener("focusin", () => { S.focusBlock = { l: l.id, b: b.id }; });
   return box;
+}
+/* ---------- code editing and running ---------- */
+function fitArea(ta) { ta.style.height = "auto"; ta.style.height = Math.min(640, Math.max(70, ta.scrollHeight + 4)) + "px"; }
+function codeArea(value, lang) {
+  const ta = h("textarea", { class: "code", spellcheck: "false", autocapitalize: "off", autocomplete: "off", "aria-label": (lang || "Code") + " editor" });
+  ta.value = value || "";
+  ta.addEventListener("keydown", e => {
+    if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); const a = ta.selectionStart, z = ta.selectionEnd; ta.value = ta.value.slice(0, a) + "    " + ta.value.slice(z); ta.selectionStart = ta.selectionEnd = a + 4; ta.dispatchEvent(new Event("input")); }
+  });
+  ta.addEventListener("input", () => fitArea(ta)); setTimeout(() => fitArea(ta), 0);
+  return ta;
+}
+const statusLine = t => h("pre", { class: "out muted" }, t);
+function figures(imgs) { return (imgs || []).map(p => h("img", { class: "fig", alt: "Plot made by the code", src: "data:image/png;base64," + String(p).replace(/[^A-Za-z0-9+/=]/g, "") })); }
+function runOutput(r, empty) {
+  const txt = (r.out || "") + (r.value != null && r.value !== "" ? r.value : "");
+  const pre = txt || r.error ? h("pre", { class: "out" }, txt, r.error ? h("span", { class: "err" }, (txt ? "\n" : "") + r.error) : null) : empty ? h("pre", { class: "out muted" }, empty) : null;
+  return h("div", { class: "outwrap" }, pre, figures(r.imgs));
+}
+const modelCode = (src, lang, title) => h("details", { class: "model", open: true }, h("summary", null, title || "Model answer"), h("pre", { "data-lang": lang || "" }, h("code", null, src || "")));
+/* An editable, runnable cell (used for "Run this code" in lessons). */
+function codeCell(src, lang, ns, o) {
+  o = o || {};
+  const ta = codeArea(src, lang); const out = h("div", { class: "runout" });
+  const go = async () => { rc(out, statusLine("Running…")); const r = await RT().run(lang, ta.value, { ns, onStatus: t => rc(out, statusLine(t)), onOut: t => rc(out, h("pre", { class: "out" }, t)) }); rc(out, runOutput(r, "(no output)")); logEvent("run", { c: S.cid }); };
+  ta.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey || e.shiftKey)) { e.preventDefault(); go(); } });
+  return h("div", { class: "cell" }, ta, h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: go }, "Run"), o.onClose ? h("button", { class: "btn small ghost", onclick: o.onClose }, "Close") : null, h("span", { class: "muted small" }, "Ctrl/⌘ + Enter runs")), out);
 }
 const mdInline = s => { const sp = h("span"); sp.innerHTML = CKmd.inline(s, mathHtml); return sp; };
 function copy(text) { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast("Copied."), () => toast("Could not copy here. Select the text instead.")); }
@@ -1708,6 +2509,7 @@ async function undoRev(cid, r) {
   await withTxn(cid, "Undid: " + (r.body.label || "a change"), "you", async tx => {
     for (const [key, body] of Object.entries(before)) {
       tx.touchKey(key);
+      if (key.startsWith("x~")) { modSet(key.split("~")[2], body); if (body == null) tx.deleted.add(key); continue; }
       if (body == null) { if (key.startsWith("l~")) delete S.lessons[key.split("~")[2]]; tx.deleted.add(key); }
       else if (key.startsWith("c~")) S.courses[cid] = body;
       else if (key.startsWith("l~")) S.lessons[body.id] = body;
@@ -1722,9 +2524,10 @@ async function withTxn(cid, label, by, fn) {
   const tx = S.txn = { cid, label, by, touched: new Set(), before: {}, deleted: new Set(), notes: [] };
   tx.touchKey = key => {
     if (tx.touched.has(key)) return; tx.touched.add(key);
-    const cur = key.startsWith("c~") ? S.courses[cid] : S.lessons[key.split("~")[2]];
-    tx.before[key] = cur ? CK.clone(cur) : null;
+    const cur = key.startsWith("c~") ? S.courses[cid] : key.startsWith("x~") ? modGet(key.split("~")[2]) : S.lessons[key.split("~")[2]];
+    tx.before[key] = cur != null ? CK.clone(cur) : null;
   };
+  tx.touchMod = part => tx.touchKey(K.mod(cid, part));
   tx.touchCourse = () => tx.touchKey(K.course(cid));
   tx.touchLesson = lid => tx.touchKey(K.lesson(cid, lid));
   try { return await fn(tx); }
@@ -1736,6 +2539,7 @@ async function commitTxn(tx) {
   for (const key of tx.touched) {
     if (tx.deleted.has(key)) { await S.store.del(key); continue; }
     if (key.startsWith("c~")) { const m = S.courses[cid]; if (!m) continue; m.updated = at; delete m.designNotes; await put(key, m); }
+    else if (key.startsWith("x~")) { const part = key.split("~")[2]; const v = modGet(part); if (v == null) await S.store.del(key); else await put(key, { kind: "module", course: cid, part, data: v, updated: at }); }
     else { const lid = key.split("~")[2]; const l = S.lessons[lid]; if (!l) continue; l.updated = at; await put(key, l); }
   }
   let before = tx.before; if (JSON.stringify(before).length > 240000) before = Object.fromEntries(Object.entries(before).filter(([k]) => k.startsWith("c~")));
@@ -1743,10 +2547,16 @@ async function commitTxn(tx) {
   logEvent("edit", { c: cid, label: String(tx.label).slice(0, 120), by: tx.by });
   S.view = null; render();
 }
+function modGet(part) { return part.startsWith("nb.") ? (S.mods.notebooks || {})[part.slice(3)] : S.mods[part]; }
+function modSet(part, v) {
+  if (part.startsWith("nb.")) { S.mods.notebooks = S.mods.notebooks || {}; if (v == null) delete S.mods.notebooks[part.slice(3)]; else S.mods.notebooks[part.slice(3)] = v; }
+  else if (v == null) delete S.mods[part]; else S.mods[part] = v;
+  S.modsJson = JSON.stringify(S.mods); S.modsRev = (S.modsRev || 0) + 1;
+}
 async function saveMeta(cid, fn, label) { return withTxn(cid, label, "you", async tx => { tx.touchCourse(); fn(S.courses[cid]); }); }
 
 async function deleteCourse(cid) {
-  const kinds = ["lesson", "progress", "rev", "source", "chat", "stats"];
+  const kinds = ["lesson", "progress", "rev", "source", "chat", "stats", "module", "pstate", "nbwork"];
   for (const kind of kinds) { const docs = await S.store.query({ kind, course: cid }).catch(() => []); for (const d of docs) await S.store.del(d.key); }
   await S.store.del(K.chat(cid)); await S.store.del(K.stats(cid)); await S.store.del(K.course(cid));
   delete S.courses[cid]; toast("Deleted."); go("#/");
@@ -1768,7 +2578,7 @@ async function importFile(data, opts) {
 }
 async function exportCourseFile(cid) {
   const c = S.courses[cid]; if (cid !== S.cid) return;
-  const file = CK.exportCourse(c, orderedLessons(c, true).filter(l => !l.archived));
+  const file = CK.exportCourse(c, orderedLessons(c, true).filter(l => !l.archived), S.mods);
   const data = JSON.stringify(file, null, 1); const name = c.id + ".coursekit.json";
   if (S.downloads) { try { await S.downloads.save({ filename: name, data }); return; } catch (e) { if (e && e.code === "cancelled") return; } }
   const ta = h("textarea", { rows: 8, readonly: true }, data);
@@ -1782,13 +2592,15 @@ function logEvent(e, data) {
   const d = today();
   if (!logBuf || logBuf.date !== d) { logBuf = { kind: "log", date: d, events: [], loaded: false }; S.store.get(K.log(d)).then(b => { if (b && Array.isArray(b.events) && logBuf.date === d) { logBuf.events = b.events.concat(logBuf.events).slice(-400); } logBuf.loaded = true; }).catch(() => { logBuf.loaded = true; }); }
   logBuf.events.push(Object.assign({ at: new Date().toISOString().slice(11, 19), e }, data));
+  const w = { check: 1, learned: 3, review: 1, run: 1, drill: 2, quiz: 2, exam: 5, nbrun: 1, nbcheck: 2, task: 1 }[e];
+  if (w && data && data.c && data.c === S.cid) bumpDay(w);
   if (logBuf.events.length > 400) logBuf.events.splice(0, logBuf.events.length - 400);
   clearTimeout(logTimer);
   logTimer = setTimeout(() => { if (logBuf && logBuf.loaded) put(K.log(logBuf.date), { kind: "log", date: logBuf.date, events: logBuf.events, updated: new Date().toISOString() }); }, 5000);
 }
 
 /* ================= Ask ================= */
-function toggleAsk() { S.ask.open ? closeAsk() : openAsk(); }
+function toggleAsk() { if (!S.ask.open && S.route && S.route.name === "exam" && S.g && S.g.examRun) { toast("Ask is off during a timed checkpoint. Submit it first."); return; } S.ask.open ? closeAsk() : openAsk(); }
 function openAsk() { S.ask.open = true; $("#ask").hidden = false; document.body.classList.add("asking"); renderAsk(); setTimeout(() => $("#ask-input") && $("#ask-input").focus(), 30); $("#top").dataset.sig = ""; render(); }
 function closeAsk() { S.ask.open = false; $("#ask").hidden = true; document.body.classList.remove("asking"); $("#top").dataset.sig = ""; render(); }
 const chatKey = () => S.route && S.route.cid && S.courses[S.route.cid] ? S.route.cid : "_lib";
@@ -1878,6 +2690,25 @@ async function sendAsk(text, opts) {
   if (c && pendingLessons(c.id).length && changes.length) startWriter(c.id);
 }
 
+/* What the learner is looking at outside lessons, for the tutor. */
+function viewContext(c) {
+  const r = S.route || {}; const g = S.g || {};
+  if (r.name === "drill") { const d = drillById(r.id); if (d) return "The learner is on the drill \"" + d.title + "\" (from memory; give hints, not the answer, unless they ask after trying):\n" + d.prompt + "\n\nTheir draft:\n" + String((g.drafts || {})["d:" + d.id] || "(empty)").slice(0, 6000) + "\n\nModel solution (for you): " + d.solution.slice(0, 4000); }
+  if (r.name === "notebook") { const T = nbOf(r.id); const nb = S.nbw && S.nbw[r.id]; if (T && nb) return "The learner is in the notebook \"" + T.title + "\". Checks: " + T.checks.map(x => x.label).join(" | ") + "\nTheir status: " + JSON.stringify((g.nb || {})[r.id] || null) + "\nCells:\n" + nb.cells.map((x, i) => "[" + i + " " + x.t + (x.tag ? " " + x.tag : "") + "]\n" + String(x.src).slice(0, 3000) + (x.out && x.out.err ? "\nERROR: " + String(x.out.err).slice(0, 1500) : x.out && x.out.text ? "\nOUTPUT: " + String(x.out.text).slice(-1200) : "")).join("\n").slice(0, 60000); }
+  if (r.name === "quiz") return "The learner is taking the self-check quiz of " + unitWord(c).toLowerCase() + " " + r.id + ". Do not give answers to it.";
+  if (r.name === "course" && planOf()) { const w = planOf().weeks[curWeek(c) - 1]; return "The learner is on the course dashboard (" + (r.tab || "home") + "). This " + unitWord(c).toLowerCase() + " (" + curWeek(c) + "): " + w.title + ". Tasks: " + w.tasks.map(t => t.title + " " + Math.round(taskProg(Object.assign({ week: w.n }, t)) * 100) + "%").join("; ") + "."; }
+  return "The learner is on the course's home page.";
+}
+function modulesSummary(c) {
+  const out = [];
+  if (c.runtimes && Object.keys(c.runtimes).length) out.push("Runtimes: " + Object.entries(c.runtimes).map(([k, r]) => k + " (" + r.engine + ")").join(", ") + ". You can run code with run_code to check something before you say it.");
+  if (c.files && c.files.length) out.push("Data files: " + c.files.map(f => f.name).join(", "));
+  const p = planOf(); if (p && S.gLoaded) out.push("Plan: " + p.weeks.length + " " + unitWord(c).toLowerCase() + "s; now " + unitWord(c).toLowerCase() + " " + curWeek(c) + "; core work " + Math.round(overall() * 100) + "% done; streak " + streak() + " days.");
+  if (drillsOf().length && S.gLoaded) out.push("Drills: " + drillsOf().length + " (" + dueDrills().length + " due). Ids: " + drillsOf().map(d => d.id).join(", ").slice(0, 3000));
+  if (cpsOf().length && S.gLoaded) out.push("Checkpoints: " + cpsOf().map(x => x.id + " " + x.title + " best " + ((G().exams[x.id] || {}).best ?? "none")).join("; "));
+  const nbs = Object.keys(S.mods.notebooks || {}); if (nbs.length) out.push("Notebooks: " + nbs.join(", "));
+  return out.length ? "Course modules (read them with read_module, change them with write_module):\n" + out.join("\n") : "This course has no plan, drills, checkpoints or notebooks yet; add them with write_module when the subject needs them.";
+}
 function buildAskInput(c, history, userTurn, attach) {
   let ctx;
   if (c) {
@@ -1888,11 +2719,12 @@ function buildAskInput(c, history, userTurn, attach) {
       (S.tools ? "You can also change the course with the tools. Change it when the learner asks for a change or when their request clearly needs one (add a lesson, more practice, a widget, a new design, a different order). Make the change fully, then say in one or two sentences what you changed. For many lessons at once, use rewrite_lessons or add_lesson without blocks: they are written in the background. Never change the course for a plain question." : "You cannot change the course in this view; if the learner asks for a change, say that this view cannot change it."),
       "Give hints before answers for practice the learner has not solved yet; give the answer when they ask for it after trying. Reply in Markdown, concise, in the course's language (" + c.language + ").",
       CK.DESIGN_RULES,
-      S.tools ? CK.BLOCK_DOC + "\n\n" + CK.DESIGN_DOC : "",
+      S.tools ? CK.BLOCK_DOC + "\n\n" + CK.MODULES_DOC + "\n\n" + CK.DESIGN_DOC : "",
       "Course description: " + (c.description || "") + (c.origin && c.origin.about ? "\nAbout the learner: " + c.origin.about : ""),
       "Course outline (lesson ids in brackets):\n" + outlineText(c, l && l.id),
       "Progress: " + progressSummary(c),
-      l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : "The learner is on the course's home page.",
+      l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : viewContext(c),
+      modulesSummary(c),
     ];
   } else {
     const list = Object.values(S.courses).filter(x => !x.archivedAt).map(x => "- " + x.title + " [" + x.id + "]: " + (S.stats[x.id]?.learned || 0) + " learned of " + x.units.reduce((n, u) => n + u.lessons.length, 0));
@@ -1938,12 +2770,12 @@ function courseTools(c, tx, changes) {
       for (const l of Object.values(S.lessons)) for (const b of l.blocks || []) { const t = JSON.stringify(b).toLowerCase(); if (q.every(w => t.includes(w))) hits.push({ lesson: l.id, block: b.id, t: b.t, text: (b.q || b.md || b.title || "").slice(0, 160) }); if (hits.length > 30) break; }
       return hits;
     }),
-    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona} and/or design (any part of the design object). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" } }, [], i => {
+    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
       tx.touchCourse(); const m = meta();
       const design = i.design ? Object.assign({}, i.design, { palette: Object.assign({}, m.design.palette, i.design.palette || {}), fonts: Object.assign({}, m.design.fonts, i.design.fonts || {}) }) : undefined;
-      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design }, m);
+      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
       Object.assign(m, next); const notes = m.designNotes || []; delete m.designNotes;
-      changes.push(i.design ? "design" : "course details");
+      changes.push(i.design ? "design" : i.runtimes || i.files || i.labels || i.tracks || i.schedule ? "course settings" : "course details");
       return notes.length ? "Saved. The rules adjusted: " + notes.join("; ") : "Saved.";
     }),
     T("upsert_unit", "Creates a unit (omit unit) or changes one (give unit id). position is the 0-based place among units.", { unit: { type: "string" }, title: { type: "string" }, goal: { type: "string" }, position: { type: "number" } }, [], i => {
@@ -1953,11 +2785,11 @@ function courseTools(c, tx, changes) {
       if (i.position != null) { m.units.splice(m.units.indexOf(u), 1); m.units.splice(CK.clamp(Math.round(Number(i.position)), 0, m.units.length), 0, u); }
       changes.push("unit " + u.title); return { unit: u.id };
     }),
-    T("add_lesson", "Adds a lesson to a unit, after the lesson id in 'after' (or at the unit's end). With blocks, it is saved now and checked against the rules; without blocks it is written in the background from title and summary.", { unit: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, after: { type: "string" }, blocks: blocksSchema }, ["unit", "title"], i => {
+    T("add_lesson", "Adds a lesson to a unit, after the lesson id in 'after' (or at the unit's end). With blocks, it is saved now and checked against the rules; without blocks it is written in the background from title and summary.", { unit: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, track: { type: "string" }, week: { type: "number" }, after: { type: "string" }, blocks: blocksSchema }, ["unit", "title"], i => {
       const u = U(i.unit); const m = meta();
       const total = m.units.reduce((n, x) => n + x.lessons.length, 0); if (total >= CK.LIMITS.lessons) throw new Error("A course holds at most " + CK.LIMITS.lessons + " lessons.");
       const hasBlocks = Array.isArray(i.blocks) && i.blocks.length;
-      const norm = CK.normalizeLesson({ title: i.title, summary: i.summary, minutes: i.minutes, blocks: hasBlocks ? i.blocks : [], pending: !hasBlocks }, { widgets: m.widgets });
+      const norm = CK.normalizeLesson({ title: i.title, summary: i.summary, minutes: i.minutes, track: i.track, week: i.week, blocks: hasBlocks ? i.blocks : [], pending: !hasBlocks }, { widgets: m.widgets, runtimes: m.runtimes || {} });
       const taken = new Set(Object.keys(S.lessons)); m.units.forEach(x => x.lessons.forEach(id => taken.add(id)));
       const id = CK.uniqueId(CK.slug(i.title, 40), taken);
       tx.touchCourse(); tx.touchLesson(id);
@@ -1967,8 +2799,9 @@ function courseTools(c, tx, changes) {
       changes.push("new lesson " + norm.title);
       return { lesson: id, written: !!hasBlocks };
     }),
-    T("update_lesson", "Changes a lesson's title, summary, minutes, and/or replaces all its blocks. To keep a block, include it with its id. Removing blocks the learner already answered needs drop_worked: true.", { lesson: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, blocks: blocksSchema, drop_worked: { type: "boolean" } }, ["lesson"], i => {
+    T("update_lesson", "Changes a lesson's title, summary, minutes, track, week, sub (eyebrow line), and/or replaces all its blocks (to keep a block, include it with its id; removing blocks the learner answered needs drop_worked: true). archived: true hides the lesson and keeps its progress; false restores it.", { lesson: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, minutes: { type: "number" }, track: { type: "string" }, week: { type: "number" }, sub: { type: "string" }, archived: { type: "boolean" }, blocks: blocksSchema, drop_worked: { type: "boolean" } }, ["lesson"], i => {
       const l = L(i.lesson); const m = meta();
+      if (i.archived != null && Object.keys(i).filter(k => k !== "lesson" && k !== "archived").length === 0) { tx.touchLesson(l.id); if (i.archived) l.archived = new Date().toISOString(); else delete l.archived; changes.push((i.archived ? "archived " : "restored ") + l.title); return "Done."; }
       const oldIds = new Set((l.blocks || []).map(b => b.id));
       let blocks = l.blocks;
       if (Array.isArray(i.blocks)) {
@@ -1977,16 +2810,17 @@ function courseTools(c, tx, changes) {
         const lost = [...oldIds].filter(id => !kept.has(id) && worked(l.id, id));
         if (lost.length && !i.drop_worked) throw new Error("The learner has answered blocks " + lost.join(", ") + ". Keep them (include them with their ids) or pass drop_worked: true if the learner asked to remove them.");
       }
-      const norm = CK.normalizeLesson({ title: i.title || l.title, summary: i.summary != null ? i.summary : l.summary, minutes: i.minutes || l.minutes, blocks }, { widgets: m.widgets, keepId: true });
+      const norm = CK.normalizeLesson({ title: i.title || l.title, summary: i.summary != null ? i.summary : l.summary, minutes: i.minutes || l.minutes, track: i.track != null ? i.track : l.track, week: i.week || l.week, sub: i.sub != null ? i.sub : l.sub, blocks }, { widgets: m.widgets, keepId: true, runtimes: m.runtimes || {} });
       norm.blocks.forEach((b, k) => { b.id = blocks[k].id; });
       tx.touchLesson(l.id);
       Object.assign(l, norm); delete l.pending; delete l.rewrite;
+      if (i.archived === true) l.archived = new Date().toISOString(); else if (i.archived === false) delete l.archived;
       changes.push("lesson " + l.title); return "Saved.";
     }),
     T("insert_blocks", "Inserts blocks into a lesson after block id 'after' ('start' for the top; omitted = end). Returns the new block ids.", { lesson: { type: "string" }, after: { type: "string" }, blocks: blocksSchema }, ["lesson", "blocks"], i => {
       const l = L(i.lesson); const m = meta();
       if (l.pending) throw new Error("This lesson is not written yet; use update_lesson with all its blocks, or rewrite_lessons.");
-      const nb = (Array.isArray(i.blocks) ? i.blocks : []).map((b, k) => { try { return CK.normalizeBlock(b, { widgets: m.widgets }); } catch (e) { throw new Error("block " + (k + 1) + ": " + e.message); } });
+      const nb = (Array.isArray(i.blocks) ? i.blocks : []).map((b, k) => { try { return CK.normalizeBlock(b, { widgets: m.widgets, runtimes: m.runtimes || {} }); } catch (e) { throw new Error("block " + (k + 1) + ": " + e.message); } });
       if (!nb.length) throw new Error("No blocks given.");
       const blocks = l.blocks.slice(); const at = i.after === "start" ? 0 : i.after ? blocks.findIndex(b => b.id === String(i.after)) + 1 : blocks.length;
       if (i.after && i.after !== "start" && at === 0) throw new Error("No block " + i.after + " in this lesson.");
@@ -1995,30 +2829,26 @@ function courseTools(c, tx, changes) {
       tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push(nb.length + " block" + (nb.length > 1 ? "s" : "") + " in " + l.title);
       return { added: nb.map(b => b.id) };
     }),
-    T("update_block", "Changes fields of one block (give only the fields to change; 't' may change too). The block keeps its id.", { lesson: { type: "string" }, block: { type: "string" }, fields: { type: "object" } }, ["lesson", "block", "fields"], i => {
+    T("update_block", "Changes fields of one block (give only the fields to change; 't' may change too); the block keeps its id. With remove: true it removes the block instead (blocks the learner answered also need force: true, only when the learner asked).", { lesson: { type: "string" }, block: { type: "string" }, fields: { type: "object" }, remove: { type: "boolean" }, force: { type: "boolean" } }, ["lesson", "block"], i => {
       const l = L(i.lesson); const m = meta(); const k = l.blocks.findIndex(b => b.id === String(i.block)); if (k < 0) throw new Error("No block " + i.block + " in this lesson.");
+      if (i.remove) {
+        if (worked(l.id, l.blocks[k].id) && !i.force) throw new Error("The learner has answered this block. Keep it, or pass force: true if they asked to remove it.");
+        const blocks = l.blocks.filter((_, j) => j !== k); const ids = blocks.map(b => b.id);
+        const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: m.widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
+        tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("removed a block in " + l.title); return "Removed.";
+      }
+      if (!i.fields) throw new Error("Give fields to change, or remove: true.");
       const merged = Object.assign({}, l.blocks[k], i.fields || {});
-      const nb = CK.normalizeBlock(merged, { widgets: m.widgets }); nb.id = l.blocks[k].id;
+      const nb = CK.normalizeBlock(merged, { widgets: m.widgets, runtimes: m.runtimes || {} }); nb.id = l.blocks[k].id;
       const blocks = l.blocks.slice(); blocks[k] = nb; const ids = blocks.map(b => b.id);
       const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: m.widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
       tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("a block in " + l.title); return "Saved.";
-    }),
-    T("remove_block", "Removes one block from a lesson. Blocks the learner already answered need force: true (only when the learner asked).", { lesson: { type: "string" }, block: { type: "string" }, force: { type: "boolean" } }, ["lesson", "block"], i => {
-      const l = L(i.lesson); const k = l.blocks.findIndex(b => b.id === String(i.block)); if (k < 0) throw new Error("No block " + i.block + ".");
-      if (worked(l.id, l.blocks[k].id) && !i.force) throw new Error("The learner has answered this block. Keep it, or pass force: true if they asked to remove it.");
-      const blocks = l.blocks.filter((_, j) => j !== k); const ids = blocks.map(b => b.id);
-      const norm = CK.normalizeLesson({ title: l.title, summary: l.summary, minutes: l.minutes, blocks }, { widgets: meta().widgets }); norm.blocks.forEach((b, j) => b.id = ids[j]);
-      tx.touchLesson(l.id); l.blocks = norm.blocks; changes.push("removed a block in " + l.title); return "Removed.";
     }),
     T("move_lesson", "Moves a lesson to a unit, after lesson id 'after' (omitted = the unit's start).", { lesson: { type: "string" }, unit: { type: "string" }, after: { type: "string" } }, ["lesson", "unit"], i => {
       const l = L(i.lesson); const u = U(i.unit); tx.touchCourse(); tx.touchLesson(l.id);
       for (const x of meta().units) x.lessons = x.lessons.filter(id => id !== l.id);
       const at = i.after ? u.lessons.indexOf(String(i.after)) + 1 : 0; u.lessons.splice(Math.max(0, at), 0, l.id); l.unit = u.id;
       changes.push("moved " + l.title); return "Moved.";
-    }),
-    T("archive_lesson", "Archives a lesson (hidden, progress kept) or restores it with restore: true.", { lesson: { type: "string" }, restore: { type: "boolean" } }, ["lesson"], i => {
-      const l = L(i.lesson); tx.touchLesson(l.id); if (i.restore) delete l.archived; else l.archived = new Date().toISOString();
-      changes.push((i.restore ? "restored " : "archived ") + l.title); return "Done.";
     }),
     T("set_widget", "Adds or replaces a reusable widget in the course's widget library. Use {\"t\":\"widget\",\"widget\":id} blocks to place it. Returns its id.", { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, height: { type: "number" } }, ["title", "html"], i => {
       const m = meta(); m.widgets = m.widgets || {};
@@ -2033,6 +2863,27 @@ function courseTools(c, tx, changes) {
       for (const id of ids) { const l = L(id); tx.touchLesson(id); l.rewrite = String(i.instruction).slice(0, 1500); }
       changes.push(ids.length + " lesson" + (ids.length > 1 ? "s" : "") + " queued for rewriting"); return "Queued " + ids.length + ". They are written after this reply.";
     }),
+    T("read_module", "Returns one course module as JSON: plan, drills, checkpoints, or nb.<id> for a notebook (\"notebooks\" lists notebook ids).", { part: { type: "string" } }, ["part"], i => {
+      const part = String(i.part); if (part === "notebooks") return Object.keys(S.mods.notebooks || {});
+      const v = modGet(part); return v == null ? "This course has no " + part + " yet." : JSON.stringify(v).slice(0, 120000);
+    }),
+    T("write_module", "Replaces one course module (plan, drills, checkpoints, or nb.<id>) with data in the module format; data null removes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, data: {} }, ["part"], i => {
+      const part = String(i.part || "");
+      if (!/^(plan|drills|checkpoints|nb\.[a-z0-9-]{1,40})$/.test(part)) throw new Error("part must be plan, drills, checkpoints or nb.<id>.");
+      let v = i.data;
+      if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { throw new Error("data must be JSON."); } }
+      if (v != null) v = part === "plan" ? CK.normalizePlan(v) : part === "drills" ? CK.normalizeDrills(v) : part === "checkpoints" ? CK.normalizeCheckpoints(v) : CK.normalizeNotebook(part.slice(3), v);
+      const next = Object.assign({}, S.mods, { notebooks: Object.assign({}, S.mods.notebooks) });
+      if (part.startsWith("nb.")) { if (v == null) delete next.notebooks[part.slice(3)]; else next.notebooks[part.slice(3)] = v; } else if (v == null) delete next[part]; else next[part] = v;
+      const probs = CK.checkModuleRefs(next, S.lessons); if (probs.length) throw new Error("Not saved: " + probs.slice(0, 8).join("; ") + ".");
+      tx.touchMod(part); modSet(part, v); changes.push(part.startsWith("nb.") ? "notebook " + part.slice(3) : part);
+      return "Saved.";
+    }),
+    T("run_code", "Runs code in one of the course's runtimes in a fresh namespace and returns its output (and errors). Use it to check an example, a solution or a test before you give or save it.", { lang: { type: "string" }, code: { type: "string" } }, ["lang", "code"], async i => {
+      if (!RT().has(i.lang)) throw new Error("This course has no runtime for " + i.lang + ".");
+      const r = await RT().run(i.lang, String(i.code), { limitMs: 60000 });
+      return { ok: r.ok, output: String(r.out || "").slice(-8000), value: r.value, error: r.error, figures: (r.imgs || []).length };
+    }),
     T("open_lesson", "Shows a lesson to the learner (navigates the page).", { lesson: { type: "string" } }, ["lesson"], i => { const l = L(i.lesson); setTimeout(() => go("#/c/" + cid + "/l/" + l.id), 50); return "opened"; }),
   ];
 }
@@ -2042,7 +2893,700 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && S.ask.open
 window.__ck = S; // for debugging in the browser console
 window.__ckKatex = () => { if (S.route && S.route.name === "lesson") { S.view = null; render(); } };
 if (window.katex) S.katex = true;
+
+
+/* ================= course modules in the page =================
+   Plan (weeks, tasks, done-when criteria, quizzes), Today, drills, checkpoints,
+   projects, notebooks and the record. Every part is driven by the course's data;
+   a course without a module simply has no tab for it. Shares scope with app.js. */
+
+/* ---------- dates (the learner's local calendar) ---------- */
+const DAY = 864e5;
+function dayStr(d) { d = d || new Date(); const z = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
+function parseDay(s) { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, m - 1, d); }
+function addDays(s, n) { const d = parseDay(s); d.setDate(d.getDate() + n); return dayStr(d); }
+function diffDays(a, b) { return Math.round((parseDay(b) - parseDay(a)) / DAY); }
+function fmtDay(s) { return parseDay(s).toLocaleDateString(undefined, { day: "numeric", month: "short" }); }
+const TODAY = () => dayStr();
+
+/* ---------- labels ---------- */
+const LABELS = { unit: "Week", lessons: "Lessons", drills: "Drills", projects: "Projects", project: "Project", checkpoint: "Checkpoint", checkpoints: "Checkpoints", today: "Today", plan: "Plan", record: "Record" };
+const LBL = c => Object.assign({}, LABELS, (c && c.labels) || {});
+const unitWord = c => LBL(c).unit;
+
+/* ---------- per-course learner state: one record g~<course> ---------- */
+function normG(b, cid) {
+  const g = Object.assign({ kind: "pstate", course: cid, v: 1, start: null, crit: {}, quiz: {}, exams: {}, examRun: null, drills: {}, drafts: {}, days: {}, nb: {} }, b || {});
+  for (const k of ["crit", "quiz", "exams", "drills", "drafts", "days", "nb"]) if (!g[k] || typeof g[k] !== "object") g[k] = {};
+  return g;
+}
+let gTimer = null;
+function G() {
+  if (!S.g) S.g = normG(null, S.cid);
+  if (!S.g.start && S.gLoaded) { const c = S.courses[S.cid]; S.g.start = (c && c.schedule && c.schedule.start) || TODAY(); saveG(); }
+  return S.g;
+}
+const gDirty = () => !!S.gPending;
+function saveG() { if (!S.store || !S.cid) return; S.gPending = true; clearTimeout(gTimer); const cid = S.cid; gTimer = setTimeout(() => flushG(cid), 500); }
+const saveGSoon = saveG;
+addEventListener("pagehide", () => { if (S.gPending && S.cid) { clearTimeout(gTimer); flushG(S.cid); } });
+addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && S.gPending && S.cid) { clearTimeout(gTimer); flushG(S.cid); } });
+async function flushG(cid) {
+  if (cid !== S.cid || !S.g) return;
+  const g = S.g; g.updated = new Date().toISOString(); S.gSavedAt = g.updated; S.gPending = false;
+  const body = JSON.parse(JSON.stringify(g));
+  if (JSON.stringify(body).length > 240000) { body.drafts = {}; if (body.examRun) for (const a of Object.values(body.examRun.ans || {})) if (a && typeof a.a === "string") a.a = a.a.slice(0, 4000); }
+  await put(K.pst(cid), body);
+}
+function bumpDay(n) { if (!S.gLoaded) return; const g = G(); const t = TODAY(); g.days[t] = (g.days[t] || 0) + (n || 1); saveG(); }
+
+/* ---------- time and pace ---------- */
+const planOf = () => S.mods.plan || null;
+const unitDays = c => (c.schedule && c.schedule.unitDays) || 7;
+function curWeek(c) { const p = planOf(); if (!p) return 1; const d = diffDays(G().start || TODAY(), TODAY()); return Math.max(1, Math.min(p.weeks.length, Math.floor(d / unitDays(c)) + 1)); }
+function weekRange(c, n) { const a = addDays(G().start || TODAY(), (n - 1) * unitDays(c)); return [a, addDays(a, unitDays(c) - 1)]; }
+function endDate(c) { const p = planOf(); return addDays(G().start || TODAY(), (p ? p.weeks.length : 1) * unitDays(c) - 1); }
+function streak() { const g = G(); let n = 0, d = TODAY(); if (!g.days[d]) d = addDays(d, -1); while (g.days[d]) { n++; d = addDays(d, -1); } return n; }
+function learnedOn(lid) { const p = S.progress[lid]; return p && p.done ? dayStr(new Date(p.done)) : null; }
+const learned = lid => !!(S.progress[lid] && S.progress[lid].done);
+function lessonWeek(c, l) { if (l.week) return l.week; const i = c.units.findIndex(u => u.lessons.includes(l.id)); return i + 1; }
+function expectedLessons(c) {
+  const dd = diffDays(G().start || TODAY(), TODAY()); if (dd < 0) return 0;
+  const w = Math.floor(dd / unitDays(c)) + 1; const frac = ((dd % unitDays(c)) + 1) / unitDays(c);
+  let n = 0; for (const l of orderedLessons(c)) { const lw = lessonWeek(c, l); if (lw < w) n++; else if (lw === w) n += frac; } return Math.floor(n + 1e-9);
+}
+
+/* ---------- tasks and their done-when criteria ---------- */
+const drillsOf = () => S.mods.drills || [];
+const drillById = id => drillsOf().find(d => d.id === id);
+const cpsOf = () => S.mods.checkpoints || [];
+const nbOf = id => (S.mods.notebooks || {})[id];
+function allTasks() { const p = planOf(); const out = []; if (p) p.weeks.forEach(w => w.tasks.forEach(t => out.push(Object.assign({ week: w.n }, t)))); return out; }
+function critDone(t, k) {
+  const c = t.crit[k]; const g = G(); const v = (g.crit[t.id] || {})[k];
+  switch (c.t) {
+    case "lesson": return learned(c.id);
+    case "drill": { const d = g.drills[c.id]; return !!(d && d.passes > 0); }
+    case "quiz": { const q = g.quiz[c.w]; return !!(q && q.best != null && q.best <= c.max); }
+    case "checkpoint": { const x = g.exams[c.id]; const ex = cpsOf().find(e => e.id === c.id); return !!(x && ex && x.best >= ex.pass); }
+    case "days": { const [a, b] = weekRange(S.courses[S.cid], c.w || t.week || curWeek(S.courses[S.cid])); let n = 0; for (let d = a; d <= b; d = addDays(d, 1)) if (g.days[d]) n++; return n >= c.n; }
+    case "link": {
+      if (t.notebook && g.nb[t.notebook] && g.nb[t.notebook].passed) return true;
+      if (!v) return false;
+      try { const u = new URL(v); if (!(c.hosts || []).length) return /^https?:$/.test(u.protocol); return c.hosts.some(h => u.hostname === h || u.hostname.endsWith("." + h)) && u.pathname.length > 1; } catch (e) { return false; }
+    }
+    case "text": {
+      if (!v) return false; const s = String(v);
+      if (c.lines && s.split("\n").filter(x => x.trim()).length < c.lines) return false;
+      if (c.expect && !c.expect.every(e => s.toLowerCase().includes(e.toLowerCase()))) return false;
+      if (c.min && CK.words(s) < c.min) return false; return true;
+    }
+    case "number": { if (v === undefined || v === "" || v === null) return false; const x = parseFloat(v); return !isNaN(x) && x >= c.min && x <= c.max; }
+    case "check": return !!v;
+  }
+  return false;
+}
+function taskProg(t) { let d = 0; t.crit.forEach((_, k) => { if (critDone(t, k)) d++; }); return t.crit.length ? d / t.crit.length : 0; }
+function overall() { let tot = 0, done = 0; for (const t of allTasks()) { if (!t.core) continue; tot += t.h; done += t.h * taskProg(t); } return tot ? done / tot : 0; }
+function critLabel(c, cr) {
+  const L = LBL(c);
+  switch (cr.t) {
+    case "lesson": return ["Lesson learned: ", h("b", null, (S.lessons[cr.id] || {}).title || cr.id), " (all practice right)"];
+    case "drill": return ["Drill passed from memory: ", h("b", null, (drillById(cr.id) || {}).title || cr.id)];
+    case "quiz": return L.unit + " " + cr.w + " self-check quiz with at most " + cr.max + " wrong";
+    case "checkpoint": { const e = cpsOf().find(x => x.id === cr.id); return ["Pass ", h("b", null, e ? e.title : cr.id), " (" + (e ? e.pass : 70) + "% or more)"]; }
+    case "days": return "Studied on at least " + cr.n + " days this " + L.unit.toLowerCase() + " (lessons, drills, reviews and runs count)";
+    default: return mdInline(cr.label || "");
+  }
+}
+
+/* ---------- small pieces ---------- */
+function ring(p, label) {
+  const r = 10, C = 2 * Math.PI * r; const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("viewBox", "0 0 26 26"); s.setAttribute("class", "ring"); s.setAttribute("role", "img"); s.setAttribute("aria-label", label || Math.round(p * 100) + "% done");
+  s.innerHTML = '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--line)" stroke-width="3"/>' + (p >= 1
+    ? '<circle cx="13" cy="13" r="10" fill="var(--ok)" stroke="var(--ok)" stroke-width="3"/><path d="M8.5 13.2l3 3 6-6.2" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<circle cx="13" cy="13" r="10" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="' + (C * p).toFixed(2) + " " + C.toFixed(2) + '" transform="rotate(-90 13 13)"/>');
+  return s;
+}
+const boxes = b => h("span", { class: "boxes", title: "Box " + (b || 0) + " of 5" }, [1, 2, 3, 4, 5].map(i => h("i", { class: i <= (b || 0) ? "on" : "" })));
+const pill = (text, cls) => h("span", { class: "pill " + (cls || "") }, text);
+const route = (c, rest) => "#/c/" + encodeURIComponent(c.id) + (rest ? "/" + rest : "");
+let timers = [];
+function stopTimers() { timers.forEach(t => clearInterval(t)); timers = []; if (S.st && S.route && S.route.name !== "notebook") { try { S.st.ctl.stop(); } catch (e) {} S.st = null; } }
+
+/* ---------- drills ---------- */
+const BOX = [0, 1, 3, 7, 14, 30];
+function drillUnlocked(d) { if (!d.lesson) return true; const on = learnedOn(d.lesson); return !!on && on < TODAY(); }
+function dueDrills() { const t = TODAY(); const g = G(); return drillsOf().filter(d => { const s = g.drills[d.id]; return s && s.attempts > 0 && s.due <= t; }); }
+function newDrills() { const g = G(); return drillsOf().filter(d => drillUnlocked(d) && !(g.drills[d.id] && g.drills[d.id].attempts > 0)); }
+function lessonDrillsNote(c, l) {
+  const ds = drillsOf().filter(d => d.lesson === l.id); if (!ds.length) return null;
+  return h("p", { class: "muted small" }, "Its drills (" + ds.map(d => d.title).join(", ") + ") unlock the day after you learn it.");
+}
+
+/* ================= course home: a dashboard with tabs ================= */
+function courseTabs(c) {
+  const L = LBL(c); const p = planOf(); const tabs = [];
+  const tasks = allTasks();
+  if (p || drillsOf().length) tabs.push(["today", L.today]);
+  if (p) tabs.push(["plan", L.plan]);
+  tabs.push(["lessons", L.lessons]);
+  if (drillsOf().length) tabs.push(["drills", L.drills]);
+  if (tasks.some(t => t.project != null || t.notebook)) tabs.push(["projects", L.projects]);
+  if (p || drillsOf().length || cpsOf().length) tabs.push(["record", L.record]);
+  return tabs;
+}
+function viewCourse(c, tab) {
+  if (!S.modsLoaded || !S.gLoaded) { const w = classicHome(c); return w; }
+  const tabs = courseTabs(c);
+  if (tabs.length <= 1) return classicHome(c);
+  const cur = tabs.find(t => t[0] === tab) ? tab : tabs[0][0];
+  const wrap = h("div", { class: "course dash" }, dashHero(c),
+    h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
+  if (S.courseMenu) ap(wrap, courseMenu(c));
+  if (!S.courseLoaded) { ap(wrap, h("p", { class: "muted" }, "Loading lessons…")); return wrap; }
+  const panel = h("section", { class: "dpanel" });
+  ({ today: tabToday, plan: tabPlan, lessons: tabLessons, drills: tabDrills, projects: tabProjects, record: tabRecord })[cur](c, panel);
+  ap(wrap, panel);
+  return wrap;
+}
+function dashHero(c) {
+  const p = planOf(); const L = LBL(c); const ls = orderedLessons(c);
+  const got = ls.filter(l => learned(l.id)).length;
+  const stats = [];
+  if (p) {
+    const cw = curWeek(c); const left = diffDays(TODAY(), endDate(c)); const exp = expectedLessons(c); const diff = got - exp;
+    stats.push([L.unit, cw + " of " + p.weeks.length, "ends " + fmtDay(endDate(c))]);
+    stats.push(["Pace", diff >= 0 ? (diff === 0 ? "On plan" : "+" + diff + " ahead") : -diff + " behind", got + "/" + ls.length + " lessons"]);
+    stats.push(["Core work", Math.round(overall() * 100) + "%", left >= 0 ? left + " days left" : "finished"]);
+  } else stats.push([L.lessons, got + "/" + ls.length, "learned"]);
+  stats.push(["Streak", String(streak()), streak() === 1 ? "day" : "days"]);
+  const due = dueCards(c).length + dueDrills().length; stats.push(["Due today", String(due), "reviews"]);
+  const timeline = p ? h("div", { class: "timeline", role: "img", "aria-label": L.unit + " " + curWeek(c) + " of " + p.weeks.length },
+    p.weeks.map(w => { const core = w.tasks.filter(t => t.core); const hrs = core.reduce((s, t) => s + t.h, 0); const pr = hrs ? core.reduce((s, t) => s + taskProg(t) * t.h, 0) / hrs : 0;
+      return h("a", { href: route(c, "t/plan"), class: "tl" + (w.n === curWeek(c) ? " cur" : "") + (pr >= 1 ? " done" : ""), title: L.unit + " " + w.n + ": " + w.title + " · " + Math.round(pr * 100) + "%" }, h("i", { style: "height:" + Math.max(8, pr * 100) + "%" })); })) : null;
+  return h("section", { class: "hero dhero" },
+    h("div", { class: "emblem big", "aria-hidden": "true" }, c.design.emblem),
+    h("div", { class: "hero-text" },
+      c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null,
+      h("h1", null, c.title),
+      h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
+      timeline,
+      h("div", { class: "row" },
+        h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
+        pendingLessons(c.id).length && S.sample && !(S.writer && S.writer.running) ? h("button", { class: "btn small", onclick: () => startWriter(c.id) }, "Write " + pendingLessons(c.id).length + " waiting lessons") : null)));
+}
+
+/* ---------- Today ---------- */
+function tabToday(c, M) {
+  const g = G(); const L = LBL(c); const q = [];
+  if (g.examRun) { const ex = cpsOf().find(e => e.id === g.examRun.id); if (ex) q.push({ ic: "CP", t: "Continue " + ex.title, d: "Timed " + L.checkpoint.toLowerCase() + " in progress · " + Math.max(0, Math.ceil((g.examRun.ends - Date.now()) / 60000)) + " min left", href: route(c, "x/" + ex.id) }); }
+  const dc = dueCards(c); if (dc.length) q.push({ ic: "RC", t: "Recall cards: " + dc.length + " due", d: "Answer from memory, then reveal and judge yourself honestly", href: route(c, "review") });
+  for (const d of dueDrills()) q.push({ ic: "DR", t: "Drill review: " + d.title, d: "Box " + g.drills[d.id].box + " · " + d.mins + " min budget · " + (d.tests ? "checked by running" : "self-graded"), href: route(c, "d/" + d.id) });
+  if (!g.examRun) for (const ex of cpsOf()) { const got = g.exams[ex.id]; const ready = ex.lessons.every(learned); if (ready && !(got && got.best >= ex.pass)) q.push({ ic: "CP", t: ex.title + " is ready", d: ex.minutes + " min timed · pass mark " + ex.pass + "% · you can retake it", href: route(c, "x/" + ex.id) }); }
+  const ls = orderedLessons(c).filter(l => !l.pending); const nl = ls.find(l => !learned(l.id));
+  const lt = ls.filter(l => learnedOn(l.id) === TODAY());
+  if (nl && (!lt.length || S.extraLesson === c.id)) { const started = S.progress[nl.id] && Object.keys(S.progress[nl.id].b || {}).length; const np = practiceBlocks(nl).length; q.push({ ic: "L", t: (started ? "Continue lesson: " : "New lesson: ") + nl.title, d: [L.unit + " " + lessonWeek(c, nl), nl.sub || nl.summary || "", np + " exercises"].filter(Boolean).join(" · "), href: route(c, "l/" + nl.id) }); }
+  for (const d of newDrills()) q.push({ ic: "DR", t: "New drill: " + d.title, d: d.mins + " min from memory · " + (d.tests ? "checked by running" : "self-graded"), href: route(c, "d/" + d.id) });
+  const left = h("div", { class: "stack" }, h("p", { class: "sec-h" }, "Today's queue · " + fmtDay(TODAY())));
+  if (!q.length) ap(left, h("div", { class: "card" }, h("b", null, "Queue clear."), h("p", { class: "muted" }, nl ? "You learned a lesson today, and drills unlock tomorrow so they test memory, not copying." : "Every lesson is learned. Keep drills and recall cards going."),
+    nl ? h("button", { class: "btn primary", onclick: () => { S.extraLesson = c.id; go(route(c, "l/" + nl.id)); } }, "Start another lesson anyway") : null));
+  q.forEach((x, k) => ap(left, h("a", { class: "q-item" + (k === 0 ? " now" : ""), href: x.href }, h("span", { class: "ic", "aria-hidden": "true" }, x.ic), h("span", { class: "qt" }, h("b", null, x.t), h("small", null, x.d)), h("span", { class: "btn small" + (k === 0 ? " primary" : "") }, "Open"))));
+  if (q.length && nl && lt.length && S.extraLesson !== c.id) ap(left, h("button", { class: "btn ghost small", onclick: () => { S.extraLesson = c.id; go(route(c, "l/" + nl.id)); } }, "Start another new lesson today"));
+  const right = h("div", { class: "stack" });
+  const p = planOf();
+  if (p) {
+    const w = p.weeks[curWeek(c) - 1];
+    ap(right, h("p", { class: "sec-h" }, "This " + L.unit.toLowerCase()), h("div", { class: "card" },
+      h("div", { class: "row between" }, h("h3", null, L.unit + " " + w.n + ": " + w.title), w.light ? pill("lighter " + L.unit.toLowerCase(), "due") : null),
+      w.goal ? h("p", { class: "small muted" }, w.goal) : null,
+      w.tasks.map(t => h("div", { class: "mini-task" }, ring(taskProg(Object.assign({ week: w.n }, t))), h("div", null, h("div", null, t.title), h("small", { class: "muted" }, (t.core ? "core" : "stretch") + " · " + t.h + " h")))),
+      h("a", { class: "btn small", href: route(c, "t/plan") }, "Open the plan")));
+  }
+  ap(right, h("p", { class: "sec-h" }, "How a study day works"), h("div", { class: "card small" }, h("ol", null,
+    h("li", null, "Recall cards: say the answer before revealing it."),
+    drillsOf().length ? h("li", null, "Drill reviews: write the answer from memory with the timer running.") : null,
+    h("li", null, "One new lesson: read it, then answer every exercise. It counts as learned only when all are right."),
+    drillsOf().length ? h("li", null, "New drills unlock the day after their lesson.") : null,
+    allTasks().some(t => t.project != null) ? h("li", null, L.projects + ": do the work, then fill in the task card to tick it.") : null,
+    h("li", null, "Stuck? Press Ask: " + (c.tutor.name || "your tutor") + " sees where you are."))));
+  rc(M, h("div", { class: "grid2" }, left, right));
+}
+
+/* ---------- Plan and task cards ---------- */
+function tabPlan(c, M) {
+  const p = planOf(); const cw = curWeek(c); const L = LBL(c); const g = G();
+  const phases = p.phases.length ? p.phases : [{ title: "", weeks: p.weeks.map(w => w.n) }];
+  for (const ph of phases) {
+    if (ph.title) ap(M, h("p", { class: "sec-h" }, ph.title + " · " + L.unit.toLowerCase() + "s " + ph.weeks[0] + "–" + ph.weeks[ph.weeks.length - 1]), ph.goal ? h("p", { class: "small muted" }, ph.goal) : null);
+    for (const n of ph.weeks) {
+      const w = p.weeks[n - 1]; if (!w) continue; const [a, b] = weekRange(c, n);
+      const core = w.tasks.filter(t => t.core); const hrs = core.reduce((s, t) => s + t.h, 0); const prog = hrs ? core.reduce((s, t) => s + taskProg(Object.assign({ week: n }, t)) * t.h, 0) / hrs : 0;
+      const stretch = w.tasks.filter(t => !t.core).reduce((s, t) => s + t.h, 0);
+      const det = h("details", { class: "week" + (n === cw ? " cur" : ""), open: n === cw || (S.openWeeks && S.openWeeks.has(n)) || null, ontoggle: e => { S.openWeeks = S.openWeeks || new Set(); e.target.open ? S.openWeeks.add(n) : S.openWeeks.delete(n); } },
+        h("summary", null, h("span", { class: "wk-n" }, h("small", null, L.unit.toUpperCase()), h("b", null, String(n))),
+          h("span", { class: "wk-t" }, h("b", null, w.title, n === cw ? pill("now", "acc") : null, w.light ? pill("lighter", "due") : null), h("small", { class: "muted" }, fmtDay(a) + " – " + fmtDay(b) + " · core " + hrs + " h" + (stretch ? " + stretch " + stretch + " h" : ""))),
+          h("span", { class: "wk-side" }, h("span", { class: "bar" }, h("i", { style: "width:" + prog * 100 + "%" })), h("small", { class: "muted" }, Math.round(prog * 100) + "%"))));
+      if (w.goal) ap(det, h("p", { class: "small wk-goal" }, w.goal));
+      for (const t of w.tasks) ap(det, taskCard(c, Object.assign({ week: n }, t)));
+      if (w.quiz && w.quiz.length) { const qz = g.quiz[n]; ap(det, h("div", { class: "task" }, ring(qz && qz.best != null && qz.best <= w.quizMax ? 1 : 0), h("div", null, h("h4", null, L.unit + " " + n + " self-check quiz"), h("small", { class: "muted" }, w.quiz.length + " questions" + (qz ? " · best " + (w.quiz.length - qz.best) + "/" + w.quiz.length : "")), h("div", null, h("a", { class: "btn small", href: route(c, "q/" + n) }, "Take the quiz"))))); }
+      ap(M, det);
+    }
+  }
+}
+function taskCard(c, t) {
+  const g = G(); const L = LBL(c);
+  const rg = h("span", { class: "ringbox" }, ring(taskProg(t)));
+  const card = h("div", { class: "task", "data-task": t.id }, rg);
+  const body = h("div", { class: "task-b" },
+    h("div", { class: "row" }, h("h4", null, t.title), pill((t.core ? "core" : "stretch") + " · " + t.h + " h", t.core ? "acc" : ""), t.track && c.tracks && c.tracks[t.track] ? pill(c.tracks[t.track]) : null, t.due ? pill("due " + fmtDay(t.due), "due") : null),
+    t.desc ? mdEl(t.desc, "desc") : null,
+    t.lessons ? h("div", { class: "row" }, t.lessons.map(id => h("a", { class: "btn small", href: route(c, "l/" + id) }, (learned(id) ? "✓ " : "") + ((S.lessons[id] || {}).title || id)))) : null);
+  const crit = h("div", { class: "crit" }, h("p", { class: "small muted" }, h("b", null, "Done when")));
+  t.crit.forEach((cr, k) => {
+    const v = (g.crit[t.id] || {})[k]; const row = h("div", { class: "c" + (critDone(t, k) ? " done" : "") }, h("span", { class: "dot", "aria-hidden": "true" }));
+    const inner = h("div", { class: "c-b" }, h("div", null, critLabel(c, cr)));
+    const set = val => { g.crit[t.id] = g.crit[t.id] || {}; g.crit[t.id][k] = val; saveG(); row.classList.toggle("done", critDone(t, k)); rc(rg, ring(taskProg(t))); logEvent("task", { c: c.id }); };
+    if (cr.t === "link" && t.notebook && nbOf(t.notebook)) ap(inner, h("div", { class: "row" }, h("a", { class: "btn small primary", href: route(c, "n/" + t.notebook) }, "📓 Open the notebook"), h("small", { class: "muted" }, g.nb[t.notebook] && g.nb[t.notebook].passed ? "Checks pass: this counts as done." : "Passing its checks counts as done. Or paste a link:")));
+    if (cr.t === "link") { const i = h("input", { type: "url", placeholder: "https://" + ((cr.hosts || [])[0] || "") + "/…", value: v || "", "aria-label": cr.label }); i.addEventListener("input", () => set(i.value)); ap(inner, i, h("small", { class: "muted" }, (cr.hosts || []).length ? "Link must be on " + cr.hosts.join(" or ") : "Any https link")); }
+    if (cr.t === "text") { const i = h("textarea", { class: cr.mono ? "code" : "", rows: cr.mono ? 5 : 3, placeholder: cr.mono ? "Paste output here" : "Write here", "aria-label": cr.label }); i.value = v || ""; i.addEventListener("input", () => set(i.value)); ap(inner, i, h("small", { class: "muted" }, [cr.min ? "At least " + cr.min + " words." : "", cr.lines ? "At least " + cr.lines + " lines." : "", cr.expect ? "Must contain: " + cr.expect.join(", ") : ""].filter(Boolean).join(" "))); }
+    if (cr.t === "number") { const i = h("input", { type: "number", step: "any", value: v == null ? "" : v, "aria-label": cr.label, style: "max-width:180px" }); i.addEventListener("input", () => set(i.value)); ap(inner, h("div", { class: "row" }, i, h("small", { class: "muted" }, (cr.unit || "") + " · expected between " + cr.min + " and " + cr.max))); }
+    if (cr.t === "check") { const i = h("input", { type: "checkbox", checked: !!v || null }); i.addEventListener("change", () => set(i.checked)); ap(inner, h("label", { class: "small" }, i, " I did this")); }
+    if (cr.t === "drill") ap(inner, h("a", { class: "btn small", href: route(c, "d/" + cr.id) }, "Open drill"));
+    if (cr.t === "quiz") ap(inner, h("a", { class: "btn small", href: route(c, "q/" + cr.w) }, "Take the quiz"));
+    if (cr.t === "checkpoint") ap(inner, h("a", { class: "btn small", href: route(c, "x/" + cr.id) }, "Open " + L.checkpoint.toLowerCase()));
+    ap(row, inner); ap(crit, row);
+  });
+  ap(body, crit);
+  if (t.res) ap(body, h("p", { class: "res small" }, "Resources: ", t.res.map(r => [h("a", { href: r[1], target: "_blank", rel: "noopener noreferrer" }, r[0]), " "])));
+  ap(card, body);
+  return card;
+}
+
+/* ---------- Lessons, Drills, Projects ---------- */
+function tabLessons(c, M) {
+  const due = dueCards(c).length; const nxt = nextLesson(c);
+  ap(M, h("div", { class: "row" }, nxt ? h("a", { class: "btn primary", href: route(c, "l/" + nxt.id) }, (orderedLessons(c).some(l => learned(l.id)) ? "Continue: " : "Start: ") + nxt.title) : null, due ? h("a", { class: "btn", href: route(c, "review") }, "Review " + due + " cards") : null));
+  ap(M, c.design.layout === "path" ? unitPath(c) : c.design.layout === "tabs" ? unitTabs(c) : unitList(c));
+}
+function tabDrills(c, M) {
+  const g = G(); const L = LBL(c);
+  ap(M, h("p", { class: "muted" }, "Drills are from-memory practice on a Leitner schedule: pass one and it comes back after 1, 3, 7, 14 and 30 days; miss it and it starts again tomorrow."));
+  const list = h("div", { class: "card list" });
+  for (const d of drillsOf()) {
+    const s = g.drills[d.id]; const un = drillUnlocked(d) || (s && s.attempts);
+    ap(list, h("div", { class: "lib-l" }, h("span", { class: "n" }, L.unit[0] + (d.week || "")), h("div", null, un ? h("a", { href: route(c, "d/" + d.id) }, d.title) : h("span", null, d.title), h("small", { class: "muted" }, d.mins + " min · " + (d.tests ? "run-checked" : "self-graded") + (s && s.due ? " · due " + fmtDay(s.due) : "") + (!un && d.lesson ? " · unlocks the day after " + ((S.lessons[d.lesson] || {}).title || d.lesson) : ""))), un ? boxes(s ? s.box : 0) : pill("locked")));
+  }
+  ap(M, list);
+}
+function tabProjects(c, M) {
+  const L = LBL(c); const hw = allTasks().filter(t => t.project != null || t.notebook);
+  const done = hw.filter(t => taskProg(t) >= 1).length;
+  ap(M, h("div", { class: "card row between" }, h("div", null, h("h3", null, L.projects), h("p", { class: "small muted" }, L.projectsIntro || "The " + hw.length + " projects of this course, scheduled after the lessons they need.")), h("div", { class: "big-num" }, h("b", null, done + "/" + hw.length), h("small", null, "complete"))));
+  for (const t of hw) ap(M, h("div", { class: "card flush" }, h("p", { class: "small muted pad" }, (t.project != null ? L.project + " " + t.project + " · " : "") + L.unit.toLowerCase() + " " + t.week), taskCard(c, t)));
+}
+
+/* ---------- Record ---------- */
+function tabRecord(c, M) {
+  const g = G(); const L = LBL(c); const ls = orderedLessons(c);
+  const left = h("div", { class: "stack" }), right = h("div", { class: "stack" });
+  const tracks = c.tracks && Object.keys(c.tracks).length ? c.tracks : null;
+  ap(left, h("p", { class: "sec-h" }, tracks ? "Tracks" : "Progress"));
+  const tcard = h("div", { class: "card" });
+  const groups = tracks ? Object.keys(tracks).map(k => [tracks[k], ls.filter(l => l.track === k), drillsOf().filter(d => d.track === k)]) : [[L.lessons, ls, drillsOf()]];
+  for (const [name, gl, gd] of groups) { if (!gl.length && !gd.length) continue; const n = gl.filter(l => learned(l.id)).length; const m = gd.filter(d => g.drills[d.id] && g.drills[d.id].box >= 4).length;
+    ap(tcard, h("div", { class: "trk" }, h("div", { class: "row between" }, h("b", null, name), h("small", { class: "muted" }, n + "/" + gl.length + " lessons" + (gd.length ? " · " + m + "/" + gd.length + " drills mastered" : ""))), h("span", { class: "bar" }, h("i", { style: "width:" + (gl.length ? n / gl.length * 100 : 0) + "%" })))); }
+  ap(left, tcard);
+  if (cpsOf().length) {
+    ap(left, h("p", { class: "sec-h" }, L.checkpoints));
+    ap(left, h("div", { class: "card scroll-x" }, h("table", { class: "list" }, h("tr", null, h("th", null, L.checkpoint), h("th", null, "Best"), h("th", null, "Attempts"), h("th")),
+      cpsOf().map(ex => { const x = g.exams[ex.id]; const ready = ex.lessons.every(learned);
+        return h("tr", null, h("td", null, h("b", null, ex.title), h("br"), h("small", { class: "muted" }, (ex.week ? L.unit.toLowerCase() + " " + ex.week + " · " : "") + ex.minutes + " min · pass " + ex.pass + "%")),
+          h("td", null, x ? pill(x.best + "%", x.best >= ex.pass ? "ok" : "bad") : "–"), h("td", null, String(x ? x.attempts.length : 0)),
+          h("td", null, g.examRun ? null : ready ? h("a", { class: "btn small", href: route(c, "x/" + ex.id) }, x ? "Retake" : "Start") : h("small", { class: "muted" }, "learn its lessons first"))); }))));
+  }
+  ap(left, h("p", { class: "sec-h" }, "Study days (last 10 weeks)"));
+  const heat = h("div", { class: "heat", role: "img", "aria-label": "Study days heatmap" });
+  const end = TODAY(); const dow = (parseDay(end).getDay() + 6) % 7; const start = addDays(end, -(69 + dow));
+  for (let d = start; d <= addDays(end, 6 - dow); d = addDays(d, 1)) { const v = g.days[d] || 0; ap(heat, h("i", { class: d > end ? "" : v >= 12 ? "l3" : v >= 5 ? "l2" : v > 0 ? "l1" : "", title: d + ": " + v })); }
+  ap(left, h("div", { class: "card" }, heat, h("p", { class: "small muted" }, "Each column is one week, Monday at the top. Darker means more done that day.")));
+  if (drillsOf().length) {
+    ap(right, h("p", { class: "sec-h" }, "Drill boxes"));
+    ap(right, h("div", { class: "card scroll-x" }, h("table", { class: "list" }, h("tr", null, h("th", null, "Drill"), h("th", null, "Box"), h("th", null, "Next")),
+      drillsOf().map(d => { const s = g.drills[d.id]; return h("tr", null, h("td", null, h("a", { href: route(c, "d/" + d.id) }, d.title)), h("td", null, boxes(s ? s.box : 0)), h("td", { class: "small" }, s && s.due ? fmtDay(s.due) : drillUnlocked(d) ? "new" : "locked")); }))));
+  }
+  ap(right, h("p", { class: "sec-h" }, "Settings"));
+  const startIn = h("input", { type: "date", value: g.start || TODAY() });
+  startIn.addEventListener("change", () => { if (startIn.value) { g.start = startIn.value; saveG(); S.gRev = (S.gRev || 0) + 1; S.view = null; render(); } });
+  const restore = h("textarea", { class: "code", rows: 4, hidden: true, placeholder: "Paste a progress backup here, then press Restore again" });
+  const rts = Object.entries(c.runtimes || {});
+  ap(right, h("div", { class: "card stack small" },
+    planOf() ? h("label", null, "Course start ", startIn) : null,
+    h("div", { class: "row" },
+      h("button", { class: "btn small", onclick: () => saveBackup(c) }, "Save progress backup"),
+      h("button", { class: "btn small", onclick: () => { if (restore.hidden || !restore.value.trim()) { restore.hidden = false; restore.focus(); return; } restoreBackup(c, restore.value).then(n => { toast("Progress restored (" + n + " records)."); restore.value = ""; restore.hidden = true; }, e => toast("That is not a progress backup: " + (e.message || e), "bad")); } }, "Restore from backup")),
+    restore,
+    h("p", { class: "muted" }, S.mode === "db" ? "Progress is saved to your Claude account and follows you to every device. A backup file is a copy you keep." : "Progress is saved in this browser only. Save a backup to move it."),
+    rts.length ? h("div", null, h("b", null, "Code runs here"), h("ul", null, rts.map(([lang, r]) => h("li", null, r.label + " (" + ({ pyodide: "CPython in this browser", js: "JavaScript in a sandbox", frame: "the course's own runner" }[r.engine] || r.engine) + ")" + (lang === "python" && r.apps ? ", Streamlit apps" : ""))))) : null,
+    (c.files || []).length ? h("div", null, h("b", null, "Data files"), h("p", { class: "muted" }, c.files.map(f => f.name).join(", "))) : null));
+  rc(M, h("div", { class: "grid2" }, left, right));
+}
+/* Backups hold this course's progress records: lessons, programme state and notebooks. */
+async function saveBackup(c) {
+  const out = { coursekitProgress: 2, course: c.id, saved: new Date().toISOString(), progress: Object.values(S.progress).map(p => { const b = Object.assign({}, p); delete b._dirty; return b; }), state: G(), notebooks: [] };
+  const nbs = await S.store.query({ kind: "nbwork", course: c.id }).catch(() => []); out.notebooks = nbs.map(d => d.body);
+  const data = JSON.stringify(out); const name = c.id + "-progress-" + TODAY() + ".json";
+  if (S.downloads) { try { await S.downloads.save({ filename: name, data }); return; } catch (e) { if (e && e.code === "cancelled") return; } }
+  copy(data);
+}
+async function restoreBackup(c, text) {
+  const o = JSON.parse(text);
+  if (o && o.coursekitProgress === 2) {
+    let n = 0;
+    for (const p of o.progress || []) { if (!p.lesson) continue; p.course = c.id; p.kind = "progress"; S.progress[p.lesson] = p; await put(K.prog(c.id, p.lesson), p); n++; }
+    if (o.state) { S.g = normG(Object.assign({}, o.state, { course: c.id }), c.id); await flushG(c.id); n++; }
+    for (const nb of o.notebooks || []) { nb.course = c.id; await put(K.nbw(c.id, nb.nb), nb); n++; }
+    S.gRev = (S.gRev || 0) + 1; S.view = null; render(); return n;
+  }
+  // A progress backup from Coursekit 1 or Sigmoid Prep: lessons by practice index.
+  if (o && o.lessons && o.prac) { const r = CK.fromV1Progress(o, S.lessons, c.id); for (const p of r.progress) { S.progress[p.lesson] = p; await put(K.prog(c.id, p.lesson), p); } S.g = normG(r.state, c.id); await flushG(c.id); S.gRev = (S.gRev || 0) + 1; S.view = null; render(); return r.progress.length + 1; }
+  throw new Error("unknown format");
+}
+
+/* ================= drill ================= */
+function viewDrill(c, id) {
+  if (!S.modsLoaded || !S.gLoaded) return h("p", { class: "muted" }, "Loading…");
+  const d = drillById(id); const L = LBL(c);
+  if (!d) return h("div", { class: "empty" }, h("h2", null, "No such drill"), h("a", { href: route(c, "t/drills") }, "Back"));
+  const g = G(); const s = g.drills[d.id] || { box: 0, attempts: 0, passes: 0 };
+  const wrap = h("article", { class: "lesson drill" },
+    h("p", { class: "crumbs" }, h("a", { href: route(c, "t/" + (courseTabs(c).some(t => t[0] === "today") ? "today" : "drills")) }, "← Back"), " · Drill" + (d.track && c.tracks && c.tracks[d.track] ? " · " + c.tracks[d.track] : "") + (d.level ? " · level " + d.level : "")),
+    h("h1", null, d.title),
+    h("p", { class: "row small muted" }, boxes(s.box), " Box " + s.box + " · " + (d.tests ? "checked by running" : "self-graded") + " · " + s.passes + " passes" + (s.due ? " · next due " + fmtDay(s.due) : "")));
+  if (!(drillUnlocked(d) || s.attempts > 0)) { ap(wrap, h("div", { class: "card" }, "This drill unlocks the day after you learn ", h("a", { href: route(c, "l/" + d.lesson) }, (S.lessons[d.lesson] || {}).title || d.lesson), ". Waiting a day means it tests memory, not copying.")); return wrap; }
+  const timer = h("span", { class: "timer", role: "timer" }, "00:00 / " + d.mins + ":00");
+  const hints = h("div"); let hn = 0;
+  const hintBtn = h("button", { class: "btn small", disabled: !d.hints.length || null, onclick: () => { if (hn < d.hints.length) { ap(hints, h("div", { class: "hintbox" }, mdInline(d.hints[hn]))); hn++; } if (hn >= d.hints.length) hintBtn.disabled = true; } }, "Show a hint (" + d.hints.length + ")");
+  const text = d.format === "text" || !d.tests && !(d.lang && RT().has(d.lang));
+  const draft = g.drafts["d:" + d.id];
+  const ta = text ? h("textarea", { class: "prosebox", rows: 8, placeholder: "Write from memory", "aria-label": "Your answer" }) : codeArea(draft != null ? draft : (d.starter || ""), d.lang);
+  if (text) ta.value = draft != null ? draft : "";
+  ta.addEventListener("input", () => { g.drafts["d:" + d.id] = ta.value; saveG(); });
+  const out = h("div", { class: "runout" });
+  const grade = gr => {
+    const s2 = g.drills[d.id] || { box: 0, attempts: 0, passes: 0 }; s2.attempts++; s2.last = TODAY();
+    if (gr === "fail") { s2.box = 0; s2.due = addDays(TODAY(), 1); } else if (gr === "hard") { s2.box = Math.max(1, s2.box); s2.due = addDays(TODAY(), BOX[s2.box]); s2.passes++; } else { s2.box = Math.min(5, s2.box + 1); s2.due = addDays(TODAY(), BOX[s2.box]); s2.passes++; }
+    g.drills[d.id] = s2; delete g.drafts["d:" + d.id]; logEvent("drill", { c: c.id, d: d.id, g: gr }); saveG();
+    toast(gr === "fail" ? "Back to box 0. It returns tomorrow." : "Moved to box " + s2.box + ". Next review " + fmtDay(s2.due) + ".", "ok");
+    S.gRev = (S.gRev || 0) + 1; go(route(c, "t/" + (courseTabs(c).some(t => t[0] === "today") ? "today" : "drills")));
+  };
+  const showModel = (note, passed) => rc(out, note || null, h("p", { class: "sec-h" }, "Model answer"), text ? mdEl(d.solution) : h("pre", { "data-lang": d.lang || "" }, h("code", null, d.solution)),
+    h("p", { class: "small" }, "How did it go?"), h("div", { class: "row" }, passed ? null : h("button", { class: "btn", onclick: () => grade("fail") }, "Failed"), h("button", { class: "btn", onclick: () => grade("hard") }, "Got it, but it was hard"), h("button", { class: "btn primary", onclick: () => grade("good") }, "Got it")));
+  const btns = h("div", { class: "row" });
+  if (d.tests && RT().has(d.lang)) ap(btns,
+    h("button", { class: "btn primary", onclick: async () => { rc(out, statusLine("Running the hidden tests…")); const r = await RT().check(d.lang, ta.value, d.tests, d.expect, { onStatus: t => rc(out, statusLine(t)) });
+      if (r.pass) showModel(h("p", { class: "ok" }, "All tests pass. Compare your version with the model answer, then record it."), true);
+      else rc(out, runOutput({ out: r.own, error: r.err, imgs: r.imgs }, null), h("div", { class: "fb" }, h("p", { class: "bad" }, r.err ? "Error while running." : "Tests ran but the output differs."), r.reachedTests && !r.err ? h("pre", { class: "out" }, r.testOut) : null, h("p", { class: "small" }, "Fix it and try again, or give up and compare."))); } }, "Run and check"),
+    h("button", { class: "btn", onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(d.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput(r, "(no output)")); } }, "Run only"));
+  ap(btns, h("button", { class: "btn" + (d.tests ? " ghost" : " primary"), onclick: () => showModel() }, d.tests ? "Give up and compare" : "Compare with the model answer"));
+  ap(wrap, h("div", { class: "q" }, mdEl(d.prompt)), h("div", { class: "row between" }, timer, hintBtn), hints, ta, btns, out);
+  const t0 = Date.now();
+  timers.push(setInterval(() => { if (!timer.isConnected) return; const sec = Math.floor((Date.now() - t0) / 1000); timer.textContent = String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0") + " / " + d.mins + ":00"; timer.classList.toggle("over", sec > d.mins * 60); }, 1000));
+  return wrap;
+}
+
+/* ================= checkpoints ================= */
+function examItems(ex) {
+  return ex.items.map(ref => {
+    if (ref.startsWith("drill:")) return { ref, kind: "drill", d: drillById(ref.slice(6)) };
+    const [lid, bid] = ref.split(":"); const l = S.lessons[lid]; const b = l && (l.blocks || []).find(x => x.id === bid);
+    return { ref, kind: "block", l, b };
+  }).filter(it => it.kind === "drill" ? it.d : it.b);
+}
+function examScore(ex, run) { const items = examItems(ex); let pts = 0; for (const it of items) { const a = run.ans[it.ref]; if (a && a.ok) pts++; } return items.length ? Math.round(pts / items.length * 100) : 0; }
+function finishExam(c, timeout) {
+  const g = G(); const run = g.examRun; if (!run) return;
+  const ex = cpsOf().find(e => e.id === run.id); const sc = ex ? examScore(ex, run) : 0;
+  const x = g.exams[run.id] || { best: 0, attempts: [] }; x.attempts.push({ date: TODAY(), score: sc }); x.best = Math.max(x.best, sc); g.exams[run.id] = x;
+  g.examRun = null; logEvent("exam", { c: c.id, x: run.id, score: sc }); saveG();
+  toast((timeout ? "Time is up. " : "") + "Score " + sc + "%" + (ex && sc >= ex.pass ? ", passed." : ex ? ", the pass mark is " + ex.pass + "%." : "."), sc >= (ex ? ex.pass : 70) ? "ok" : "bad");
+  S.gRev = (S.gRev || 0) + 1; go(route(c, "t/record"));
+}
+function viewExam(c, id) {
+  if (!S.modsLoaded || !S.gLoaded || !S.courseLoaded) return h("p", { class: "muted" }, "Loading…");
+  const ex = cpsOf().find(e => e.id === id); const L = LBL(c); const g = G();
+  if (!ex) return h("div", { class: "empty" }, h("h2", null, "No such " + L.checkpoint.toLowerCase()), h("a", { href: route(c) }, "Back"));
+  const back = route(c, "t/" + (courseTabs(c).some(t => t[0] === "today") ? "today" : "record"));
+  if (g.examRun && g.examRun.id !== id) return h("div", { class: "empty" }, h("h2", null, "Another " + L.checkpoint.toLowerCase() + " is running"), h("a", { class: "btn", href: route(c, "x/" + g.examRun.id) }, "Go to it"));
+  if (g.examRun && Date.now() > g.examRun.ends) { setTimeout(() => finishExam(c, true), 0); return h("p", { class: "muted" }, "Time is up. Marking…"); }
+  const items = examItems(ex);
+  if (!g.examRun) {
+    const ready = ex.lessons.every(learned); const x = g.exams[ex.id];
+    return h("article", { class: "lesson exam" }, h("p", { class: "crumbs" }, h("a", { href: back }, "← Back")), h("h1", null, ex.title),
+      h("p", { class: "lede" }, items.length + " items · " + ex.minutes + " minutes · pass mark " + ex.pass + "%"),
+      x ? h("p", null, "Best so far: ", pill(x.best + "%", x.best >= ex.pass ? "ok" : "bad"), " after " + x.attempts.length + " attempt" + (x.attempts.length > 1 ? "s" : "") + ".") : null,
+      h("p", { class: "muted" }, "Timed and closed-book: no notes, no lessons, and Ask is off until you submit. Answers save as you go and are marked when you submit or when time runs out."),
+      ready ? null : h("p", { class: "note" }, "Learn its lessons first: " + ex.lessons.filter(l => !learned(l)).map(l => (S.lessons[l] || {}).title || l).join(", ") + "."),
+      h("button", { class: "btn primary", disabled: !ready || null, onclick: () => { g.examRun = { id: ex.id, started: Date.now(), ends: Date.now() + ex.minutes * 60000, ans: {} }; saveG(); S.gRev = (S.gRev || 0) + 1; S.view = null; render(); } }, x ? "Retake it now" : "Start the timer"));
+  }
+  const run = g.examRun;
+  const timer = h("span", { class: "timer", role: "timer" });
+  const wrap = h("article", { class: "lesson exam" },
+    h("p", { class: "crumbs" }, h("a", { href: back }, "← Leave (the timer keeps running)")), h("h1", null, ex.title),
+    h("div", { class: "exam-bar" }, timer, h("button", { class: "btn primary", onclick: () => finishExam(c, false) }, "Submit")),
+    h("p", { class: "muted small" }, items.length + " items. Answers are saved as you go and marked when you submit."));
+  items.forEach((it, i) => {
+    const num = "Q" + (i + 1);
+    if (it.kind === "block") ap(wrap, renderBlock(c, it.l, it.b, { ans: run.ans, key: it.ref, num }));
+    else ap(wrap, examDrill(c, it.d, run, it.ref, num));
+  });
+  const tick = () => { const left = Math.max(0, run.ends - Date.now()); timer.textContent = String(Math.floor(left / 60000)).padStart(2, "0") + ":" + String(Math.floor(left / 1000) % 60).padStart(2, "0") + " left"; timer.classList.toggle("over", left < 60000); if (left <= 0 && S.g && S.g.examRun === run) finishExam(c, true); };
+  tick(); timers.push(setInterval(tick, 1000));
+  return wrap;
+}
+function examDrill(c, d, run, ref, num) {
+  const st = run.ans[ref] || {}; const box = h("section", { class: "blk practice exam-item" }, h("p", { class: "qnum" }, num + " · from memory"), h("div", { class: "q" }, mdEl(d.prompt)));
+  const o = h("div", { class: "fb" });
+  if (d.tests && RT().has(d.lang)) {
+    const ta = codeArea(st.a != null ? st.a : (d.starter || ""), d.lang); ta.addEventListener("input", () => { run.ans[ref] = Object.assign(run.ans[ref] || {}, { a: ta.value }); saveG(); });
+    ap(box, ta, h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: async () => { rc(o, statusLine("Running…")); const r = await RT().check(d.lang, ta.value, d.tests, d.expect, { onStatus: t => rc(o, statusLine(t)) }); run.ans[ref] = { a: ta.value, ok: r.pass }; saveG(); rc(o, h("p", { class: "muted" }, r.pass ? "Tests pass. Saved." : "Tests do not pass yet. Saved.")); } }, "Run and check")), o);
+  } else {
+    const ta = h("textarea", { class: "prosebox", rows: 6, "aria-label": "Your answer" }); ta.value = st.a || "";
+    ta.addEventListener("input", () => { run.ans[ref] = Object.assign(run.ans[ref] || {}, { a: ta.value }); saveG(); });
+    ap(box, ta, h("div", { class: "row" }, h("button", { class: "btn small", onclick: () => rc(o, h("pre", { class: "out wrap" }, d.solution), h("div", { class: "row" }, h("button", { class: "btn small", onclick: () => { run.ans[ref] = { a: ta.value, ok: false }; saveG(); rc(o, h("p", { class: "muted" }, "Marked wrong. Saved.")); } }, "I got it wrong"), h("button", { class: "btn small primary", onclick: () => { run.ans[ref] = { a: ta.value, ok: true }; saveG(); rc(o, h("p", { class: "muted" }, "Marked right. Saved.")); } }, "I got it right"))) }, "Compare with the model answer")), o);
+  }
+  return box;
+}
+
+/* ================= weekly quiz ================= */
+function viewQuiz(c, n) {
+  if (!S.modsLoaded || !S.gLoaded) return h("p", { class: "muted" }, "Loading…");
+  const p = planOf(); const w = p && p.weeks[n - 1]; const L = LBL(c);
+  if (!w || !w.quiz) return h("div", { class: "empty" }, h("h2", null, "No quiz here"), h("a", { href: route(c, "t/plan") }, "Back to the plan"));
+  const picks = {}; let done = false;
+  const wrap = h("article", { class: "lesson quiz" }, h("p", { class: "crumbs" }, h("a", { href: route(c, "t/plan") }, "← Plan")), h("h1", null, L.unit + " " + n + " self-check"),
+    h("p", { class: "lede" }, w.quiz.length + " questions. Pass with at most " + w.quizMax + " wrong. You can retake it."));
+  const items = w.quiz.map((q, i) => {
+    const fb = h("div", { class: "fb" });
+    const opts = q.o.map((o, j) => h("button", { class: "opt", "aria-pressed": "false", onclick: e => { if (done) return; picks[i] = j; opts.forEach(x => x.setAttribute("aria-pressed", "false")); e.currentTarget.setAttribute("aria-pressed", "true"); } }, mdInline(o)));
+    ap(wrap, h("section", { class: "blk practice" }, h("div", { class: "q" }, h("p", null, h("b", null, (i + 1) + ". "), mdInline(q.q))), h("div", { class: "opts" }, opts), fb));
+    return { q, opts, fb };
+  });
+  const res = h("div");
+  ap(wrap, h("button", { class: "btn primary", onclick: () => {
+    if (done) return; if (w.quiz.some((_, i) => picks[i] == null)) { toast("Answer every question first."); return; }
+    done = true; let wrong = 0; const g = G();
+    items.forEach((it, i) => { it.opts.forEach((b, j) => { if (j === it.q.a) b.classList.add("right"); else if (j === picks[i]) b.classList.add("wrong"); }); if (picks[i] !== it.q.a) wrong++; rc(it.fb, h("p", { class: picks[i] === it.q.a ? "ok" : "bad" }, picks[i] === it.q.a ? "Right." : "Not this one."), it.q.why ? mdEl(it.q.why) : null); });
+    const prev = g.quiz[n]; g.quiz[n] = { best: prev && prev.best != null ? Math.min(prev.best, wrong) : wrong, last: wrong }; logEvent("quiz", { c: c.id, w: n, wrong }); saveG();
+    rc(res, h("div", { class: "card" }, h("b", null, (w.quiz.length - wrong) + " of " + w.quiz.length + " right. "), wrong <= w.quizMax ? "Passed." : "Not passed yet. Read the explanations and retake it tomorrow."));
+  } }, "Submit answers"), res);
+  return wrap;
+}
+
+/* ================= notebooks ================= */
+const NB = { exec: {}, imgs: {}, n: 0 };
+const nbRand = () => "c" + Math.random().toString(36).slice(2, 8);
+function nbFromTemplate(T) { return { cells: T.cells.map(x => ({ id: nbRand(), t: x.t, src: x.src, tag: x.tag || null, out: null })), files: [], tplv: T.v || 1 }; }
+async function nbLoad(c, id) {
+  if (S.nbw[id]) return S.nbw[id];
+  const T = nbOf(id); let doc = null;
+  try { doc = await S.store.get(K.nbw(c.id, id)); } catch (e) {}
+  const nb = doc && Array.isArray(doc.cells) ? { cells: doc.cells, files: doc.files || [], tplv: doc.tplv || 1 } : nbFromTemplate(T);
+  return S.nbw[id] = nb;
+}
+let nbTimers = {};
+function nbSave(c, id) {
+  const nb = S.nbw[id]; if (!nb) return; clearTimeout(nbTimers[id]);
+  nbTimers[id] = setTimeout(() => {
+    const cells = nb.cells.map(x => ({ id: x.id, t: x.t, src: x.src, tag: x.tag || null, out: x.out ? { text: String(x.out.text || "").slice(-6000), err: x.out.err ? String(x.out.err).slice(0, 3000) : null, value: x.out.value != null ? String(x.out.value).slice(0, 3000) : null } : null }));
+    let body = { kind: "nbwork", course: c.id, nb: id, cells, files: nb.files.map(f => ({ name: f.name, url: f.url || null })), tplv: nb.tplv, updated: new Date().toISOString() };
+    if (JSON.stringify(body).length > 240000) body.cells = cells.map(x => Object.assign({}, x, { out: null }));
+    put(K.nbw(c.id, id), body);
+  }, 900);
+}
+const nbWords = src => CK.words(String(src || "").split("\n").filter(l => !/^\s*#/.test(l) && !/^\s*_[^_].*_\s*$/.test(l)).join(" "));
+const nbAnswer = src => String(src || "").split("\n").filter(l => !/^\s*#/.test(l) && !/^\s*_[^_].*_\s*$/.test(l)).join("\n").trim();
+function nbFiles(c, nb) { return (c.files || []).concat(nb.files.filter(f => f.url).map(f => ({ name: f.name, url: f.url }))); }
+function viewNotebook(c, id) {
+  if (!S.modsLoaded || !S.gLoaded) return h("p", { class: "muted" }, "Loading…");
+  const T = nbOf(id); const L = LBL(c);
+  if (!T) return h("div", { class: "empty" }, h("h2", null, "No such notebook"), h("a", { href: route(c, "t/projects") }, "Back"));
+  const wrap = h("article", { class: "nbwrap" }, h("p", { class: "muted" }, "Opening the notebook…"));
+  nbLoad(c, id).then(nb => { if (S.route.name === "notebook" && S.route.id === id) rc(wrap, ...nbPaint(c, id, nb)); });
+  return wrap;
+}
+function nbPaint(c, id, nb) {
+  const T = nbOf(id); const L = LBL(c); const g = G(); const ns = "nb:" + id; const lang = T.lang || "python";
+  const task = allTasks().find(t => t.notebook === id);
+  const status = pill(g.nb[id] && g.nb[id].passed ? "All checks pass" : "Checks not passed yet", g.nb[id] && g.nb[id].passed ? "ok" : "");
+  const checks = h("div", { id: "nbchecks" }); const cellsEl = h("div", { class: "nbcells" });
+  const can = RT().has(lang);
+  const paintChecks = r => {
+    if (!r) { const st = g.nb[id] || {}; rc(checks, h("details", { class: "card nbck" }, h("summary", null, h("b", null, T.checks.length + " checks"), " ", h("small", { class: "muted" }, st.score ? "last run " + fmtDay(st.last) + ": " + st.score + " passed" : "press Check my work when you think you are done")), h("ul", { class: "nbcklist" }, T.checks.map(x => h("li", null, h("span", { class: "dot" }), mdInline(x.label)))))); return; }
+    if (r.error) { rc(checks, h("div", { class: "card nbck" }, h("p", { class: "bad" }, r.error))); return; }
+    rc(checks, h("div", { class: "card nbck" }, h("div", { class: "row between" }, h("b", null, r.all ? "All checks pass." + (task ? " The notebook criterion of its task is done." : "") : r.results.filter(x => x.ok).length + " of " + r.results.length + " checks pass"), task ? h("a", { class: "btn small", href: route(c, "t/projects") }, "See the task card") : null),
+      h("ul", { class: "nbcklist" }, T.checks.map((x, k) => { const y = r.results[k]; return h("li", { class: y.ok ? "ok" : "no" }, h("span", { class: "dot" }), h("div", null, mdInline(x.label), !y.ok && y.why ? h("small", { class: "muted" }, y.why) : null)); })),
+      r.filled ? h("p", { class: "small muted" }, "Copied " + r.filled + " of your results and answers into the task card.") : null));
+    status.className = "pill " + (g.nb[id] && g.nb[id].passed ? "ok" : ""); status.textContent = g.nb[id] && g.nb[id].passed ? "All checks pass" : "Checks not passed yet";
+  };
+  const runCell = async (x, el) => {
+    if (x.t !== "code" || x.tag === "app") return true;
+    const outEl = el.querySelector(".nbout"); el.classList.add("running"); rc(outEl, statusLine("Running…"));
+    const r = await RT().run(lang, x.src, { ns, limitMs: 180000, files: nbFiles(c, nb), onStatus: t => rc(outEl, statusLine(t)), onOut: t => rc(outEl, h("pre", { class: "out" }, t.slice(-20000))) });
+    el.classList.remove("running");
+    if (r.boot) { rc(outEl, h("p", { class: "bad" }, "Python could not start in this browser, so the notebook cannot run here. Export it and run it in Jupyter or Colab instead.")); return false; }
+    NB.exec[x.id] = ++NB.n; NB.imgs[x.id] = r.imgs || [];
+    x.out = { text: (r.out || "").slice(-20000), err: r.ok ? null : String(r.error || "Error").slice(0, 6000), value: r.value != null ? String(r.value).slice(0, 8000) : null };
+    nbSave(c, id); el.querySelector(".nbn").textContent = "[" + NB.exec[x.id] + "]"; rc(outEl, nbOut(x)); logEvent("nbrun", { c: c.id });
+    return r.ok;
+  };
+  const runAll = async () => { const els = [...cellsEl.children]; for (let i = 0; i < nb.cells.length; i++) { const x = nb.cells[i]; if (x.t !== "code" || x.tag === "app") continue; if (els[i]) els[i].scrollIntoView({ block: "nearest" }); if (!(await runCell(x, els[i]))) { toast("Stopped at an error in cell " + (i + 1) + "."); return false; } } return true; };
+  const paintCells = () => rc(cellsEl, nb.cells.map((x, i) => nbCell(c, id, nb, x, i, paintCells, runCell)));
+  const check = async btn => {
+    btn.disabled = true; rc(checks, h("div", { class: "card nbck" }, h("p", { class: "muted" }, "Checking…")));
+    try {
+      if (!(await RT().has_ns(lang, ns))) { rc(checks, h("div", { class: "card nbck" }, h("p", { class: "muted" }, "Python has none of your variables yet, so every cell runs first…"))); if (!(await runAll())) return paintChecks({ error: "A cell raised an error, so the checks could not run. Fix that cell first." }); }
+      const py = [], pyIdx = []; T.checks.forEach((x, k) => { if (typeof x.test === "string") { py.push(x.test); pyIdx.push(k); } });
+      const vals = {}; Object.entries(T.fill || {}).forEach(([k, f]) => { if (typeof f === "string") vals[k] = f; });
+      const code = "import json as __ck_json\ndef __ck_c(src):\n    try:\n        return bool(eval(src, globals()))\n    except Exception as e:\n        return 'ERR:' + type(e).__name__ + ': ' + str(e)[:200]\ndef __ck_v(src):\n    try:\n        v = eval(src, globals())\n    except Exception:\n        return None\n    if isinstance(v, str):\n        return v\n    try:\n        return float(v)\n    except Exception:\n        return str(v)\nprint('@@NBCHK@@' + __ck_json.dumps({'c': [__ck_c(s) for s in " + JSON.stringify(py) + "], 'v': {k: __ck_v(s) for k, s in " + JSON.stringify(vals) + ".items()}}))\n";
+      const app = nb.cells.find(x => x.tag === "app");
+      const pre = "import numpy as np\ntry:\n    import pandas as pd\nexcept Exception:\n    pass\n" + (app ? "import json as __ck_json\nAPP_SRC = __ck_json.loads(" + JSON.stringify(JSON.stringify(app.src)) + ")\n" : "") + (T.prelude || "") + "\n";
+      const r = await RT().run(lang, pre + code, { ns, limitMs: 120000 });
+      let res = null; const m = (r.out || "").split("@@NBCHK@@")[1]; if (m) { try { res = JSON.parse(m.trim().split("\n")[0]); } catch (e) {} }
+      if (!res) return paintChecks({ error: "The checker could not run: " + (r.error || "no result") });
+      const figs = nb.cells.reduce((n, x) => n + (NB.imgs[x.id] || []).length, 0);
+      const results = T.checks.map((x, k) => {
+        if (typeof x.test === "string") { const v = res.c[pyIdx.indexOf(k)]; return { ok: v === true, why: nbWhy(v) }; }
+        if (x.test.app) { const st = S.st && S.st.id === id ? S.st.ctl : null; return { ok: !!(st && st.ran && st.err === false), why: !st || !st.ran ? "Launch the app once (▶ Launch app) so the check can see it run." : st.err ? "The app shows an error. Fix it, then Apply." : "The app is still starting. Wait for it, then check again." }; }
+        if (x.test.figs) return { ok: figs >= x.test.figs, why: figs + " figure" + (figs === 1 ? "" : "s") + " in this session" };
+        if (x.test.md) { const cell = nb.cells.find(y => y.tag === x.test.md); const n = cell ? nbWords(cell.src) : 0; return { ok: n >= x.test.words, why: n + " words" }; }
+        return { ok: false, why: "" };
+      });
+      const all = results.every(x => x.ok);
+      g.nb[id] = Object.assign(g.nb[id] || {}, { passed: all || !!(g.nb[id] && g.nb[id].passed), last: TODAY(), score: results.filter(x => x.ok).length + "/" + results.length });
+      let filled = 0;
+      if (task) { g.crit[task.id] = g.crit[task.id] || {}; Object.entries(T.fill || {}).forEach(([k, f]) => { let v = null; if (typeof f === "string") { v = res.v[k]; if (typeof v === "number" && !isFinite(v)) v = null; } else if (f && f.md) { const cell = nb.cells.find(y => y.tag === f.md); v = cell ? nbAnswer(cell.src) : null; if (v === "") v = null; } if (v != null) { g.crit[task.id][k] = typeof v === "number" ? String(+v.toFixed(6)) : v; filled++; } }); }
+      logEvent("nbcheck", { c: c.id, nb: id, all }); saveG();
+      paintChecks({ results, all, filled });
+    } finally { btn.disabled = false; }
+  };
+  const up = h("input", { type: "file", accept: ".csv,.tsv,.txt,.json,.xlsx,.parquet", hidden: true, onchange: async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+    if (f.size > 20 * 1024 * 1024) { toast("That file is over 20 MB. Use a sample of it.", "bad"); return; }
+    const name = f.name.replace(/[^A-Za-z0-9._-]/g, "_"); const buf = await f.arrayBuffer();
+    toast("Loading " + name + "…"); await RT().put(lang, name, buf);
+    let url = null; if (S.assets) { try { const a = await S.assets.upload(new Blob([buf], { type: "text/csv" })); url = a.url; } catch (err) {} }
+    nb.files = nb.files.filter(x => x.name !== name); nb.files.push({ name, url });
+    toast(url ? name + " is stored with this notebook on your account. Read it with pd.read_csv(\"" + name + "\")." : name + " is loaded for this session only; upload it again next time.", url ? "ok" : "");
+    nbSave(c, id); rc(filesEl, filesRow());
+  } });
+  const filesRow = () => [h("span", { class: "muted" }, "Data files: "), T.datasets.length ? T.datasets.map(f => pill(f)) : h("span", { class: "muted" }, "none needed"), nb.files.length ? [" · uploaded: ", nb.files.map(f => pill(f.name, "acc"))] : null, " ", h("label", { class: "btn ghost small" }, "Upload a data file", up)];
+  const filesEl = h("div", { class: "nbfiles small row" }, filesRow());
+  paintCells(); paintChecks(null);
+  return [
+    h("p", { class: "crumbs" }, h("a", { href: route(c, "t/projects") }, "← " + L.projects), task ? " · " + L.unit + " " + task.week : ""),
+    h("div", { class: "row between" }, h("h1", null, T.title), h("div", { class: "row small muted" }, status, h("span", null, S.mode === "db" ? "Saved to your account" : "Saved in this browser"))),
+    can ? null : h("p", { class: "note" }, "This course has no " + lang + " runtime here. You can still read, edit and export the notebook."),
+    h("div", { class: "nbbar", role: "toolbar", "aria-label": "Notebook" },
+      h("button", { class: "btn small primary", disabled: !can || null, onclick: async e => { e.currentTarget.disabled = true; await runAll(); e.currentTarget.disabled = false; } }, "▶ Run all"),
+      h("button", { class: "btn small", disabled: !can || null, onclick: e => check(e.currentTarget) }, "✓ Check my work"),
+      h("button", { class: "btn small", disabled: !can || null, onclick: async () => { await RT().reset(lang, ns); NB.exec = {}; paintCells(); toast("Python restarted. Variables are cleared; run the cells again."); } }, "Restart Python"),
+      h("button", { class: "btn small", onclick: () => nbExport(c, id, nb) }, "Export (.ipynb + data, .zip)"),
+      h("button", { class: "btn small ghost", onclick: e => { const b = e.currentTarget; if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Click again to replace your cells with the template"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Start over from the template"; }, 5000); return; } const files = nb.files; S.nbw[id] = nbFromTemplate(T); S.nbw[id].files = files; nbSave(c, id); RT().reset(lang, ns); S.view = null; render(); } }, "Start over from the template")),
+    filesEl, checks, cellsEl,
+    h("div", { class: "row" }, h("button", { class: "btn small", onclick: () => { nb.cells.push({ id: nbRand(), t: "code", src: "", tag: null, out: null }); nbSave(c, id); paintCells(); } }, "+ Code cell"), h("button", { class: "btn small", onclick: () => { nb.cells.push({ id: nbRand(), t: "md", src: "", tag: null, out: null, _edit: true }); nbSave(c, id); paintCells(); } }, "+ Text cell")),
+  ];
+}
+function nbWhy(v) {
+  if (v === true || v === false || v == null) return ""; v = String(v).replace(/^ERR:/, "");
+  let m = v.match(/^NameError: name '([^']+)' is not defined/); if (m) return m[1] + " does not exist yet. Create it (and run that cell).";
+  if (/NoneType/.test(v)) return "A variable is still None: replace the placeholder with your result.";
+  m = v.match(/^KeyError: (.*)/); if (m) return "Missing column or key " + m[1] + ".";
+  return "Python said: " + v;
+}
+function nbOut(x) {
+  const o = x.out; if (!o) return null; const stale = !NB.exec[x.id];
+  return h("div", null, o.text || o.value || o.err ? h("pre", { class: "out" + (stale ? " stale" : "") }, o.text || "", o.value != null ? h("span", { class: "muted" }, o.value) : null, o.err ? h("span", { class: "err" }, (o.text ? "\n" : "") + o.err) : null) : null,
+    figures(NB.imgs[x.id]), stale && (o.text || o.value || o.err) ? h("small", { class: "muted" }, "Output from an earlier session. Run the notebook again to bring variables and charts back.") : null);
+}
+function nbCell(c, id, nb, x, i, repaint, runCell) {
+  const el = h("div", { class: "nbcell " + (x.t === "code" ? "code" : "md") + (x.tag === "app" ? " app" : x.tag ? " answer" : "") });
+  const mv = d => { const j = i + d; if (j < 0 || j >= nb.cells.length) return; [nb.cells[i], nb.cells[j]] = [nb.cells[j], nb.cells[i]]; nbSave(c, id); repaint(); };
+  const del = h("button", { class: "icon", title: "Delete cell", "aria-label": "Delete cell", onclick: () => { if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Delete?"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "✕"; }, 3000); return; } nb.cells.splice(i, 1); nbSave(c, id); repaint(); } }, "✕");
+  const tools = h("span", { class: "nbtools" }, h("button", { class: "icon", "aria-label": "Move up", onclick: () => mv(-1) }, "↑"), h("button", { class: "icon", "aria-label": "Move down", onclick: () => mv(1) }, "↓"),
+    h("button", { class: "link small", onclick: () => { nb.cells.splice(i + 1, 0, { id: nbRand(), t: "code", src: "", tag: null, out: null }); nbSave(c, id); repaint(); } }, "+ code"),
+    h("button", { class: "link small", onclick: () => { nb.cells.splice(i + 1, 0, { id: nbRand(), t: "md", src: "", tag: null, out: null, _edit: true }); nbSave(c, id); repaint(); } }, "+ text"), x.tag ? null : del);
+  if (x.t === "code") {
+    const ta = codeArea(x.src, "python"); ta.addEventListener("input", () => { x.src = ta.value; nbSave(c, id); });
+    const isApp = x.tag === "app";
+    ta.addEventListener("keydown", e => { if (e.key === "Enter" && (e.shiftKey || e.ctrlKey || e.metaKey)) { e.preventDefault(); if (isApp) return stLaunch(c, id, nb, x); runCell(x, el).then(() => { if (e.shiftKey) { const nx = el.nextElementSibling; const t = nx && nx.querySelector("textarea"); if (t) t.focus(); } }); } });
+    ap(el, h("div", { class: "nbhead" }, isApp ? [pill("app.py", "acc"), h("button", { class: "btn small primary", onclick: () => stLaunch(c, id, nb, x) }, "▶ Launch app")] : [h("span", { class: "nbn" }, NB.exec[x.id] ? "[" + NB.exec[x.id] + "]" : "[ ]"), h("button", { class: "btn small primary", onclick: () => runCell(x, el) }, "▶ Run")], tools), ta, h("div", { class: "nbout" }, nbOut(x)));
+  } else {
+    const editing = !!x._edit;
+    const head = h("div", { class: "nbhead" }, x.tag ? [pill("Your answer", "acc"), h("small", { class: "muted wc" }, nbWords(x.src) + " words")] : h("span", { class: "nbn" }), h("button", { class: "btn small", onclick: () => { x._edit = !editing; repaint(); } }, editing ? "Done" : "Edit"), tools);
+    if (editing) { const ta = h("textarea", { class: "prosebox", "aria-label": "Text cell" }); ta.value = x.src; ta.addEventListener("input", () => { x.src = ta.value; fitArea(ta); nbSave(c, id); const wc = head.querySelector(".wc"); if (wc) wc.textContent = nbWords(x.src) + " words"; }); ta.addEventListener("keydown", e => { if (e.key === "Enter" && (e.shiftKey || e.ctrlKey || e.metaKey)) { e.preventDefault(); x._edit = false; repaint(); } }); setTimeout(() => fitArea(ta), 0); ap(el, head, ta); }
+    else { const m = mdEl(x.src || "_Empty text cell. Press Edit._", "nbmd"); m.addEventListener("dblclick", () => { x._edit = true; repaint(); }); ap(el, head, m); }
+  }
+  return el;
+}
+/* Streamlit: cells tagged "app" run as a real Streamlit app in an overlay. */
+function stLaunch(c, id, nb, x) {
+  if (!RT().apps()) { toast("This course does not run Streamlit apps.", "bad"); return; }
+  let ov = $("#stov");
+  if (!ov) { ov = h("div", { id: "stov", class: "stov", role: "dialog", "aria-label": "Streamlit app" }); document.body.appendChild(ov); }
+  const stat = h("span", { class: "small muted", role: "status" }); const host = h("div", { class: "stbody" });
+  const close = () => { ov.hidden = true; document.documentElement.style.overflow = ""; };
+  rc(ov, h("div", { class: "stbar" }, h("button", { class: "btn small", onclick: close }, "← Back to the code"), h("b", null, "Your Streamlit app"), stat, h("span", { class: "grow" }),
+    h("button", { class: "btn small primary", onclick: () => S.st && S.st.ctl.apply(x.src) }, "Apply my code"), h("button", { class: "btn small ghost", onclick: () => S.st && S.st.ctl.restart(x.src) }, "Restart the app")), host);
+  ov.hidden = false; document.documentElement.style.overflow = "hidden";
+  ov.onkeydown = e => { if (e.key === "Escape") close(); };
+  if (S.st && S.st.id === id && S.st.host) { host.replaceWith(S.st.host); S.st.stat = stat; S.st.ctl.apply(x.src); return; }
+  if (S.st) { try { S.st.ctl.stop(); } catch (e) {} }
+  const st = { id, host, stat }; S.st = st;
+  st.ctl = CKRun.streamlit(host, x.src, nbFiles(c, nb), (state, text) => { if (st.stat) st.stat.textContent = text; });
+}
+/* .ipynb export inside a .zip, with the data files the notebook uses. */
+async function nbExport(c, id, nb) {
+  const T = nbOf(id); const files = nbFiles(c, nb);
+  const used = files.filter(f => nb.cells.some(x => x.t === "code" && x.src.includes(f.name)));
+  const lines = s => { const a = String(s).split("\n"); return a.map((l, i) => i < a.length - 1 ? l + "\n" : l); };
+  const cells = [{ cell_type: "markdown", id: "ck-header", metadata: {}, source: lines("_Exported from " + c.title + " on " + TODAY() + "." + (used.length ? " Data files used: " + used.map(f => f.name).join(", ") + ". They are in this zip; in Colab, upload them with the Files panel before running." : "") + "_") }];
+  for (const x of nb.cells) {
+    if (x.t === "md") { cells.push({ cell_type: "markdown", id: x.id, metadata: {}, source: lines(x.src) }); continue; }
+    if (x.tag === "app") { cells.push({ cell_type: "code", id: x.id, execution_count: null, metadata: {}, outputs: [], source: lines("%%writefile app.py\n" + x.src) }); cells.push({ cell_type: "markdown", id: x.id + "r", metadata: {}, source: lines("Run the app on your computer with `streamlit run app.py`.") }); continue; }
+    const outs = []; const o = x.out; const n = NB.exec[x.id] || null;
+    if (o && o.text) outs.push({ output_type: "stream", name: "stdout", text: lines(o.text) });
+    for (const p of NB.imgs[x.id] || []) outs.push({ output_type: "display_data", data: { "image/png": p, "text/plain": ["<Figure>"] }, metadata: {} });
+    if (o && o.value != null) outs.push({ output_type: "execute_result", execution_count: n, data: { "text/plain": lines(o.value) }, metadata: {} });
+    if (o && o.err) outs.push({ output_type: "stream", name: "stderr", text: lines(o.err) });
+    cells.push({ cell_type: "code", id: x.id, execution_count: n, metadata: {}, outputs: outs, source: lines(x.src) });
+  }
+  const json = JSON.stringify({ cells, metadata: { kernelspec: { display_name: "Python 3", language: "python", name: "python3" }, language_info: { name: "python" } }, nbformat: 4, nbformat_minor: 5 }, null, 1);
+  const name = id.replace(/[^a-z0-9-]/gi, "") + "-" + c.id;
+  const enc = new TextEncoder(); const zf = [{ name: name + ".ipynb", data: enc.encode(json) }];
+  const app = nb.cells.find(x => x.tag === "app"); if (app) zf.push({ name: "app.py", data: enc.encode(app.src) });
+  for (const f of used) { try { const r = await fetch(new URL(f.url, document.baseURI).href); if (r.ok) zf.push({ name: f.name, data: new Uint8Array(await r.arrayBuffer()) }); } catch (e) {} }
+  const zip = zipStore(zf); const blob = new Blob([zip], { type: "application/zip" });
+  if (S.downloads) { try { await S.downloads.save({ filename: name + ".zip", data: blob }); toast("Saved " + name + ".zip", "ok"); return; } catch (e) { if (e && e.code === "cancelled") return; } }
+  const a = h("a", { href: URL.createObjectURL(blob), download: name + ".zip" }); document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+}
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let x = n; for (let k = 0; k < 8; k++) x = x & 1 ? 0xEDB88320 ^ (x >>> 1) : x >>> 1; t[n] = x >>> 0; } return t; })();
+function crc32(b) { let x = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) x = CRC_T[(x ^ b[i]) & 255] ^ (x >>> 8); return (x ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(); const parts = [], central = []; let off = 0;
+  const d = new Date(); const dt = ((d.getFullYear() - 1980) << 25) | ((d.getMonth() + 1) << 21) | (d.getDate() << 16) | (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  for (const f of files) {
+    const nm = enc.encode(f.name); const crc = crc32(f.data); const sz = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint32(10, dt, true); lh.setUint32(14, crc, true); lh.setUint32(18, sz, true); lh.setUint32(22, sz, true); lh.setUint16(26, nm.length, true);
+    parts.push(new Uint8Array(lh.buffer), nm, f.data);
+    const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint32(12, dt, true); ch.setUint32(16, crc, true); ch.setUint32(20, sz, true); ch.setUint32(24, sz, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nm); off += 30 + nm.length + sz;
+  }
+  const csz = central.reduce((n, p) => n + p.length, 0); const end = new DataView(new ArrayBuffer(22)); end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csz, true); end.setUint32(16, off, true);
+  const all = parts.concat(central, [new Uint8Array(end.buffer)]); const out = new Uint8Array(all.reduce((n, p) => n + p.length, 0)); let p = 0; for (const a of all) { out.set(a, p); p += a.length; } return out;
+}
+
 boot();
 })();
-
 </script>

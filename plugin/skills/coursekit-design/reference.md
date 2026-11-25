@@ -32,6 +32,26 @@ Practice blocks (the learner must get each one right for the lesson to count as 
 - {"t":"match","q":"instruction","pairs":[["left","right"],["left","right"]],"why":"explanation"} 3-8 pairs.
 - {"t":"write","q":"prompt","min":40,"model":"model answer","rubric":"what a good answer contains"} a written answer of at least "min" words; the tutor grades it against the rubric.
 - {"t":"task","q":"what to do (markdown)","lang":"optional","starter":"optional","solution":"model solution or what done looks like"} hands-on work done outside the page; the learner marks it done and compares with the solution.
+Code practice (only for languages the course declares in "runtimes"; the page runs the code, so the check is real):
+- {"t":"run","q":"what to write (markdown)","lang":"python","starter":"optional starting code","test":"code run after the learner's code that prints results","expect":["line printed by the test", "..."],"solution":"model code","why":"optional"} the learner writes code; it passes when the test prints exactly the expected lines (numbers match to the shown decimals).
+- {"t":"predict","q":"markdown, usually with a code listing","expect":["exact output line", "..."],"alts":["other accepted answer"],"why":"explanation"} the learner types what the code prints.
+- {"t":"output","q":"what to run (markdown)","lang":"python","code":"runnable code","expect":["text the output must contain"],"min":1,"why":"optional"} the learner runs code (here, or on their own machine and pastes the output); it passes when the output contains every expected piece.
+Code blocks ({"t":"code"}) in a language the course runs get a Run button; snippets in one lesson share variables.
+
+## Course modules
+
+Course modules (all optional; add the ones the subject needs):
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
+- labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
+- tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
+- schedule: {"unitDays":7,"start":"YYYY-MM-DD"} enables pace: each plan week lasts unitDays from the learner's start date.
+- plan: {"phases":[{"id","title","goal","weeks":[1,2]}], "weeks":[{"title","goal","light":false,"tasks":[task],"quiz":[{"q","o":["a","b"],"a":0,"why"}],"quizMax":1}]}
+  task: {"id","title","desc":"markdown","track","core":true,"h":1.5,"lessons":["lesson id"],"res":[["label","https://..."]],"project":"3","notebook":"notebook id","crit":[criterion]}
+  criterion (done when): {"t":"lesson","id"} | {"t":"drill","id"} | {"t":"quiz","w":2,"max":1} | {"t":"checkpoint","id"} | {"t":"days","w":2,"n":4} | {"t":"link","label","hosts":["github.com"]} | {"t":"text","label","min":words,"lines":n,"expect":["must contain"],"mono":true} | {"t":"number","label","min","max","unit"} | {"t":"check","label"}
+- drills: [{"id","title","prompt":"markdown","lesson":"unlocks the day after this lesson is learned","week","track","level":1-5,"mins":10,"hints":["..."],"starter","solution","lang":"python","tests":"code printing results","expect":["lines"]}] from-memory practice on a Leitner schedule; with tests they are checked by running, without them the learner compares and grades themselves.
+- checkpoints: [{"id","title","week","minutes":60,"pass":70,"lessons":["lesson ids that must be learned first"],"items":["<lesson id>:<block id>","drill:<id>"]}] timed tests made of existing practice blocks and drills.
+- notebooks: {"id":{"title","lang":"python","datasets":["file names"],"cells":[{"t":"md"|"code","src","tag":"answer|app"}],"checks":[{"label","test":"python expression true when done" | {"figs":1} | {"md":"tag","words":40} | {"app":true}}],"fill":{"<criterion index>":"python expression" | {"md":"tag"}},"prelude":"python run before checks"}} graded notebooks; a task with "notebook" counts its link criterion done when all checks pass.
 
 ## Design
 
