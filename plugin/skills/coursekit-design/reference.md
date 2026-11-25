@@ -58,9 +58,12 @@ Course modules (all optional; add the ones the subject needs):
 Design object (all fields optional when editing):
 {"palette":{"bg":"#rrggbb","surface":"#rrggbb","ink":"#rrggbb","muted":"#rrggbb","accent":"#rrggbb","accent2":"#rrggbb"},
  "fonts":{"display":"<font>","body":"<font>"},
- "shape":"round|soft|square", "layout":"sidebar|tabs|path", "pattern":"none|dots|grid|lines|waves|paper", "density":"airy|normal|compact", "meter":"bar|ring|sigmoid|steps", "emblem":"one emoji"}
+ "shape":"round|soft|square", "layout":"sidebar|tabs|path", "pattern":"none|dots|grid|lines|waves|paper", "density":"airy|normal|compact", "meter":"bar|ring|sigmoid|steps", "emblem":"one emoji",
+ "tabs":["today","plan","lessons","drills","projects","record"], "hide":["meter","stats","timeline","queue","week","howto"]}
 bg = page background, surface = cards, ink = text, muted = secondary text, accent = buttons and links, accent2 = highlights.
 meter: how overall progress is drawn on the course home. bar = a plain bar; ring = a circle; sigmoid = a dot climbing an S-curve (machine learning, growth, adoption); steps = one tick per unit (short skill courses). Pick the one that fits the subject.
+tabs: the course home's sections, in the order to show them. Tabs the course has no content for are skipped; tabs left out of the list are hidden (their data stays); [] = the default order with all tabs. "projects" is the homework/projects tab.
+hide: parts of the course home to hide (their data stays, nothing is deleted): meter = the overall progress meter; stats = the row of numbers (unit, pace, streak…); timeline = the row of per-unit progress bars in the header; queue = Today's queue; week = the "This week" card on Today; howto = the "How a study day works" card. [] shows everything. Use this when the learner wants something off the dashboard; never delete plan weeks, tasks or lessons for that.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: Inter, Source Sans 3, Atkinson Hyperlegible, Work Sans, Nunito, IBM Plex Sans, Outfit, Space Grotesk, Bricolage Grotesque, Baloo 2, Lora, Literata, Merriweather, Source Serif 4, Crimson Pro, Fraunces, Playfair Display, DM Serif Display, JetBrains Mono, IBM Plex Mono (Playfair Display and DM Serif Display only for display).
 

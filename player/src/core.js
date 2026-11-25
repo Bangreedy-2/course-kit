@@ -99,6 +99,9 @@ const SHAPES = ["round", "soft", "square"];
 const PATTERNS = ["none", "dots", "grid", "lines", "waves", "paper"];
 const DENSITIES = ["airy", "normal", "compact"];
 const METERS = ["bar", "ring", "sigmoid", "steps"];
+/* Course home sections: tabs (in order) and parts that can be hidden. Hiding never deletes data. */
+const DASH_TABS = ["today", "plan", "lessons", "drills", "projects", "record"];
+const DASH_PARTS = ["meter", "stats", "timeline", "queue", "week", "howto"];
 
 const DEFAULT_DESIGN = {
   palette: { bg: "#f6f4ef", surface: "#ffffff", ink: "#1d232b", muted: "#5b6470", accent: "#2f5bd3", accent2: "#c2410c" },
@@ -155,6 +158,17 @@ function normalizeDesign(input, base) {
   d.pattern = pickFrom(i.pattern, PATTERNS, d.pattern, "pattern");
   d.density = pickFrom(i.density, DENSITIES, d.density, "density");
   d.meter = pickFrom(i.meter, METERS, d.meter || "bar", "meter");
+  const listOf = (v, allowed, what) => {
+    if (v == null) return undefined;
+    if (!Array.isArray(v)) { notes.push(what + " must be a list"); return undefined; }
+    const out = [];
+    for (const x of v) { const k = String(x).toLowerCase().trim(); if (!allowed.includes(k)) notes.push(what + ": \"" + k + "\" is not one of " + allowed.join(", ")); else if (!out.includes(k)) out.push(k); }
+    return out;
+  };
+  const tabs = listOf(i.tabs, DASH_TABS, "tabs"); if (tabs !== undefined) d.tabs = tabs;
+  const hide = listOf(i.hide, DASH_PARTS, "hide"); if (hide !== undefined) d.hide = hide;
+  if (!Array.isArray(d.tabs)) d.tabs = [];
+  if (!Array.isArray(d.hide)) d.hide = [];
   d.emblem = emblemOf(i.emblem, d.emblem);
   return { design: d, notes };
 }
@@ -721,9 +735,12 @@ const DESIGN_DOC =
 `Design object (all fields optional when editing):
 {"palette":{"bg":"#rrggbb","surface":"#rrggbb","ink":"#rrggbb","muted":"#rrggbb","accent":"#rrggbb","accent2":"#rrggbb"},
  "fonts":{"display":"<font>","body":"<font>"},
- "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "meter":"${METERS.join("|")}", "emblem":"one emoji"}
+ "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "meter":"${METERS.join("|")}", "emblem":"one emoji",
+ "tabs":["${DASH_TABS.join("\",\"")}"], "hide":["${DASH_PARTS.join("\",\"")}"]}
 bg = page background, surface = cards, ink = text, muted = secondary text, accent = buttons and links, accent2 = highlights.
 meter: how overall progress is drawn on the course home. bar = a plain bar; ring = a circle; sigmoid = a dot climbing an S-curve (machine learning, growth, adoption); steps = one tick per unit (short skill courses). Pick the one that fits the subject.
+tabs: the course home's sections, in the order to show them. Tabs the course has no content for are skipped; tabs left out of the list are hidden (their data stays); [] = the default order with all tabs. "projects" is the homework/projects tab.
+hide: parts of the course home to hide (their data stays, nothing is deleted): meter = the overall progress meter; stats = the row of numbers (unit, pace, streak…); timeline = the row of per-unit progress bars in the header; queue = Today's queue; week = the "This week" card on Today; howto = the "How a study day works" card. [] shows everything. Use this when the learner wants something off the dashboard; never delete plan weeks, tasks or lessons for that.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
 
@@ -755,7 +772,7 @@ function fromV1Progress(old, lessonsById, cid) {
 
 const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
 const api = {
-  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
+  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, DASH_TABS, DASH_PARTS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
   RuleError, slug, uniqueId, newBlockId, clone, words, str, clamp,
   hexToRgb, contrast, ensureContrast, onColor, isDark,

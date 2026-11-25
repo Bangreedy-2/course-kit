@@ -28,7 +28,10 @@
    "pattern": "grid",
    "density": "normal",
    "emblem": "σ",
-   "meter": "sigmoid"
+   "meter": "sigmoid",
+   "hide": [
+    "timeline"
+   ]
   },
   "units": [
    {

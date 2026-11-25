@@ -18,6 +18,11 @@ t("unknown fonts and layouts are refused", () => {
   throwsRule(() => CK.normalizeDesign({ fonts: { body: "Playfair Display" } }), /display-only/);
   throwsRule(() => CK.normalizeDesign({ layout: "grid" }), /layout/);
 });
+t("course home sections can be reordered and hidden", () => {
+  const { design, notes } = CK.normalizeDesign({ tabs: ["plan", "today", "bogus", "plan"], hide: ["timeline"] });
+  assert.deepStrictEqual(design.tabs, ["plan", "today"]); assert.deepStrictEqual(design.hide, ["timeline"]); assert(notes.some(n => /bogus/.test(n)));
+  assert.deepStrictEqual(CK.normalizeDesign({ meter: "ring" }, design).design.hide, ["timeline"]);
+});
 t("a lesson must teach before it tests", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "choice", q: "q", options: ["a", "b"], answer: 0 }, teach] }), /open with teaching/));
 t("long teaching needs practice", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "md", md: "word ".repeat(300) }] }), /no practice/));
 t("a thin lesson is refused", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "md", md: "Hi." }] }), /teaches almost nothing/));
