@@ -124,12 +124,11 @@ function frameEngine(kind, html) {
 }
 
 /* ---------- this computer: the "local" engine ----------
-   Runs a program on the learner's own machine. Two ways to reach it, tried in this order:
-   1. the player installed as a desktop app with permission to run programs (Mac and Windows);
-   2. the Coursekit runner, a local MCP server, reached through the Claude desktop app.
+   Runs a program on the learner's own machine, through the player installed as a desktop app with
+   permission to run programs. An add-on may register another way in LOCAL.via.
    Nothing here runs by itself: a course must be allowed by the learner first (see allow()), and the
    page never sends code the learner did not press Run on. */
-const LOCAL = { provider: null, state: "off", langs: {}, note: "", desktop: null, mcp: null, allowed: () => false, listeners: new Set() };
+const LOCAL = { provider: null, state: "off", langs: {}, note: "", desktop: null, allowed: () => false, listeners: new Set() };
 const localSet = (st, note) => { LOCAL.state = st; if (note != null) LOCAL.note = note; LOCAL.listeners.forEach(f => { try { f(st); } catch (e) {} }); };
 const localCmd = (l, k, win) => (win && l[k === "cmd" ? "win" : "winProbe"]) || l[k];
 async function desktopExec(lang, code, o) {
@@ -144,11 +143,25 @@ async function desktopExec(lang, code, o) {
   const clean = x => String(x || "").split(dir + sep).join("").split(dir).join(".");
   return { ok: r.code === 0, out: clean(r.stdout), err: r.code === 0 ? "" : clean(r.stderr) || (r.signal ? "Stopped (" + r.signal + "): the code ran too long." : "Exit code " + r.code), ms: Date.now() - t0 };
 }
-async function mcpExec(lang, code, o) {
-  const r = await LOCAL.mcp.callTool("host:coursekit", "run_code", { lang, code, stdin: o && o.stdin != null ? String(o.stdin) : undefined, timeout: Math.round(((o && o.limitMs) || 60000) / 1000) });
-  const p = r && r.payload; if (!p || typeof p !== "object") throw new Error("The runner gave no result.");
-  return p;
-}
+/*ADDON<*/
+/* The Coursekit runner: a local MCP server reached through the Claude desktop app. Only in the full build. */
+LOCAL.via = {
+  help: "Open this player in the Claude desktop app with the Coursekit runner on, then press Connect.",
+  async connect(interactive) {
+    const m = LOCAL.mcp || (LOCAL.mcp = window.claude && claude.use ? await claude.use("mcp").catch(() => null) : null);
+    if (!(m && (interactive || LOCAL.remembered === "mcp"))) return false;
+    const r = await m.callTool("host:coursekit", "runner_info", {}); const p = r && r.payload;
+    if (!(p && p.languages)) return false;
+    LOCAL.langs = p.languages; LOCAL.platform = p.platform; try { localStorage.setItem("ck-local", "mcp"); } catch (e) {}
+    return true;
+  },
+  async exec(lang, code, o) {
+    const r = await LOCAL.mcp.callTool("host:coursekit", "run_code", { lang, code, stdin: o && o.stdin != null ? String(o.stdin) : undefined, timeout: Math.round(((o && o.limitMs) || 60000) / 1000) });
+    const p = r && r.payload; if (!p || typeof p !== "object") throw new Error("The runner gave no result.");
+    return p;
+  }
+};
+/*>ADDON*/
 /* Finds a way to this computer. "interactive" means the learner just clicked, so the page may ask for permission. */
 async function localConnect(interactive) {
   if (LOCAL.state === "ready") return true;
@@ -165,21 +178,19 @@ async function localConnect(interactive) {
       }
       if (st === "denied") { localSet("off", "Running programs is turned off for this app. Turn it on in the app's Permissions."); return false; }
     }
-    const m = LOCAL.mcp || (LOCAL.mcp = window.claude && claude.use ? await claude.use("mcp").catch(() => null) : null);
-    if (m && (interactive || LOCAL.remembered === "mcp")) {
-      try { const r = await m.callTool("host:coursekit", "runner_info", {}); const p = r && r.payload;
-        if (p && p.languages) { LOCAL.langs = p.languages; LOCAL.platform = p.platform; LOCAL.provider = "mcp"; localSet("ready", ""); try { localStorage.setItem("ck-local", "mcp"); } catch (e) {} return true; } }
+    if (LOCAL.via) {
+      try { if (await LOCAL.via.connect(interactive)) { LOCAL.provider = "via"; localSet("ready", ""); return true; } }
       catch (e) { LOCAL.lastError = e && (e.code || e.message); }
     }
     localSet("off", ""); return false;
   } catch (e) { localSet("off", String(e && e.message || e)); return false; }
 }
-/* What to offer the learner: "install" (make this player a desktop app), "allow" (app is installed, ask permission), "runner" (needs the runner in the Claude desktop app). */
+/* What to offer the learner: "install" (make this player a desktop app), "allow" (app is installed, ask permission), "none" (no way to this computer from here). */
 async function localOffer() {
   const d = LOCAL.desktop || (LOCAL.desktop = window.claude && claude.use ? await claude.use("desktop").catch(() => null) : null);
   if (d && d.childProcess) return "allow";
   if (d && d.install) { try { if ((await d.install.state()) === "available") return "install"; } catch (e) {} }
-  return "runner";
+  return "none";
 }
 function localEngine(lang) {
   const spaces = new Map();
@@ -187,11 +198,11 @@ function localEngine(lang) {
     o = o || {};
     if (!LOCAL.allowed()) return { ok: false, error: "This course is not yet allowed to run programs on this computer. Use the note at the top of the course to allow it.", boot: true, out: "", imgs: [] };
     if (LOCAL.state !== "ready" && !(await localConnect(false))) return { ok: false, error: "This lesson runs " + CK.LOCAL_LANGS[lang].label + " on your own computer, and this page is not connected to it. Use the note at the top of the course.", boot: true, out: "", imgs: [] };
-    if (!LOCAL.langs[lang]) return { ok: false, error: CK.LOCAL_LANGS[lang].label + " is not installed on this computer (the runner tried: " + CK.LOCAL_LANGS[lang].probe + "). Install it, then reload this page.", boot: true, out: "", imgs: [] };
+    if (!LOCAL.langs[lang]) return { ok: false, error: CK.LOCAL_LANGS[lang].label + " is not installed on this computer (tried: " + CK.LOCAL_LANGS[lang].probe + "). Install it, then reload this page.", boot: true, out: "", imgs: [] };
     if (o.onStatus) o.onStatus("Running on this computer…");
     const prior = o.ns ? spaces.get(o.ns) : null; const full = prior ? prior.code + "\n" + code : code;
-    let r; try { r = await (LOCAL.provider === "desktop" ? desktopExec : mcpExec)(lang, full, o); }
-    catch (e) { const msg = e && e.code === "cancelled" ? "You did not allow this run." : "The runner could not be reached: " + (e && (e.message || e.code) || e); return { ok: false, error: msg, out: "", imgs: [] }; }
+    let r; try { r = await (LOCAL.provider === "desktop" ? desktopExec : LOCAL.via.exec)(lang, full, o); }
+    catch (e) { const msg = e && e.code === "cancelled" ? "You did not allow this run." : "This computer could not be reached: " + (e && (e.message || e.code) || e); return { ok: false, error: msg, out: "", imgs: [] }; }
     let out = String(r.out || "");
     if (prior && out.startsWith(prior.out)) out = out.slice(prior.out.length);
     if (o.ns && r.ok) spaces.set(o.ns, { code: full, out: String(r.out || "") });
@@ -320,6 +331,6 @@ function streamlit(host, src, files, onStatus) {
   return { apply, restart: start, get ran() { return C.ran; }, get err() { return C.err; }, get state() { return C.state; }, stop() { clearInterval(C.poll); try { const k = ctl(); if (k) k.unmount(); } catch (e) {} host.replaceChildren(); } };
 }
 
-const api = { local: { get state() { return LOCAL.state; }, get langs() { return LOCAL.langs; }, get provider() { return LOCAL.provider; }, get note() { return LOCAL.note; }, get lastError() { return LOCAL.lastError; }, connect: localConnect, offer: localOffer, install: async () => { const d = LOCAL.desktop; return d && d.install ? d.install.request() : "unavailable"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); }, setAllowed: f => { LOCAL.allowed = f; }, uses: course => Object.entries((course && course.runtimes) || {}).filter(([, r]) => r && r.engine === "local").map(([k]) => k) }, PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
+const api = { local: { get state() { return LOCAL.state; }, get langs() { return LOCAL.langs; }, get provider() { return LOCAL.provider; }, get note() { return LOCAL.note; }, get lastError() { return LOCAL.lastError; }, get help() { return LOCAL.via ? LOCAL.via.help : ""; }, connect: localConnect, offer: localOffer, install: async () => { const d = LOCAL.desktop; return d && d.install ? d.install.request() : "unavailable"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); }, setAllowed: f => { LOCAL.allowed = f; }, uses: course => Object.entries((course && course.runtimes) || {}).filter(([, r]) => r && r.engine === "local").map(([k]) => k) }, PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
 root.CKRun = api;
 })(typeof window !== "undefined" ? window : globalThis);
