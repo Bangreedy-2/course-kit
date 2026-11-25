@@ -41,13 +41,7 @@ The block types, the design object and the allowed fonts are in [reference.md](r
 
 ## Checking a course file
 
-From a clone of the repository:
-
-```sh
-node tools/validate-course.js my-course.coursekit.json
-```
-
-It prints the first rule a file breaks, or `ok` with any colour corrections the player will make.
+Import the file with "Import a course file" in the player's library. The player checks it against the same rules and names the first one the file breaks.
 
 ## Widgets
 

@@ -15,7 +15,7 @@ You need a paid Claude plan. Nothing else to install: Python and JavaScript run 
 To learn a language that cannot run in a page (Elixir, C, C++, Rust, Go, Java and more), or to use your own Python libraries and GPU, courses run code on your own computer:
 
 - **Mac or Windows:** open the player in the Claude desktop app and press **Install as app** when a course asks.
-- **Linux, Cowork or Claude Code:** add the optional `coursekit-runner` plugin from the same marketplace (`runner/coursekit-runner.js`, Node 18+); the course shows a **Connect** button. For plain chat in the desktop app, add the runner as a local MCP server named `coursekit`, or install `coursekit-runner.mcpb` (build it with `python3 tools/build-runner-extension.py`).
+- **Linux, Cowork or Claude Code:** add the optional `coursekit-runner` plugin from the same marketplace (`runner/coursekit-runner.js`, Node 18+); then say "connect the runner" to Claude once (the plugin's skill gives your player access to it) and the course shows a **Connect** button. For plain chat in the desktop app, add the runner as a local MCP server named `coursekit`, or install `coursekit-runner.mcpb` (build it with `python3 tools/build-runner-extension.py`).
 
 Code is sent to your computer only when you press Run, and each course must be allowed once. See `docs/publishing.md` for how the landing page, the plugin directory listing and the runtime packs fit together.
 

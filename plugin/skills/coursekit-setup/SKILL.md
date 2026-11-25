@@ -13,13 +13,12 @@ Coursekit needs a paid Claude plan. If publishing an artifact is refused for pla
 
 List the person's artifacts and look for one titled "Coursekit". If it exists, read it and treat this as an update: publish the new page to that same URL (step 2 and 3 still apply).
 
-Otherwise take `../coursekit-player/coursekit-player-page.txt` (a text file holding the complete HTML page), copy it byte for byte to a working file named `coursekit-player.html`, and publish that copy **unchanged** as a new artifact, title "Coursekit", icon "book", together with every `player-code-N.txt` file from that same folder, each published under its own name beside the page (the `files` map). The page loads its code from those files. Use exactly these capabilities:
+Otherwise take `../coursekit-player/coursekit-player-page.txt` (a text file holding the complete HTML page), copy it byte for byte to a working file named `coursekit-player.html`, and publish that copy **unchanged** as a new artifact, title "Coursekit", icon "book", together with every `player-code-N.txt` file from that same folder, each published under its own name beside the page (the `files` map). The page loads its code from those files. Use these capabilities (on an update, keep any others the player already has):
 
 ```json
 {
   "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {},
-  "desktop": {},
-  "mcp": { "servers": [{ "server": "host:coursekit", "tools": ["runner_info", "run_code"] }] }
+  "desktop": {}
 }
 ```
 
@@ -27,7 +26,7 @@ Never edit the page. Courses are data inside it, not changes to the file.
 
 ## 2. Add Python
 
-Follow "Runtime packs" in the `coursekit-player` skill: copy the Python pack from its pack artifact into the player in two publishes of under 60 MB each. If the copy is refused, build the pack with `node tools/runtime-pack.js python <dir>` from a clone of https://github.com/Bangreedy-2/course-kit and publish those files. If neither works here (for example no shell), finish the setup anyway and tell the person that Python exercises will work once the pack is added; everything else works without it.
+Follow "Runtime packs" in the `coursekit-player` skill: copy the Python pack from its pack artifact into the player in two publishes of under 60 MB each. If the copy is refused or the pack does not match its pinned checksum, finish the setup anyway and tell the person that Python exercises will work once the pack is added; everything else works without it.
 
 ## 3. Check it
 
@@ -49,9 +48,9 @@ Offer to pin it to their sidebar. Do not explain packs, runners or records unles
 
 ## Running code on their own computer (only when they ask, or a course needs it)
 
-Courses in Python and JavaScript run inside the page. Other languages (Elixir, C, C++, Rust, Go, Java, Ruby, R, Julia and more), and Python with their own libraries or GPU, run on their computer through one of:
+Courses in Python and JavaScript run inside the page. Other languages (Elixir, C, C++, Rust, Go, Java, Ruby, R, Julia and more), and Python with their own libraries or GPU, run on their computer:
 
 - **Mac or Windows:** in the Claude desktop app, open the player and press "Install as app" in the course's note (or in the artifact's menu). The first Run asks once to allow running programs. Nothing else to install.
-- **Any system with the Claude desktop app, including Linux:** the Coursekit runner, a small local server (needs Node 18+). It is a separate, optional plugin named `coursekit-runner` in the same marketplace (`Bangreedy-2/course-kit`); in Cowork and Claude Code that plugin starts it by itself. For plain chat in the desktop app, add `runner/coursekit-runner.js` from the repository to the app's local MCP servers under the name `coursekit` with command `node`, or install `coursekit-runner.mcpb` by double-click. Then open the player in the desktop app and press "Connect" in the course's note.
+- **Other systems:** this plugin has no way to run code there. Say so plainly; such a course still works with predict-the-output practice and checks the learner runs themselves.
 
-The language itself must be installed on the computer; the runner reports which ones it finds. The page sends code only when the learner presses Run, and each course must be allowed once.
+The language itself must be installed on the computer; The page sends code only when the learner presses Run, and each course must be allowed once.
