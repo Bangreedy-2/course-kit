@@ -215,6 +215,9 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.waitForSelector(".dtabs");
   ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Plan,Lessons,Drills,Homework,Record", "Sigmoid dashboard has all six sections, with its own labels");
   ok((await page.$$eval(".stat", e => e.length)) === 5, "dashboard shows week, pace, core work, streak and due");
+  await page.waitForTimeout(400);
+  { const miss = await page.$$eval("#banners", e => e.some(x => /Install the Python pack in my Coursekit player/.test(x.textContent))); const have = !!process.env.CK_PY;
+    ok(have ? !miss : miss, have ? "no install note when the Python pack is present" : "a player without the Python pack says how to install it"); }
   await page.waitForSelector(".q-item");
   const queue = await page.$$eval(".q-item b", e => e.map(x => x.textContent));
   ok(queue.some(t => /New drill: /.test(t)) && queue.some(t => /New lesson: /.test(t)), "Today queue has the next lesson and unlocked drills (" + queue.length + " items)");

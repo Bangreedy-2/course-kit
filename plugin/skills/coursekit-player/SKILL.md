@@ -19,6 +19,29 @@ Publish [coursekit-player.html](coursekit-player.html) unchanged as an artifact 
 
 Title it "Coursekit", icon "book". To update an existing player, publish the new file to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
 
+## Runtime packs (Python and other languages)
+
+The player runs JavaScript by itself. Other languages need a **runtime pack**: files that sit beside the page. A new player has none. Install a pack when the learner asks ("Install the Python pack in my Coursekit player"), when the player shows a note that a pack is missing, or when you install a course whose `runtimes` use the `pyodide` engine.
+
+The packs are listed in `runtimes/registry.json` of the repository. Python:
+
+- pack artifact: https://claude.ai/artifact/LvxxaxBuXPqgTVHrvdmiha (its `pack.json` lists every file with size and SHA-256)
+- files go under `py/` beside the player page, 64 files, about 73 MB
+
+**Install by copying from the pack artifact (preferred).** Read `pack.json` from the pack artifact. Then publish to the learner's player artifact URL with the player page unchanged and a `files` map that copies each listed path from the pack artifact, `{"py/<name>": {"artifact": "<pack artifact URL>", "path": "py/<name>"}}`. One publish carries at most 64 MB, so split the list into two publishes of under 60 MB each. Files already in the player stay; nothing is downloaded.
+
+**If the copy is refused** (the learner cannot open the pack artifact, or the copy fails), build the pack from public sources in a clone of the repository and publish those files instead:
+
+```sh
+node tools/runtime-pack.js python /tmp/ck-pack     # fetches from the Pyodide CDN, checks every SHA-256
+```
+
+Then publish to the player URL with `root` set to that folder and the `py/...` files listed, again in two batches.
+
+Afterwards tell the learner to reload the player. Check with one read of `py/pyodide-lock.json` from the player artifact. Never rename pack files: wheels and zips carry a `.wasm` suffix on purpose.
+
+A language with no pack still works as a course: lessons use predict-the-output practice and run-on-your-machine checks. Do not promise in-page execution for it.
+
 ## Install a course into the player
 
 Either tell the learner to use "Import a course file" in the library, or write the records yourself. From a clone of the repository:
