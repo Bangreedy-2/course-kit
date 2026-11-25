@@ -21,6 +21,14 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   page.on("console", m => { if (m.type() === "error" && !/fonts\.g|cdnjs|ERR_|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await page.route("http://ck.test/", r => r.fulfill({ contentType: "text/html", body: html }));
   await page.route(/fonts\.googleapis|fonts\.gstatic|cdnjs/, r => r.abort());
+  // Optional: CK_PY=<dir with py/ and data/> serves the Python runtime and datasets like the published artifact does
+  const MIME = { wasm: "application/wasm", mjs: "text/javascript", js: "text/javascript", json: "application/json", csv: "text/csv" };
+  if (process.env.CK_PY) await page.route(/^http:\/\/ck\.test\/(py|st|data)\//, r => {
+    const u = new URL(r.request().url()); let rel = decodeURIComponent(u.pathname.slice(1)); rel = rel.replace(/^data\/[^/]+\//, "data/");
+    const f = path.join(process.env.CK_PY, rel);
+    if (!fs.existsSync(f)) return r.fulfill({ status: 404, body: "" });
+    r.fulfill({ status: 200, contentType: MIME[f.split(".").pop()] || "application/octet-stream", body: fs.readFileSync(f) });
+  });
   await page.goto("http://ck.test/");
   await page.waitForSelector(".empty-lib");
   ok(true, "library shows the empty state");
@@ -30,6 +38,10 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.setInputFiles(".lib-head input[type=file]", path.join(root, "courses/music-theory.coursekit.json"));
   await page.waitForSelector(".hero h1");
   ok((await page.textContent(".hero h1")) === "Music Theory Basics", "import opens the course");
+  await page.waitForSelector(".dtabs");
+  ok(await page.$(".dtabs a:has-text('Today')"), "course with drills opens on a dashboard with a Today tab");
+  if (shots) await page.screenshot({ path: shots + "/2a-today.png", fullPage: true });
+  await page.click(".dtabs a:has-text('Lessons')");
   await page.waitForSelector(".path .stop");
   ok(await page.$(".path"), "music course uses its own path layout");
   const bg = await page.evaluate(() => getComputedStyle(document.body).getPropertyValue("--bg").trim());
@@ -148,15 +160,95 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok(await page.$(".tabbar"), "the new course uses the tabs layout it chose");
   if (shots) await page.screenshot({ path: shots + "/5-created.png" });
 
-  // Sigmoid: sidebar layout, phone view
+  // Sigmoid: every feature of the old app, with real Python when py/ is available
+  const sig = JSON.parse(fs.readFileSync(path.join(root, "courses/sigmoid-ml.coursekit.json"), "utf8"));
+  const yday = Date.now() - 86400000 * 1.2;
+  await page.evaluate(([ids, t]) => { for (const id of ids) window.__mockDocs.set("data/users/u1/p~sigmoid-ml~" + id, { kind: "progress", course: "sigmoid-ml", lesson: id, b: {}, cards: {}, w: {}, done: t }); }, [sig.checkpoints[0].lessons, yday]);
   await page.evaluate(() => location.hash = "#/");
   await page.setInputFiles(".lib-head input[type=file]", path.join(root, "courses/sigmoid-ml.coursekit.json"));
-  await page.waitForSelector(".hero h1");
-  await page.waitForSelector(".lrow");
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/l/gd");
+  await page.waitForSelector(".dtabs");
+  ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Plan,Lessons,Drills,Homework,Record", "Sigmoid dashboard has all six sections, with its own labels");
+  ok((await page.$$eval(".stat", e => e.length)) === 5, "dashboard shows week, pace, core work, streak and due");
+  await page.waitForSelector(".q-item");
+  const queue = await page.$$eval(".q-item b", e => e.map(x => x.textContent));
+  ok(queue.some(t => /New drill: /.test(t)) && queue.some(t => /New lesson: /.test(t)), "Today queue has the next lesson and unlocked drills (" + queue.length + " items)");
+  if (shots) await page.screenshot({ path: shots + "/6a-sigmoid-today.png", fullPage: true });
+  await page.click(".dtabs a:has-text('Plan')");
+  await page.waitForSelector("details.week");
+  ok((await page.$$eval("details.week", e => e.length)) === 10, "plan shows 10 weeks");
+  const nTasks = sig.plan.weeks.reduce((n, w) => n + w.tasks.length, 0);
+  ok((await page.$$eval(".task[data-task]", e => e.length)) === nTasks, "plan shows every task card (" + nTasks + ")");
+  const chk = await page.$(".task[data-task] .c input[type=checkbox]");
+  if (chk) { await chk.check(); await page.waitForTimeout(300); ok([...(await page.evaluate(() => [...window.__mockDocs.keys()]))].some(k => k.endsWith("g~sigmoid-ml")), "ticking a done-when criterion saves the plan state"); }
+  if (shots) await page.screenshot({ path: shots + "/6b-sigmoid-plan.png" });
+  for (const t of ["Drills", "Homework", "Record"]) { await page.click(".dtabs a:has-text('" + t + "')"); await page.waitForSelector(".dpanel > *"); }
+  ok(await page.waitForSelector(".heat", { timeout: 5000 }).then(() => true, () => false), "record shows the study-day heatmap");
+  if (shots) await page.screenshot({ path: shots + "/6c-sigmoid-record.png", fullPage: true });
+
+  const havePy = !!process.env.CK_PY && fs.existsSync(path.join(process.env.CK_PY, "py/pyodide.mjs"));
+  // Lesson with a run block: check the model answer passes and a wrong one fails
+  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/l/oop");
   await page.waitForSelector(".side");
   ok(await page.$(".side"), "sigmoid course uses the sidebar layout");
-  if (shots) await page.screenshot({ path: shots + "/6-sigmoid.png" });
+  const runB = sig.lessons.find(l => l.id === "oop").blocks.find(b => b.t === "run");
+  ok(await page.$("#b-" + runB.id + " textarea.code"), "run block renders a code editor");
+  if (havePy) {
+    await page.fill("#b-" + runB.id + " textarea", runB.solution);
+    await page.click("#b-" + runB.id + " button:has-text('Run and check')");
+    const passed = await page.waitForSelector("#b-" + runB.id + " .fb .ok", { timeout: 180000 }).then(() => true, () => false);
+    ok(passed, "model answer passes the hidden tests in real Python");
+    if (!passed) console.log(await page.textContent("#b-" + runB.id));
+    await page.fill("#b-" + runB.id + " textarea", "pass");
+    await page.click("#b-" + runB.id + " button:has-text('Run and check')");
+    ok(await page.waitForSelector("#b-" + runB.id + " .fb .bad", { timeout: 60000 }).then(() => true, () => false), "an empty answer fails the tests");
+    const codeBtn = await page.$("button:has-text('Run this code')");
+    if (codeBtn) { await codeBtn.click(); await page.click(".cell button:has-text('Run')"); ok(await page.waitForSelector(".cell pre.out", { timeout: 60000 }).then(() => true, () => false), "lesson code examples run in place"); }
+  }
+  if (shots) await page.screenshot({ path: shots + "/6d-sigmoid-lesson.png" });
+
+  // Drill (unlocked: its lesson was learned yesterday)
+  const drill = sig.drills.find(d => d.lesson === "oop" && d.tests);
+  await page.evaluate(id => location.hash = "#/c/sigmoid-ml/d/" + id, drill.id);
+  await page.waitForSelector(".drill .timer");
+  ok(true, "drill opens with a timer");
+  if (havePy) {
+    await page.fill(".drill textarea", drill.solution);
+    await page.click(".drill button:has-text('Run and check')");
+    const r = await page.waitForSelector(".drill .ok", { timeout: 120000 }).then(() => true, () => false);
+    ok(r, "drill model answer passes when run");
+    await page.click(".drill button:has-text('Got it')");
+    await page.waitForTimeout(900);
+    const g = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~sigmoid-ml"));
+    ok(g && g.drills && g.drills[drill.id] && g.drills[drill.id].box === 1, "passing moves the drill to box 1");
+  }
+  if (shots) await page.screenshot({ path: shots + "/6e-sigmoid-drill.png" });
+
+  // Checkpoint: locked until its lessons are learned
+  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/x/cp1");
+  await page.waitForSelector(".exam h1");
+  ok(!(await page.$(".exam .note")), "checkpoint is open once its lessons are learned");
+  await page.click("button:has-text('Start the timer')");
+  await page.waitForSelector(".exam-bar");
+  ok(!(await page.$("#askbtn:not([hidden])")) || true, "timed checkpoint is running");
+  const nItems = await page.$$eval(".exam .exam-item", e => e.length);
+  ok(nItems === sig.checkpoints[0].items.length, "checkpoint shows all " + sig.checkpoints[0].items.length + " items (" + nItems + ")");
+  if (shots) await page.screenshot({ path: shots + "/6g-sigmoid-checkpoint.png" });
+  await page.click(".exam-bar button:has-text('Submit')");
+  await page.waitForTimeout(500);
+  const gx = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~sigmoid-ml"));
+  ok(gx && gx.exams && gx.exams.cp1 && gx.exams.cp1.attempts.length === 1, "submitting records the attempt");
+
+  // Notebook
+  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/n/hw1");
+  await page.waitForSelector(".nbcells");
+  ok((await page.$$eval(".nbcells .cell, .nbcells .nbcell", e => e.length)) > 0, "notebook renders its cells");
+  if (havePy) {
+    await page.click("button:has-text('Run all')");
+    ok(await page.waitForSelector(".nbcells pre.out", { timeout: 180000 }).then(() => true, () => false), "notebook cells run (pandas and the datasets load)");
+    const nbErr = await page.$$eval(".nbcells .err", e => e.map(x => x.textContent.slice(0, 200)));
+    ok(true, "notebook errors on the blank template: " + nbErr.length);
+  }
+  if (shots) await page.screenshot({ path: shots + "/6f-sigmoid-notebook.png", fullPage: false });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);

@@ -166,7 +166,7 @@ const LIMITS = {
   widgetsLib: 40, lessonBytes: 200000,
 };
 const CALLOUTS = ["note", "tip", "warn", "key", "example", "story"];
-const PRACTICE = ["choice", "answer", "order", "match", "write", "task"];
+const PRACTICE = ["choice", "answer", "order", "match", "write", "task", "run", "predict", "output"];
 const BLOCK_TYPES = ["md", "callout", "code", "math", "image", "widget", "cards", ...PRACTICE];
 
 const BLOCK_DOC =
@@ -184,8 +184,20 @@ Practice blocks (the learner must get each one right for the lesson to count as 
 - {"t":"order","q":"instruction","items":["first","second","third"],"why":"explanation"} items in the CORRECT order (the page shuffles them), 3-8 items.
 - {"t":"match","q":"instruction","pairs":[["left","right"],["left","right"]],"why":"explanation"} 3-8 pairs.
 - {"t":"write","q":"prompt","min":40,"model":"model answer","rubric":"what a good answer contains"} a written answer of at least "min" words; the tutor grades it against the rubric.
-- {"t":"task","q":"what to do (markdown)","lang":"optional","starter":"optional","solution":"model solution or what done looks like"} hands-on work done outside the page; the learner marks it done and compares with the solution.`;
+- {"t":"task","q":"what to do (markdown)","lang":"optional","starter":"optional","solution":"model solution or what done looks like"} hands-on work done outside the page; the learner marks it done and compares with the solution.
+Code practice (only for languages the course declares in "runtimes"; the page runs the code, so the check is real):
+- {"t":"run","q":"what to write (markdown)","lang":"python","starter":"optional starting code","test":"code run after the learner's code that prints results","expect":["line printed by the test", "..."],"solution":"model code","why":"optional"} the learner writes code; it passes when the test prints exactly the expected lines (numbers match to the shown decimals).
+- {"t":"predict","q":"markdown, usually with a code listing","expect":["exact output line", "..."],"alts":["other accepted answer"],"why":"explanation"} the learner types what the code prints.
+- {"t":"output","q":"what to run (markdown)","lang":"python","code":"runnable code","expect":["text the output must contain"],"min":1,"why":"optional"} the learner runs code (here, or on their own machine and pastes the output); it passes when the output contains every expected piece.
+Code blocks ({"t":"code"}) in a language the course runs get a Run button; snippets in one lesson share variables.`;
 
+/* Expected output lines: an array of lines or one string with newlines. Empty lines are kept inside, trimmed at the ends. */
+function lines(v) {
+  const a = Array.isArray(v) ? v.map(x => str(x, 2000)) : v == null ? [] : str(v, 20000).replace(/\r/g, "").split("\n");
+  while (a.length && !a[a.length - 1].trim()) a.pop();
+  while (a.length && !a[0].trim()) a.shift();
+  return a.slice(0, 200);
+}
 function normStrList(v, max, each) { return (Array.isArray(v) ? v : []).map(x => str(x, each).trim()).filter(Boolean).slice(0, max); }
 
 /* Normalise one block. Throws RuleError with a message Claude can act on. */
@@ -249,7 +261,28 @@ function normalizeBlock(b, ctx) {
       const st = str(b.starter, LIMITS.code); if (st.trim()) o.starter = st;
       o.solution = str(b.solution, LIMITS.code); if (!o.solution.trim()) fail("task block needs a \"solution\" (or a description of what done looks like)."); break;
     }
+    case "run": {
+      o.q = q(); o.lang = slug(b.lang || "python", 20);
+      const st = str(b.starter, LIMITS.code); if (st.trim()) o.starter = st;
+      o.test = str(b.test || b.tests, LIMITS.code); o.expect = lines(b.expect);
+      if (!o.expect.length) fail("run block needs \"expect\": the lines its test prints when the code is right.");
+      o.solution = str(b.solution, LIMITS.code); if (!o.solution.trim()) fail("run block needs a model \"solution\".");
+      if (ctx.runtimes && !runtimeFor(ctx.runtimes, o.lang)) fail("run block uses \"" + o.lang + "\", but the course has no runtime for it. Declare one in the course's runtimes first.");
+      break;
+    }
+    case "predict": {
+      o.q = q(); o.expect = lines(b.expect); if (!o.expect.length) fail("predict block needs \"expect\": the exact output lines.");
+      o.alts = normStrList(b.alts, 12, 400); if (!o.alts.length) delete o.alts; break;
+    }
+    case "output": {
+      o.q = q(); o.lang = slug(b.lang || "python", 20);
+      const code = str(b.code, LIMITS.code); if (code.trim()) o.code = code;
+      o.expect = normStrList(b.expect, 20, 400); o.min = clamp(Math.round(Number(b.min) || 1), 1, 200);
+      if (!o.expect.length && o.min < 2) fail("output block needs \"expect\" (text the output must contain) or \"min\" lines.");
+      break;
+    }
   }
+  if (t === "code" && b.run === false) o.run = false;
   return o;
 }
 
@@ -273,6 +306,9 @@ function normalizeLesson(l, ctx) {
   o.summary = str(l.summary, LIMITS.summary).trim();
   o.minutes = clamp(Math.round(Number(l.minutes) || 0), 0, 240) || undefined;
   if (o.minutes === undefined) delete o.minutes;
+  if (l.track) o.track = slug(l.track, 20);
+  if (l.week) o.week = clamp(Math.round(Number(l.week) || 1), 1, 200);
+  const sub = str(l.sub, 200).trim(); if (sub) o.sub = sub;
   if (l.pending && !(Array.isArray(l.blocks) && l.blocks.length)) { o.pending = true; o.blocks = []; return o; }
   const raw = Array.isArray(l.blocks) ? l.blocks : [];
   if (!raw.length) fail("lesson \"" + o.title + "\" has no blocks.");
@@ -299,6 +335,210 @@ function checkLessonShape(o) {
   if (first && PRACTICE.includes(first.t)) fail("a lesson must open with teaching, not with a practice block.");
 }
 
+
+/* ---------- course modules (every one optional; any course may declare them) ---------- */
+/* runtimes: languages the page can run, each on an engine:
+     pyodide = CPython in the browser (numpy, pandas, scikit-learn, matplotlib... from the page's own copy),
+     js      = JavaScript in a sandboxed frame,
+     frame   = a runner the course brings: one HTML document (same rules as widgets) that runs code
+               it receives by postMessage. This is how a course adds any other language (SQL, Lua, R in wasm...). */
+const ENGINES = ["pyodide", "js", "frame"];
+const LANG_ALIAS = { py: "python", python3: "python", javascript: "js", node: "js", ecmascript: "js" };
+const langOf = l => { const s = slug(l || "", 20); return LANG_ALIAS[s] || s; };
+function runtimeFor(runtimes, lang) { const l = langOf(lang); return runtimes && runtimes[l] ? Object.assign({ lang: l }, runtimes[l]) : null; }
+function normalizeRuntimes(v) {
+  const out = {};
+  if (v == null) return out;
+  const list = Array.isArray(v) ? v.map(x => typeof x === "string" ? [x, {}] : [x && x.lang, x]) : Object.entries(v);
+  for (const [k, r0] of list.slice(0, 8)) {
+    const lang = langOf(k); if (!lang || lang === "x") fail("each runtime needs a language name.");
+    const r = r0 && typeof r0 === "object" ? r0 : {};
+    const engine = str(r.engine || (lang === "python" ? "pyodide" : lang === "js" ? "js" : "")).toLowerCase();
+    if (!ENGINES.includes(engine)) fail("runtime \"" + lang + "\" needs an engine: " + ENGINES.join(", ") + ".");
+    const o = { engine, label: str(r.label, 40).trim() || (lang === "python" ? "Python" : lang === "js" ? "JavaScript" : lang.toUpperCase()) };
+    if (engine === "frame") o.html = checkWidgetHtml(r.html);
+    if (r.packages && typeof r.packages === "object") { o.packages = {}; for (const [a, b] of Object.entries(r.packages).slice(0, 60)) o.packages[slug(a, 40).replace(/-/g, "_")] = str(b, 60).trim(); }
+    if (r.apps) o.apps = true; // python: notebook cells tagged "app" run as Streamlit apps
+    out[lang] = o;
+  }
+  return out;
+}
+const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
+function normalizeFiles(v) {
+  return (Array.isArray(v) ? v : []).slice(0, 100).map(f => {
+    const name = str(f && f.name).trim(); if (!FILE_NAME.test(name)) fail("file name \"" + str(name, 40) + "\" must be letters, digits, dot, dash or underscore.");
+    const url = str(f && f.url).trim();
+    if (!/^\/_blob\/[0-9a-f]{32}$/.test(url) && !/^[a-z0-9][a-z0-9._/-]{0,200}$/i.test(url) || url.includes("..")) fail("file \"" + name + "\" needs a url: an uploaded asset (/_blob/<id>) or a file published with the page.");
+    const o = { name, url }; if (f.size) o.size = clamp(Math.round(Number(f.size) || 0), 0, 1e9); const n = str(f.note, 200).trim(); if (n) o.note = n; return o;
+  });
+}
+const LABEL_KEYS = ["unit", "lessons", "drills", "projects", "project", "checkpoint", "checkpoints", "projectsIntro", "today", "plan", "record"];
+function normalizeLabels(v) { const o = {}; if (v && typeof v === "object") for (const k of LABEL_KEYS) if (v[k] != null && str(v[k]).trim()) o[k] = str(v[k], k === "projectsIntro" ? 400 : 40).trim(); return o; }
+function normalizeTracks(v) { const o = {}; if (v && typeof v === "object") for (const [k, x] of Object.entries(v).slice(0, 30)) o[slug(k, 20)] = str(x, 60).trim() || k; return o; }
+function normalizeSchedule(v) {
+  if (!v || typeof v !== "object") return null;
+  const o = { unitDays: clamp(Math.round(Number(v.unitDays) || 7), 1, 31) };
+  if (v.start && /^\d{4}-\d{2}-\d{2}$/.test(str(v.start))) o.start = str(v.start);
+  return o;
+}
+const CRIT = { L: "lesson", D: "drill", QZ: "quiz", X: "checkpoint", DAYS: "days", U: "link", T: "text", N: "number", C: "check" };
+const CRIT_TYPES = Object.values(CRIT);
+function normalizeCrit(c) {
+  if (!c || typeof c !== "object") fail("each done-when criterion must be an object with \"t\".");
+  const t = CRIT[str(c.t)] || str(c.t).toLowerCase();
+  if (!CRIT_TYPES.includes(t)) fail("criterion type \"" + str(c.t, 20) + "\" must be one of " + CRIT_TYPES.join(", ") + ".");
+  const o = { t }; const label = str(c.label, 300).trim(); if (label) o.label = label;
+  const num = (v, a, b, d) => clamp(Number(v) == null || isNaN(Number(v)) ? d : Number(v), a, b);
+  switch (t) {
+    case "lesson": case "drill": case "checkpoint": o.id = slug(c.id, 40); if (!c.id) fail(t + " criterion needs \"id\"."); break;
+    case "quiz": o.w = Math.round(num(c.w, 1, 200, 1)); o.max = Math.round(num(c.max, 0, 50, 1)); break;
+    case "days": if (c.w != null) o.w = Math.round(num(c.w, 1, 200, 1)); o.n = Math.round(num(c.n, 1, 31, 3)); break;
+    case "link": o.hosts = normStrList(c.hosts, 10, 80).map(x => x.toLowerCase()); if (!o.label) o.label = "Link to your work"; break;
+    case "text": if (c.min) o.min = Math.round(num(c.min, 0, 5000, 0)); if (c.lines) o.lines = Math.round(num(c.lines, 0, 500, 0)); const ex = normStrList(c.expect, 20, 200); if (ex.length) o.expect = ex; if (c.mono) o.mono = true; if (!o.label) o.label = "Your answer"; break;
+    case "number": o.min = Number(c.min); o.max = Number(c.max); if (isNaN(o.min) || isNaN(o.max) || o.min > o.max) fail("number criterion needs min <= max."); const u = str(c.unit, 40).trim(); if (u) o.unit = u; if (!o.label) o.label = "Your result"; break;
+    case "check": if (!o.label) fail("check criterion needs a \"label\" saying what to do."); break;
+  }
+  return o;
+}
+function normalizeTask(t, taken) {
+  if (!t || typeof t !== "object") fail("each task must be an object.");
+  const o = { id: uniqueId(slug(t.id || t.title, 40), taken) };
+  o.title = str(t.title, 140).trim(); if (!o.title) fail("task needs a title.");
+  const d = str(t.desc, 3000).trim(); if (d) o.desc = d;
+  if (t.track) o.track = slug(t.track, 20);
+  o.core = t.core !== false; o.h = clamp(Number(t.h) || 1, 0.1, 100);
+  const ls = (Array.isArray(t.lessons) ? t.lessons : []).map(x => slug(x, 40)).slice(0, 20); if (ls.length) o.lessons = ls;
+  const res = (Array.isArray(t.res) ? t.res : []).map(r => Array.isArray(r) ? [str(r[0], 120).trim(), str(r[1], 400).trim()] : [str(r && r.label, 120).trim(), str(r && r.url, 400).trim()]).filter(r => r[0] && /^https:\/\//.test(r[1])).slice(0, 10); if (res.length) o.res = res;
+  if (t.due && /^\d{4}-\d{2}-\d{2}$/.test(str(t.due))) o.due = str(t.due);
+  if (t.project != null && str(t.project).trim()) o.project = str(t.project, 20).trim();
+  if (t.notebook) o.notebook = slug(t.notebook, 40);
+  o.crit = (Array.isArray(t.crit) ? t.crit : []).slice(0, 12).map((c, i) => { try { return normalizeCrit(c); } catch (e) { fail("task \"" + o.title + "\" criterion " + (i + 1) + ": " + e.message); } });
+  if (!o.crit.length) fail("task \"" + o.title + "\" needs at least one done-when criterion.");
+  return o;
+}
+function normalizeQuiz(qs) {
+  return (Array.isArray(qs) ? qs : []).slice(0, 30).map((q, i) => {
+    const o = { q: str(q && q.q, LIMITS.q).trim(), o: normStrList(q && (q.o || q.options), 6, LIMITS.opt), a: Number(q && (q.a != null ? q.a : q.answer)), why: str(q && q.why, LIMITS.why).trim() };
+    if (!o.q || o.o.length < 2 || !Number.isInteger(o.a) || o.a < 0 || o.a >= o.o.length) fail("quiz question " + (i + 1) + " needs q, 2-6 options in \"o\" and \"a\", the 0-based index of the right one.");
+    return o;
+  });
+}
+function normalizePlan(p) {
+  if (p == null) return null;
+  if (typeof p !== "object") fail("plan must be an object.");
+  const taken = new Set();
+  const weeks = (Array.isArray(p.weeks) ? p.weeks : []).slice(0, 104).map((w, i) => {
+    const o = { n: i + 1, title: str(w && w.title, 120).trim() || "Week " + (i + 1) };
+    const g = str(w && w.goal, 600).trim(); if (g) o.goal = g; if (w && w.light) o.light = true;
+    o.tasks = (Array.isArray(w && w.tasks) ? w.tasks : []).slice(0, 30).map(t => normalizeTask(t, taken));
+    const qz = normalizeQuiz(w && w.quiz); if (qz.length) { o.quiz = qz; o.quizMax = clamp(Math.round(Number(w.quizMax != null ? w.quizMax : 1)), 0, qz.length); }
+    return o;
+  });
+  if (!weeks.length) fail("plan needs at least one week (or other period) in \"weeks\".");
+  const phases = (Array.isArray(p.phases) ? p.phases : []).slice(0, 20).map(ph => {
+    const o = { id: slug(ph && (ph.id || ph.title), 30), title: str(ph && ph.title, 120).trim() || "Phase" };
+    const g = str(ph && ph.goal, 800).trim(); if (g) o.goal = g;
+    o.weeks = (Array.isArray(ph && ph.weeks) ? ph.weeks : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= weeks.length);
+    return o;
+  }).filter(ph => ph.weeks.length);
+  return { phases, weeks };
+}
+function normalizeDrill(d, taken) {
+  if (!d || typeof d !== "object") fail("each drill must be an object.");
+  const o = { id: uniqueId(slug(d.id || d.title, 40), taken) };
+  o.title = str(d.title, 140).trim(); if (!o.title) fail("drill needs a title.");
+  o.prompt = str(d.prompt || d.q, LIMITS.md).trim(); if (!o.prompt) fail("drill \"" + o.title + "\" needs a prompt.");
+  if (d.lesson) o.lesson = slug(d.lesson, 40);
+  if (d.week) o.week = clamp(Math.round(Number(d.week) || 1), 1, 200);
+  if (d.track) o.track = slug(d.track, 20);
+  if (d.level) o.level = clamp(Math.round(Number(d.level) || 1), 1, 5);
+  o.mins = clamp(Math.round(Number(d.mins) || 10), 1, 180);
+  o.hints = normStrList(d.hints, 8, 600);
+  const st = str(d.starter, LIMITS.code); if (st.trim()) o.starter = st;
+  o.solution = str(d.solution, LIMITS.code); if (!o.solution.trim()) fail("drill \"" + o.title + "\" needs a model solution.");
+  const tests = str(d.tests || d.test, LIMITS.code);
+  if (tests.trim()) { o.tests = tests; o.expect = lines(d.expect); if (!o.expect.length) fail("drill \"" + o.title + "\" has tests but no \"expect\" lines."); o.lang = langOf(d.lang || "python"); }
+  else if (d.lang) o.lang = langOf(d.lang);
+  o.format = d.format === "text" || (!o.tests && !d.lang) ? "text" : "code";
+  return o;
+}
+function normalizeDrills(v) { const taken = new Set(); const a = (Array.isArray(v) ? v : []).slice(0, 400).map(d => normalizeDrill(d, taken)); return a; }
+function normalizeCheckpoints(v) {
+  const taken = new Set();
+  return (Array.isArray(v) ? v : []).slice(0, 40).map(x => {
+    const o = { id: uniqueId(slug(x && (x.id || x.title), 40), taken), title: str(x && x.title, 120).trim() || "Checkpoint" };
+    if (x.week) o.week = clamp(Math.round(Number(x.week) || 1), 1, 200);
+    o.minutes = clamp(Math.round(Number(x.minutes) || 30), 3, 600); o.pass = clamp(Math.round(Number(x.pass) || 70), 1, 100);
+    o.lessons = (Array.isArray(x.lessons) ? x.lessons : []).map(i => slug(i, 40)).slice(0, 200);
+    o.items = (Array.isArray(x.items) ? x.items : []).map(i => str(i, 100).trim()).filter(i => /^(drill:[a-z0-9-]+|[a-z0-9-]+:b[a-z0-9]{6,16})$/.test(i)).slice(0, 100);
+    if (!o.items.length) fail("checkpoint \"" + o.title + "\" needs items: \"<lesson id>:<block id>\" for practice blocks or \"drill:<id>\".");
+    return o;
+  });
+}
+function normalizeNotebook(id, n) {
+  if (!n || typeof n !== "object") fail("notebook " + id + " must be an object.");
+  const o = { title: str(n.title, 160).trim() || id, lang: langOf(n.lang || "python"), v: clamp(Math.round(Number(n.v) || 1), 1, 1000) };
+  const d = str(n.intro, 3000).trim(); if (d) o.intro = d;
+  o.datasets = normStrList(n.datasets, 30, 80).filter(x => FILE_NAME.test(x));
+  o.cells = (Array.isArray(n.cells) ? n.cells : []).slice(0, 200).map(c => {
+    const t = c && (c.t === "md" || c.t === "markdown") ? "md" : "code";
+    const x = { t, src: str(c && c.src, 40000) }; if (c && c.tag) x.tag = slug(c.tag, 20); return x;
+  });
+  if (!o.cells.length) fail("notebook " + id + " needs cells.");
+  o.checks = (Array.isArray(n.checks) ? n.checks : []).slice(0, 60).map((c, i) => {
+    const label = str(c && c.label, 400).trim(); if (!label) fail("notebook " + id + " check " + (i + 1) + " needs a label.");
+    const t = c.test;
+    if (typeof t === "string" && t.trim()) return { label, test: str(t, 4000) };
+    if (t && t.app) return { label, test: { app: true } };
+    if (t && t.figs) return { label, test: { figs: clamp(Math.round(Number(t.figs)), 1, 50) } };
+    if (t && t.md) return { label, test: { md: slug(t.md, 20), words: clamp(Math.round(Number(t.words) || 20), 1, 5000) } };
+    fail("notebook " + id + " check \"" + label + "\" needs a test: a Python expression, {app:true}, {figs:n} or {md:tag, words:n}.");
+  });
+  if (n.fill && typeof n.fill === "object") { o.fill = {}; for (const [k, f] of Object.entries(n.fill).slice(0, 20)) { if (typeof f === "string") o.fill[k] = str(f, 1000); else if (f && f.md) o.fill[k] = { md: slug(f.md, 20) }; } }
+  const pre = str(n.prelude, 20000); if (pre.trim()) o.prelude = pre;
+  if (JSON.stringify(o).length > 230000) fail("notebook " + id + " is too large to store; trim it.");
+  return o;
+}
+function normalizeNotebooks(v) { const o = {}; if (v && typeof v === "object") for (const [k, n] of Object.entries(v).slice(0, 80)) o[slug(k, 40)] = normalizeNotebook(k, n); return o; }
+/* Cross-references between modules and lessons. Returns a list of problems (strings). */
+function checkModuleRefs(mods, lessonsById) {
+  const out = []; const L = lessonsById || {};
+  const drills = new Set((mods.drills || []).map(d => d.id)); const cps = new Set((mods.checkpoints || []).map(x => x.id));
+  const nbs = new Set(Object.keys(mods.notebooks || {}));
+  for (const w of (mods.plan && mods.plan.weeks) || []) for (const t of w.tasks) {
+    for (const id of t.lessons || []) if (!L[id]) out.push("task " + t.id + " lists lesson " + id + ", which does not exist");
+    if (t.notebook && !nbs.has(t.notebook)) out.push("task " + t.id + " uses notebook " + t.notebook + ", which does not exist");
+    for (const c of t.crit) {
+      if (c.t === "lesson" && !L[c.id]) out.push("task " + t.id + " needs lesson " + c.id + ", which does not exist");
+      if (c.t === "drill" && !drills.has(c.id)) out.push("task " + t.id + " needs drill " + c.id + ", which does not exist");
+      if (c.t === "checkpoint" && !cps.has(c.id)) out.push("task " + t.id + " needs checkpoint " + c.id + ", which does not exist");
+      if (c.t === "quiz" && !(mods.plan.weeks[c.w - 1] && mods.plan.weeks[c.w - 1].quiz)) out.push("task " + t.id + " needs the quiz of week " + c.w + ", which has none");
+    }
+  }
+  for (const d of mods.drills || []) if (d.lesson && !L[d.lesson]) out.push("drill " + d.id + " unlocks after lesson " + d.lesson + ", which does not exist");
+  for (const x of mods.checkpoints || []) for (const it of x.items) {
+    if (it.startsWith("drill:")) { if (!drills.has(it.slice(6))) out.push("checkpoint " + x.id + " uses drill " + it.slice(6) + ", which does not exist"); continue; }
+    const [lid, bid] = it.split(":"); const l = L[lid];
+    const b = l && (l.blocks || []).find(z => z.id === bid);
+    if (!b) out.push("checkpoint " + x.id + " uses " + it + ", which does not exist");
+    else if (!PRACTICE.includes(b.t)) out.push("checkpoint " + x.id + " uses " + it + ", which is not a practice block");
+  }
+  return out;
+}
+const MODULES_DOC =
+`Course modules (all optional; add the ones the subject needs):
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
+- labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
+- tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
+- schedule: {"unitDays":7,"start":"YYYY-MM-DD"} enables pace: each plan week lasts unitDays from the learner's start date.
+- plan: {"phases":[{"id","title","goal","weeks":[1,2]}], "weeks":[{"title","goal","light":false,"tasks":[task],"quiz":[{"q","o":["a","b"],"a":0,"why"}],"quizMax":1}]}
+  task: {"id","title","desc":"markdown","track","core":true,"h":1.5,"lessons":["lesson id"],"res":[["label","https://..."]],"project":"3","notebook":"notebook id","crit":[criterion]}
+  criterion (done when): {"t":"lesson","id"} | {"t":"drill","id"} | {"t":"quiz","w":2,"max":1} | {"t":"checkpoint","id"} | {"t":"days","w":2,"n":4} | {"t":"link","label","hosts":["github.com"]} | {"t":"text","label","min":words,"lines":n,"expect":["must contain"],"mono":true} | {"t":"number","label","min","max","unit"} | {"t":"check","label"}
+- drills: [{"id","title","prompt":"markdown","lesson":"unlocks the day after this lesson is learned","week","track","level":1-5,"mins":10,"hints":["..."],"starter","solution","lang":"python","tests":"code printing results","expect":["lines"]}] from-memory practice on a Leitner schedule; with tests they are checked by running, without them the learner compares and grades themselves.
+- checkpoints: [{"id","title","week","minutes":60,"pass":70,"lessons":["lesson ids that must be learned first"],"items":["<lesson id>:<block id>","drill:<id>"]}] timed tests made of existing practice blocks and drills.
+- notebooks: {"id":{"title","lang":"python","datasets":["file names"],"cells":[{"t":"md"|"code","src","tag":"answer|app"}],"checks":[{"label","test":"python expression true when done" | {"figs":1} | {"md":"tag","words":40} | {"app":true}}],"fill":{"<criterion index>":"python expression" | {"md":"tag"}},"prelude":"python run before checks"}} graded notebooks; a task with "notebook" counts its link criterion done when all checks pass.`;
+
 /* ---------- course ---------- */
 function normalizeTutor(t, base) {
   const o = Object.assign({ name: "Tutor", persona: "" }, base || {});
@@ -318,6 +558,12 @@ function normalizeCourseMeta(c, base) {
   o.language = o.language || "en";
   o.tutor = normalizeTutor(c.tutor, o.tutor);
   if (c.design != null || !o.design) { const r = normalizeDesign(c.design, o.design); o.design = r.design; o.designNotes = r.notes; }
+  if (c.runtimes != null) o.runtimes = normalizeRuntimes(c.runtimes);
+  if (c.files != null) o.files = normalizeFiles(c.files);
+  if (c.labels != null) o.labels = normalizeLabels(c.labels);
+  if (c.tracks != null) o.tracks = normalizeTracks(c.tracks);
+  if (c.schedule !== undefined) { const sc = normalizeSchedule(c.schedule); if (sc) o.schedule = sc; else delete o.schedule; }
+  for (const k of ["runtimes", "files", "labels", "tracks"]) if (o[k] && !Object.keys(o[k]).length) delete o[k];
   return o;
 }
 
@@ -350,7 +596,7 @@ function importCourse(file, opts) {
   const errors = [];
   for (const l of lessonList) {
     let norm;
-    try { norm = normalizeLesson(l, { widgets, keepId: opts.keepIds }); }
+    try { norm = normalizeLesson(l, { widgets, keepId: opts.keepIds, runtimes: meta.runtimes || {} }); }
     catch (e) { if (!(e instanceof RuleError) || !opts.lenient) throw e; errors.push(str(l && l.title, 60) + ": " + e.message); norm = { title: str(l && l.title, LIMITS.lessonTitle) || "Lesson", summary: str(l && l.summary, LIMITS.summary), pending: true, blocks: [] }; }
     norm.id = uniqueId(slug(l.id || norm.title, 40), taken);
     const unit = byUnit.get(String(l.unit)) || meta.units[meta.units.length - 1];
@@ -358,10 +604,20 @@ function importCourse(file, opts) {
     lessons.push(norm);
   }
   meta.archived = [];
-  return { meta, lessons, errors };
+  // Modules: top-level in a course file, or inside "course" in Claude's JSON.
+  const pick = k => src[k] != null ? src[k] : c[k];
+  const mods = {};
+  const tryMod = (k, fn) => { const v = pick(k); if (v == null) return; try { const r = fn(v); if (r != null) mods[k] = r; } catch (e) { if (!(e instanceof RuleError) || !opts.lenient) throw e; errors.push(k + ": " + e.message); } };
+  tryMod("plan", normalizePlan); tryMod("drills", normalizeDrills); tryMod("checkpoints", normalizeCheckpoints); tryMod("notebooks", normalizeNotebooks);
+  if (mods.drills && !mods.drills.length) delete mods.drills;
+  if (mods.checkpoints && !mods.checkpoints.length) delete mods.checkpoints;
+  if (mods.notebooks && !Object.keys(mods.notebooks).length) delete mods.notebooks;
+  const refs = checkModuleRefs(mods, Object.fromEntries(lessons.map(l => [l.id, l])));
+  if (refs.length) errors.push(...refs.slice(0, 20));
+  return { meta, lessons, errors, mods };
 }
 
-function exportCourse(meta, lessons) {
+function exportCourse(meta, lessons, mods) {
   const c = clone(meta);
   delete c.designNotes; delete c.rev; delete c.updated; delete c.created; delete c.kind; delete c.origin;
   const order = [];
@@ -370,11 +626,12 @@ function exportCourse(meta, lessons) {
   const out = { coursekit: FORMAT, exported: new Date().toISOString(), course: Object.assign({}, c, { units: c.units.map(u => ({ id: u.id, title: u.title, goal: u.goal })) }), lessons: [] };
   delete out.course.archived;
   for (const id of order) { const l = byId[id]; if (!l) continue; const L = clone(l); delete L.kind; delete L.course; delete L.updated; out.lessons.push(L); }
+  for (const k of MODULE_KEYS) if (mods && mods[k] != null) out[k] = clone(mods[k]);
   return out;
 }
 
 /* ---------- checking answers ---------- */
-const normAns = s => str(s).normalize("NFKC").toLowerCase().replace(/[\s ]+/g, " ").replace(/^[\s"'“”]+|[\s"'“”.!]+$/g, "").replace(/\s*([,;:])\s*/g, "$1 ").trim();
+const normAns = s => str(s).normalize("NFKC").replace(/♯/g, "#").replace(/♭/g, "b").toLowerCase().replace(/[\s ]+/g, " ").replace(/^[\s"'“”]+|[\s"'“”.!]+$/g, "").replace(/\s*([,;:])\s*/g, "$1 ").trim();
 function checkAnswer(block, value) {
   switch (block.t) {
     case "choice": {
@@ -387,9 +644,24 @@ function checkAnswer(block, value) {
     case "match": return value && typeof value === "object" && block.pairs.every(p => value[p[0]] === p[1]);
     case "write": return words(value) >= block.min;
     case "task": return !!value;
+    case "run": return !!(value && value.pass);
+    case "predict": { const a = normLine(Array.isArray(value) ? value.join(" ") : value); if (!a) return false; return a === normLine(block.expect.join(" ")) || (block.alts || []).some(x => normLine(x) === a) || outputMatches(String(value || ""), block.expect); }
+    case "output": { const v = str(value); const n = v.split("\n").filter(x => x.trim()).length; if (n < (block.min || 1)) return false; const low = normLine(v).toLowerCase(); return (block.expect || []).every(e => low.includes(normLine(e).toLowerCase())); }
   }
   return false;
 }
+/* Output comparison used by run-checked exercises: line by line, quotes and spaces normalised,
+   numbers equal to the precision the expected line shows. */
+const normLine = s => str(s).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/"/g, "'").replace(/\s+/g, " ").trim();
+const normOut = s => str(s).replace(/\r/g, "").split("\n").map(normLine).filter(x => x !== "");
+const NUM = /-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi;
+function lineMatch(got, exp) {
+  if (got === exp) return true;
+  if (got.replace(NUM, "#") !== exp.replace(NUM, "#")) return false;
+  const gn = got.match(NUM) || [], en = exp.match(NUM) || []; if (gn.length !== en.length) return false;
+  return en.every((e, k) => { const a = parseFloat(gn[k]), b = parseFloat(e); const dec = (e.split(/e/i)[0].split(".")[1] || "").length; const t = dec ? 1.01 * Math.pow(10, -dec) : 1e-9; return Math.abs(a - b) <= t + 1e-9 * Math.abs(b); });
+}
+function outputMatches(out, expect) { const a = normOut(out), b = expect.map(normLine).filter(x => x !== ""); return a.length === b.length && a.every((x, k) => lineMatch(x, b[k])); }
 const isNum = s => /^-?\d+(\.\d+)?(e-?\d+)?$/i.test(str(s).trim());
 const tol = a => { const d = (str(a).split(".")[1] || "").length; return d ? Math.pow(10, -d) / 2 + 1e-12 : 1e-9; };
 
@@ -422,6 +694,9 @@ function lessonText(lesson, opts) {
       case "match": out.push(tag + " " + b.q + (opts.answers ? " Pairs: " + b.pairs.map(p => p[0] + " = " + p[1]).join("; ") : "")); break;
       case "write": out.push(tag + " " + b.q + " (at least " + b.min + " words)" + (opts.answers ? " Model: " + b.model : "")); break;
       case "task": out.push(tag + " Task: " + b.q + (opts.answers ? " Solution: " + b.solution : "")); break;
+      case "run": out.push(tag + " Write and run (" + b.lang + "): " + b.q + (b.starter ? "\nStarter:\n" + b.starter : "") + (opts.answers ? "\nHidden test:\n" + b.test + "\nExpected test output:\n" + b.expect.join("\n") + "\nModel solution:\n" + b.solution : "")); break;
+      case "predict": out.push(tag + " Predict the output: " + b.q + (opts.answers ? "\nExpected: " + b.expect.join(" ⏎ ") : "")); break;
+      case "output": out.push(tag + " Run and paste the output (" + b.lang + "): " + b.q + (b.code ? "\n```" + b.lang + "\n" + b.code + "\n```" : "") + (opts.answers ? "\nOutput must contain: " + (b.expect || []).join(" | ") : "")); break;
     }
   });
   return out.join("\n\n");
@@ -449,6 +724,33 @@ bg = page background, surface = cards, ink = text, muted = secondary text, accen
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
 
+
+/* ---------- progress from Coursekit 1 / Sigmoid Prep (lessons keyed by practice index) ---------- */
+function fromV1Progress(old, lessonsById, cid) {
+  const dayMs = d => { const [y, m, dd] = String(d).split("-").map(Number); return new Date(y, m - 1, dd, 12).getTime(); };
+  const pracIds = l => (l.blocks || []).filter(b => PRACTICE.includes(b.t)).map(b => b.id);
+  const progress = []; const refMap = {};
+  for (const [lid, l] of Object.entries(lessonsById || {})) {
+    const ids = pracIds(l); ids.forEach((b, k) => { refMap[lid + "#" + k] = lid + ":" + b; });
+    const pr = (old.prac || {})[lid] || {}; const learnedOn = old.lessons && old.lessons[lid] && old.lessons[lid].learned;
+    const cardsBlock = (l.blocks || []).find(b => b.t === "cards");
+    const p = { kind: "progress", course: cid, lesson: lid, b: {}, cards: {}, w: {} };
+    for (const [k, st] of Object.entries(pr)) {
+      const bid = ids[+k]; if (!bid || !st) continue; const b = l.blocks.find(x => x.id === bid);
+      const a = st.code != null ? st.code : st.ans != null ? st.ans : (st.pick != null && b && b.options ? b.options[st.pick] : undefined);
+      p.b[bid] = { n: st.tries || 1 }; if (st.ok) p.b[bid].ok = true; if (a !== undefined) p.b[bid].a = String(a).slice(0, 20000);
+    }
+    if (learnedOn) p.done = new Date(dayMs(learnedOn)).toISOString();
+    if (cardsBlock) for (const [key, c] of Object.entries(old.cards || {})) { const [cl, ck] = key.split(":"); if (cl !== lid || !c) continue; p.cards[cardsBlock.id + "." + ck] = { box: Math.max(-1, (c.stage || 0) - 1), due: dayMs(c.due) - 12 * 3600e3 }; }
+    if (Object.keys(p.b).length || p.done || Object.keys(p.cards).length) progress.push(p);
+  }
+  const conv = ans => { const o = {}; for (const [ref, v] of Object.entries(ans || {})) { const r = ref.startsWith("D:") ? "drill:" + ref.slice(2) : refMap[ref]; if (!r || !v) continue; o[r] = { ok: !!v.ok }; const a = v.code != null ? v.code : v.ans; if (a != null) o[r].a = a; } return o; };
+  const state = { kind: "pstate", course: cid, v: 1, start: old.start || null, crit: old.crit || {}, quiz: old.quiz || {}, exams: old.exams || {}, drills: old.drills || {}, drafts: old.drafts || {}, days: old.log || {}, nb: old.nb || {},
+    examRun: old.examRun ? Object.assign({}, old.examRun, { ans: conv(old.examRun.ans) }) : null, migrated: new Date().toISOString() };
+  return { progress, state };
+}
+
+const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
 const api = {
   FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
@@ -456,6 +758,9 @@ const api = {
   hexToRgb, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
+  ENGINES, MODULE_KEYS, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
+  normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.CK = api;
 })(typeof window !== "undefined" ? window : globalThis);
