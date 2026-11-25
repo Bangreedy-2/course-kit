@@ -57,7 +57,7 @@ const sampleError = e => {
     : c === "cancelled" ? "Stopped."
     : c === "invalid_json" ? "Claude's answer could not be read. Try again."
     : c === "tools_unavailable" ? "This view of Claude cannot change the course. Open the page in claude.ai."
-    : "Claude could not answer (" + (c || "error") + "). Try again.";
+    : "Claude could not answer (" + (c || "error") + (e && e.message ? ": " + String(e.message).slice(0, 200) : "") + "). Try again.";
 };
 
 /* ================= store wiring ================= */
@@ -552,7 +552,7 @@ function classicHome(c) {
       c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null,
       h("h1", null, c.title),
       c.description ? h("p", { class: "lede" }, c.description) : null,
-      h("div", { class: "bar", role: "progressbar", "aria-valuenow": learned, "aria-valuemax": total, "aria-label": "Lessons learned" }, h("i", { style: "width:" + (total ? 100 * learned / total : 0) + "%" })),
+      (c.design.meter || "bar") === "bar" ? h("div", { class: "bar", role: "progressbar", "aria-valuenow": learned, "aria-valuemax": total, "aria-label": "Lessons learned" }, h("i", { style: "width:" + (total ? 100 * learned / total : 0) + "%" })) : meter(c),
       h("p", { class: "meta" }, learned + " of " + total + " lessons learned" + (due ? " · " + due + " cards to review" : "")),
       h("div", { class: "row" },
         nxt ? h("a", { class: "btn primary", href: "#/c/" + c.id + "/l/" + nxt.id }, learned ? "Continue: " + nxt.title : "Start: " + nxt.title) : null,
@@ -1157,6 +1157,7 @@ async function sendAsk(text, opts) {
     if (c) await withTxn(c.id, "Asked: " + text.slice(0, 120), opts.from === "project" ? "project" : "tutor", run);
     else await run(null);
   } catch (e) {
+    console.error("Ask failed", e);
     reply.content = (e && e.text ? e.text + "\n\n" : "") + "*" + sampleError(e) + "*";
   }
   reply.changes = changes.slice(0, 20);
@@ -1345,11 +1346,12 @@ function courseTools(c, tx, changes) {
       const part = String(i.part); if (part === "notebooks") return Object.keys(S.mods.notebooks || {});
       const v = modGet(part); return v == null ? "This course has no " + part + " yet." : JSON.stringify(v).slice(0, 120000);
     }),
-    T("write_module", "Replaces one course module (plan, drills, checkpoints, or nb.<id>) with data in the module format; data null removes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, data: {} }, ["part"], i => {
+    T("write_module", "Replaces one course module (plan, drills, checkpoints, or nb.<id>) with new content in the module format, given as JSON text in json; remove: true deletes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, json: { type: "string", description: "The whole module as JSON text" }, remove: { type: "boolean" } }, ["part"], i => {
       const part = String(i.part || "");
       if (!/^(plan|drills|checkpoints|nb\.[a-z0-9-]{1,40})$/.test(part)) throw new Error("part must be plan, drills, checkpoints or nb.<id>.");
-      let v = i.data;
-      if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { throw new Error("data must be JSON."); } }
+      let v = i.remove ? null : i.json != null ? i.json : i.data;
+      if (v === undefined) throw new Error("give the module as JSON text in json, or remove: true.");
+      if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { throw new Error("json is not valid JSON: " + e.message); } }
       if (v != null) v = part === "plan" ? CK.normalizePlan(v) : part === "drills" ? CK.normalizeDrills(v) : part === "checkpoints" ? CK.normalizeCheckpoints(v) : CK.normalizeNotebook(part.slice(3), v);
       const next = Object.assign({}, S.mods, { notebooks: Object.assign({}, S.mods.notebooks) });
       if (part.startsWith("nb.")) { if (v == null) delete next.notebooks[part.slice(3)]; else next.notebooks[part.slice(3)] = v; } else if (v == null) delete next[part]; else next[part] = v;

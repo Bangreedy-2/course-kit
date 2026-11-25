@@ -27,7 +27,8 @@
    "layout": "sidebar",
    "pattern": "grid",
    "density": "normal",
-   "emblem": "σ"
+   "emblem": "σ",
+   "meter": "sigmoid"
   },
   "units": [
    {

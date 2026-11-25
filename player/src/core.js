@@ -98,11 +98,12 @@ const LAYOUTS = ["sidebar", "tabs", "path"];
 const SHAPES = ["round", "soft", "square"];
 const PATTERNS = ["none", "dots", "grid", "lines", "waves", "paper"];
 const DENSITIES = ["airy", "normal", "compact"];
+const METERS = ["bar", "ring", "sigmoid", "steps"];
 
 const DEFAULT_DESIGN = {
   palette: { bg: "#f6f4ef", surface: "#ffffff", ink: "#1d232b", muted: "#5b6470", accent: "#2f5bd3", accent2: "#c2410c" },
   fonts: { display: "Space Grotesk", body: "Inter" },
-  shape: "soft", layout: "sidebar", pattern: "none", density: "normal", emblem: "📘",
+  shape: "soft", layout: "sidebar", pattern: "none", density: "normal", meter: "bar", emblem: "📘",
 };
 
 function pickFrom(v, list, fallback, what) {
@@ -153,6 +154,7 @@ function normalizeDesign(input, base) {
   d.layout = pickFrom(i.layout, LAYOUTS, d.layout, "layout");
   d.pattern = pickFrom(i.pattern, PATTERNS, d.pattern, "pattern");
   d.density = pickFrom(i.density, DENSITIES, d.density, "density");
+  d.meter = pickFrom(i.meter, METERS, d.meter || "bar", "meter");
   d.emblem = emblemOf(i.emblem, d.emblem);
   return { design: d, notes };
 }
@@ -719,8 +721,9 @@ const DESIGN_DOC =
 `Design object (all fields optional when editing):
 {"palette":{"bg":"#rrggbb","surface":"#rrggbb","ink":"#rrggbb","muted":"#rrggbb","accent":"#rrggbb","accent2":"#rrggbb"},
  "fonts":{"display":"<font>","body":"<font>"},
- "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "emblem":"one emoji"}
+ "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "meter":"${METERS.join("|")}", "emblem":"one emoji"}
 bg = page background, surface = cards, ink = text, muted = secondary text, accent = buttons and links, accent2 = highlights.
+meter: how overall progress is drawn on the course home. bar = a plain bar; ring = a circle; sigmoid = a dot climbing an S-curve (machine learning, growth, adoption); steps = one tick per unit (short skill courses). Pick the one that fits the subject.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
 
@@ -752,7 +755,7 @@ function fromV1Progress(old, lessonsById, cid) {
 
 const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
 const api = {
-  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
+  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
   RuleError, slug, uniqueId, newBlockId, clone, words, str, clamp,
   hexToRgb, contrast, ensureContrast, onColor, isDark,
