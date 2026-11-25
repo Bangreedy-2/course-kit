@@ -11,7 +11,7 @@ Requirements: a paid Claude plan (artifact storage and Claude inside artifacts a
 
 ## Install or update the player
 
-Publish [coursekit-player.html](coursekit-player.html) unchanged as an artifact with these capabilities:
+Publish [coursekit-player.html](coursekit-player.html) unchanged as the artifact's page, together with every `player-code-N.txt` file that sits beside it in this skill folder, each published under its own name next to the page (the `files` map: `{"player-code-1.txt": "<path to it>", …}`). The page loads its code from those files, so a page published without them shows an error. Use these capabilities:
 
 ```json
 {
@@ -23,7 +23,7 @@ Publish [coursekit-player.html](coursekit-player.html) unchanged as an artifact 
 
 `desktop` and `mcp` are what let a course run code on the learner's own computer (see the `coursekit-setup` skill). For a first setup, use the `coursekit-setup` skill, which does every step.
 
-Title it "Coursekit", icon "book". To update an existing player, publish the new file to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
+Title it "Coursekit", icon "book". To update an existing player, publish the new page and its `player-code-N.txt` files to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
 
 ## Runtime packs (Python and other languages)
 

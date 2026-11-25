@@ -3,7 +3,7 @@
 the server and its language table. Usage: python3 tools/build-runner-extension.py [out file]"""
 import sys, zipfile
 from pathlib import Path
-root = Path(__file__).resolve().parent.parent / "plugin" / "runner"
+root = Path(__file__).resolve().parent.parent / "runner"
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "coursekit-runner.mcpb")
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
     for name in ("manifest.json", "coursekit-runner.js", "langs.json"):

@@ -5,7 +5,9 @@ const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "..");
 const shots = process.argv[2] || null;
-const page_html = fs.readFileSync(path.join(root, "player/dist/coursekit-player.html"), "utf8");
+// CK_SPLIT=1 tests the page as the plugin ships it: a small page that loads its code from player-code-N.txt beside it.
+const split = !!process.env.CK_SPLIT, splitDir = path.join(root, "plugin/skills/coursekit-player");
+const page_html = fs.readFileSync(split ? path.join(splitDir, "coursekit-player.html") : path.join(root, "player/dist/coursekit-player.html"), "utf8");
 const mock = fs.readFileSync(path.join(__dirname, "mock-claude.js"), "utf8");
 const html = "<!doctype html><html><head><meta charset=utf8><meta name=viewport content='width=device-width,initial-scale=1'></head><body><script>" + mock + "</script>" + page_html + "</body></html>";
 
@@ -21,6 +23,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   page.on("console", m => { if (m.type() === "error" && !/fonts\.g|cdnjs|ERR_|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await page.route("http://ck.test/", r => r.fulfill({ contentType: "text/html", body: html }));
   await page.route(/fonts\.googleapis|fonts\.gstatic|cdnjs/, r => r.abort());
+  if (split) await page.route(/^http:\/\/ck\.test\/player-code-\d+\.txt$/, r => r.fulfill({ contentType: "text/plain", body: fs.readFileSync(path.join(splitDir, path.basename(new URL(r.request().url()).pathname))) }));
   // Optional: CK_PY=<dir with py/ and data/> serves the Python runtime and datasets like the published artifact does
   const MIME = { wasm: "application/wasm", mjs: "text/javascript", js: "text/javascript", json: "application/json", csv: "text/csv" };
   if (process.env.CK_PY) await page.route(/^http:\/\/ck\.test\/(py|st|data)\//, r => {
