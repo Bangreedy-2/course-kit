@@ -17,7 +17,7 @@ delete meta.designNotes;
 const write = (key, body) => { fs.writeFileSync(path.join(outDir, key + ".json"), JSON.stringify(body)); console.log(key, JSON.stringify(body).length); };
 for (const l of imp.lessons) write("l~" + cid + "~" + l.id, Object.assign({}, l, { kind: "lesson", course: cid, updated: at }));
 const mods = imp.mods || {};
-const parts = {}; for (const k of ["plan", "drills", "checkpoints"]) if (mods[k] != null) parts[k] = mods[k];
+const parts = {}; for (const k of ["plan", "drills", "checkpoints", "pages"]) if (mods[k] != null) parts[k] = mods[k];
 for (const [id, n] of Object.entries(mods.notebooks || {})) parts["nb." + id] = n;
 for (const [part, data] of Object.entries(parts)) write("x~" + cid + "~" + part, { kind: "module", course: cid, part, data, updated: at });
 write("c~" + cid, meta); // last, so the course appears once its lessons exist

@@ -68,7 +68,7 @@ const K = {
   mod: (c, part) => "x~" + c + "~" + part, pst: c => "g~" + c, nbw: (c, id) => "n~" + c + "~" + id,
 };
 /* Modules are stored one record per part: plan, drills, checkpoints, nb.<id> (one per notebook). */
-const modParts = mods => { const out = {}; for (const k of ["plan", "drills", "checkpoints"]) if (mods[k] != null) out[k] = mods[k]; for (const [id, n] of Object.entries(mods.notebooks || {})) out["nb." + id] = n; return out; };
+const modParts = mods => { const out = {}; for (const k of ["plan", "drills", "checkpoints", "pages"]) if (mods[k] != null) out[k] = mods[k]; for (const [id, n] of Object.entries(mods.notebooks || {})) out["nb." + id] = n; return out; };
 function modsFromDocs(docs) {
   const m = { notebooks: {} };
   for (const d of docs) { const b = d.body; if (!b || b.data == null) continue; if (b.part.startsWith("nb.")) m.notebooks[b.part.slice(3)] = b.data; else m[b.part] = b.data; }
@@ -1474,17 +1474,17 @@ function courseTools(c, tx, changes) {
       for (const id of ids) { const l = L(id); tx.touchLesson(id); l.rewrite = String(i.instruction).slice(0, 1500); }
       changes.push(ids.length + " lesson" + (ids.length > 1 ? "s" : "") + " queued for rewriting"); return "Queued " + ids.length + ". They are written after this reply.";
     }),
-    T("read_module", "Returns one course module as JSON: plan, drills, checkpoints, or nb.<id> for a notebook (\"notebooks\" lists notebook ids).", { part: { type: "string" } }, ["part"], i => {
+    T("read_module", "Returns one course module as JSON: plan, drills, checkpoints, pages, or nb.<id> for a notebook (\"notebooks\" lists notebook ids).", { part: { type: "string" } }, ["part"], i => {
       const part = String(i.part); if (part === "notebooks") return Object.keys(S.mods.notebooks || {});
       const v = modGet(part); return v == null ? "This course has no " + part + " yet." : JSON.stringify(v).slice(0, 120000);
     }),
-    T("write_module", "Replaces one course module (plan, drills, checkpoints, or nb.<id>) with new content in the module format, given as JSON text in json; remove: true deletes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, json: { type: "string", description: "The whole module as JSON text" }, remove: { type: "boolean" } }, ["part"], i => {
+    T("write_module", "Replaces one course module (plan, drills, checkpoints, pages, or nb.<id>) with new content in the module format, given as JSON text in json; remove: true deletes it. The rules check it and every reference (lesson ids, block ids, drill ids). Read the module first and keep ids the learner has progress on.", { part: { type: "string" }, json: { type: "string", description: "The whole module as JSON text" }, remove: { type: "boolean" } }, ["part"], i => {
       const part = String(i.part || "");
-      if (!/^(plan|drills|checkpoints|nb\.[a-z0-9-]{1,40})$/.test(part)) throw new Error("part must be plan, drills, checkpoints or nb.<id>.");
+      if (!/^(plan|drills|checkpoints|pages|nb\.[a-z0-9-]{1,40})$/.test(part)) throw new Error("part must be plan, drills, checkpoints, pages or nb.<id>.");
       let v = i.remove ? null : i.json != null ? i.json : i.data;
       if (v === undefined) throw new Error("give the module as JSON text in json, or remove: true.");
       if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { throw new Error("json is not valid JSON: " + e.message); } }
-      if (v != null) v = part === "plan" ? CK.normalizePlan(v) : part === "drills" ? CK.normalizeDrills(v) : part === "checkpoints" ? CK.normalizeCheckpoints(v) : CK.normalizeNotebook(part.slice(3), v);
+      if (v != null) v = part === "plan" ? CK.normalizePlan(v) : part === "drills" ? CK.normalizeDrills(v) : part === "checkpoints" ? CK.normalizeCheckpoints(v, { runtimes: meta().runtimes || {} }) : part === "pages" ? CK.normalizePages(v) : CK.normalizeNotebook(part.slice(3), v);
       const next = Object.assign({}, S.mods, { notebooks: Object.assign({}, S.mods.notebooks) });
       if (part.startsWith("nb.")) { if (v == null) delete next.notebooks[part.slice(3)]; else next.notebooks[part.slice(3)] = v; } else if (v == null) delete next[part]; else next[part] = v;
       const probs = CK.checkModuleRefs(next, S.lessons); if (probs.length) throw new Error("Not saved: " + probs.slice(0, 8).join("; ") + ".");

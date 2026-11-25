@@ -66,9 +66,17 @@ weeks.forEach((w, i) => {
   ok((pw.quiz || []).length === (w.quiz || []).length, "week " + w.n + ": quiz questions"); nQuiz += (w.quiz || []).length;
 });
 ok(file.plan.phases.length === (pack.phases || []).length, "phases");
+ok(((file.plan.projects || []).length) === (pack.projects || []).length, (pack.projects || []).length + " named projects");
+ok(((file.pages || []).length) === (pack.pages || []).length, (pack.pages || []).length + " pages");
+for (const pg of pack.pages || []) { const n = weeks.flatMap(w => w.tasks).filter(t => t.page === pg.id).length; ok(file.plan.weeks.flatMap(w => w.tasks).filter(t => t.page === pg.id).length === n && n > 0, "page " + pg.id + ": " + n + " tasks"); }
 const exams = pack.exams || [];
 ok(file.checkpoints.length === exams.length, exams.length + " checkpoints");
-exams.forEach((x, i) => { const c = file.checkpoints[i]; ok(c.items.length === x.items.length && c.minutes === x.minutes && c.pass === x.pass, "checkpoint " + x.id + ": " + x.items.length + " items, time and pass mark");
+const { parseLessons } = require("../app/js/text.js");
+const allParsed = pack.lessons.flatMap(f => parseLessons(fs.readFileSync(path.join(root, "packs", id, f), "utf8")));
+exams.filter(x => x.bank).forEach(x => { const c = file.checkpoints.find(k => k.id === x.id); const B = allParsed.find(l => l.id === x.bank);
+  ok(c && B && c.blocks.length === B.practice.length && c.minutes === x.minutes && c.pass === x.pass, "checkpoint " + x.id + ": its own " + (B ? B.practice.length : "?") + " questions, time and pass mark");
+  if (c && B) { B.practice.forEach((p, k) => ok(c.blocks[k].q === p.prompt, "checkpoint " + x.id + " question " + (k + 1) + ": text")); nItems += B.practice.length; ok(!byId[x.bank], "checkpoint " + x.id + ": its question bank is not listed as a lesson"); } });
+exams.filter(x => !x.bank).forEach((x) => { const c = file.checkpoints.find(k => k.id === x.id); ok(c.items.length === x.items.length && c.minutes === x.minutes && c.pass === x.pass, "checkpoint " + x.id + ": " + x.items.length + " items, time and pass mark");
   for (const ref of c.items) { if (ref.startsWith("drill:")) ok(file.drills.some(d => d.id === ref.slice(6)), x.id + ": " + ref); else { const [lid, bid] = ref.split(":"); ok(byId[lid] && byId[lid].blocks.some(b => b.id === bid), x.id + ": " + ref); } } });
 console.log(nTasks + " tasks, " + nCrit + " criteria, " + nQuiz + " quiz questions, " + exams.length + " checkpoints compared");
 

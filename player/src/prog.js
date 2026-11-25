@@ -18,9 +18,10 @@ const LBL = c => Object.assign({}, LABELS, (c && c.labels) || {});
 const unitWord = c => LBL(c).unit;
 
 /* ---------- per-course learner state: one record g~<course> ---------- */
+const MASTER_BOX = 4;
 function normG(b, cid) {
   const g = Object.assign({ kind: "pstate", course: cid, v: 1, start: null, crit: {}, quiz: {}, exams: {}, examRun: null, drills: {}, drafts: {}, days: {}, nb: {} }, b || {});
-  for (const k of ["crit", "quiz", "exams", "drills", "drafts", "days", "nb"]) if (!g[k] || typeof g[k] !== "object") g[k] = {};
+  for (const k of ["crit", "quiz", "exams", "drills", "drafts", "days", "nb", "docs"]) if (!g[k] || typeof g[k] !== "object") g[k] = {};
   return g;
 }
 let gTimer = null;
@@ -72,6 +73,8 @@ function critDone(t, k) {
     case "drill": { const d = g.drills[c.id]; return !!(d && d.passes > 0); }
     case "quiz": { const q = g.quiz[c.w]; return !!(q && q.best != null && q.best <= c.max); }
     case "checkpoint": { const x = g.exams[c.id]; const ex = cpsOf().find(e => e.id === c.id); return !!(x && ex && x.best >= ex.pass); }
+    case "mastered": return Object.values(g.drills).filter(d => d && d.box >= MASTER_BOX).length >= c.n;
+    case "lessons": return orderedLessons(S.courses[S.cid]).filter(l => (l.week || 1) <= c.w && !l.pending).every(l => learned(l.id));
     case "days": { const [a, b] = weekRange(S.courses[S.cid], c.w || t.week || curWeek(S.courses[S.cid])); let n = 0; for (let d = a; d <= b; d = addDays(d, 1)) if (g.days[d]) n++; return n >= c.n; }
     case "link": {
       if (t.notebook && g.nb[t.notebook] && g.nb[t.notebook].passed) return true;
@@ -79,7 +82,9 @@ function critDone(t, k) {
       try { const u = new URL(v); if (!(c.hosts || []).length) return /^https?:$/.test(u.protocol); return c.hosts.some(h => u.hostname === h || u.hostname.endsWith("." + h)) && u.pathname.length > 1; } catch (e) { return false; }
     }
     case "text": {
-      if (!v) return false; const s = String(v);
+      const tv = c.doc ? (g.docs || {})[c.doc] : v;
+      if (!tv) return false; const s = String(tv);
+      if (c.tpl && s.trim() === c.tpl.trim()) return false;
       if (c.lines && s.split("\n").filter(x => x.trim()).length < c.lines) return false;
       if (c.expect && !c.expect.every(e => s.toLowerCase().includes(e.toLowerCase()))) return false;
       if (c.min && CK.words(s) < c.min) return false; return true;
@@ -98,6 +103,8 @@ function critLabel(c, cr) {
     case "drill": return ["Drill passed from memory: ", h("b", null, (drillById(cr.id) || {}).title || cr.id)];
     case "quiz": return L.unit + " " + cr.w + " self-check quiz with at most " + cr.max + " wrong";
     case "checkpoint": { const e = cpsOf().find(x => x.id === cr.id); return ["Pass ", h("b", null, e ? e.title : cr.id), " (" + (e ? e.pass : 70) + "% or more)"]; }
+    case "mastered": return "At least " + cr.n + " drills at mastered level (passed " + MASTER_BOX + " times in a row, spaced out)";
+    case "lessons": return "Every lesson up to " + L.unit.toLowerCase() + " " + cr.w + " learned";
     case "days": return "Studied on at least " + cr.n + " days this " + L.unit.toLowerCase() + " (lessons, drills, reviews and runs count)";
     default: return mdInline(cr.label || "");
   }
@@ -167,7 +174,11 @@ function courseTabs(c) {
   if (drillsOf().length) tabs.push(["drills", L.drills]);
   if (tasks.some(t => t.project != null || t.notebook)) tabs.push(["projects", L.projects]);
   if (p || drillsOf().length || cpsOf().length) tabs.push(["record", L.record]);
-  const want = (c.design && c.design.tabs) || [];
+  const pages = S.mods.pages || [];
+  const rec = tabs.findIndex(t => t[0] === "record");
+  tabs.splice(rec < 0 ? tabs.length : rec + 1, 0, ...pages.map(pg => ["page-" + pg.id, pg.title]));
+  const want = ((c.design && c.design.tabs) || []).slice();
+  if (want.length) for (const pg of pages) if (!want.includes("page-" + pg.id)) want.push("page-" + pg.id);
   if (!want.length) return tabs;
   const picked = want.map(k => tabs.find(t => t[0] === k)).filter(Boolean);
   return picked.length ? picked : tabs;
@@ -182,7 +193,8 @@ function viewCourse(c, tab) {
   if (S.courseMenu) ap(wrap, courseMenu(c));
   if (!S.courseLoaded) { ap(wrap, h("p", { class: "muted" }, "Loading lessons…")); return wrap; }
   const panel = h("section", { class: "dpanel" });
-  ({ today: tabToday, plan: tabPlan, lessons: tabLessons, drills: tabDrills, projects: tabProjects, record: tabRecord })[cur](c, panel);
+  if (cur.startsWith("page-")) tabPage(c, panel, cur.slice(5));
+  else ({ today: tabToday, plan: tabPlan, lessons: tabLessons, drills: tabDrills, projects: tabProjects, record: tabRecord })[cur](c, panel);
   ap(wrap, panel);
   return wrap;
 }
@@ -292,6 +304,8 @@ function tabPlan(c, M) {
     }
   }
 }
+/* Replacing typed text needs a second press, not a dialog. */
+function confirmReplace(i) { if (i.dataset.sure) { delete i.dataset.sure; return true; } i.dataset.sure = "1"; toast("Press again to replace what you wrote with the template."); setTimeout(() => delete i.dataset.sure, 4000); return false; }
 function taskCard(c, t) {
   const g = G(); const L = LBL(c);
   const rg = h("span", { class: "ringbox" }, ring(taskProg(t)));
@@ -307,7 +321,11 @@ function taskCard(c, t) {
     const set = val => { g.crit[t.id] = g.crit[t.id] || {}; g.crit[t.id][k] = val; saveG(); row.classList.toggle("done", critDone(t, k)); rc(rg, ring(taskProg(t))); logEvent("task", { c: c.id }); };
     if (cr.t === "link" && t.notebook && nbOf(t.notebook)) ap(inner, h("div", { class: "row" }, h("a", { class: "btn small primary", href: route(c, "n/" + t.notebook) }, "📓 Open the notebook"), h("small", { class: "muted" }, g.nb[t.notebook] && g.nb[t.notebook].passed ? "Checks pass: this counts as done." : "Passing its checks counts as done. Or paste a link:")));
     if (cr.t === "link") { const i = h("input", { type: "url", placeholder: "https://" + ((cr.hosts || [])[0] || "") + "/…", value: v || "", "aria-label": cr.label }); i.addEventListener("input", () => set(i.value)); ap(inner, i, h("small", { class: "muted" }, (cr.hosts || []).length ? "Link must be on " + cr.hosts.join(" or ") : "Any https link")); }
-    if (cr.t === "text") { const i = h("textarea", { class: cr.mono ? "code" : "", rows: cr.mono ? 5 : 3, placeholder: cr.mono ? "Paste output here" : "Write here", "aria-label": cr.label }); i.value = v || ""; i.addEventListener("input", () => set(i.value)); ap(inner, i, h("small", { class: "muted" }, [cr.min ? "At least " + cr.min + " words." : "", cr.lines ? "At least " + cr.lines + " lines." : "", cr.expect ? "Must contain: " + cr.expect.join(", ") : ""].filter(Boolean).join(" "))); }
+    if (cr.t === "text") { const i = h("textarea", { class: cr.mono ? "code" : "", rows: cr.doc ? 10 : cr.mono ? 5 : 3, placeholder: cr.mono ? "Paste output here" : "Write here", "aria-label": cr.label }); i.value = (cr.doc ? (g.docs || {})[cr.doc] : v) || "";
+      const setT = val => { if (cr.doc) { g.docs = g.docs || {}; g.docs[cr.doc] = val; set(val ? 1 : ""); } else set(val); };
+      i.addEventListener("input", () => setT(i.value));
+      if (cr.tpl) ap(inner, h("button", { class: "btn small ghost", onclick: () => { if (i.value.trim() && i.value.trim() !== cr.tpl.trim() && !confirmReplace(i)) return; i.value = cr.tpl; setT(i.value); } }, "Insert template"));
+      if (cr.doc) ap(inner, h("small", { class: "muted" }, "This is one shared document: every task that asks for it edits the same text.")); ap(inner, i, h("small", { class: "muted" }, [cr.min ? "At least " + cr.min + " words." : "", cr.lines ? "At least " + cr.lines + " lines." : "", cr.expect ? "Must contain: " + cr.expect.join(", ") : ""].filter(Boolean).join(" "))); }
     if (cr.t === "number") { const i = h("input", { type: "number", step: "any", value: v == null ? "" : v, "aria-label": cr.label, style: "max-width:180px" }); i.addEventListener("input", () => set(i.value)); ap(inner, h("div", { class: "row" }, i, h("small", { class: "muted" }, (cr.unit || "") + " · expected between " + cr.min + " and " + cr.max))); }
     if (cr.t === "check") { const i = h("input", { type: "checkbox", checked: !!v || null }); i.addEventListener("change", () => set(i.checked)); ap(inner, h("label", { class: "small" }, i, " I did this")); }
     if (cr.t === "drill") ap(inner, h("a", { class: "btn small", href: route(c, "d/" + cr.id) }, "Open drill"));
@@ -337,10 +355,37 @@ function tabDrills(c, M) {
   }
   ap(M, list);
 }
+function tabPage(c, M, id) {
+  const pg = (S.mods.pages || []).find(x => x.id === id); if (!pg) return;
+  const tasks = allTasks().filter(t => t.page === id).sort((a, b) => (a.due || "9") < (b.due || "9") ? -1 : (a.due || "9") > (b.due || "9") ? 1 : 0);
+  const done = tasks.filter(t => taskProg(t) >= 1).length;
+  if (pg.facts && pg.facts.length) ap(M, h("div", { class: "facts" }, pg.facts.map(f => h("div", { class: "card" }, f.eyebrow ? h("p", { class: "eyebrow" }, f.eyebrow) : null, h("h3", null, f.title),
+    h("dl", null, f.rows.map(r => [h("dt", null, r[0]), h("dd", null, mdInline(r[1]))]))))));
+  if (pg.note) ap(M, h("div", { class: "card warnbox" }, mdEl(pg.note)));
+  if (pg.intro) ap(M, mdEl(pg.intro));
+  if (tasks.length) ap(M, h("p", { class: "sec-h" }, done + " of " + tasks.length + " done"));
+  const groups = pg.groups || {}; const keys = Object.keys(groups); const used = new Set();
+  for (const k of keys) { const ts = tasks.filter(t => t.group === k); if (!ts.length) continue; ts.forEach(t => used.add(t.id));
+    ap(M, h("div", { class: "card row between" }, h("h3", null, groups[k]), h("span", { class: "muted small" }, ts.filter(t => taskProg(t) >= 1).length + "/" + ts.length + " done")));
+    for (const t of ts) ap(M, h("div", { class: "card flush" }, taskCard(c, t))); }
+  for (const t of tasks.filter(t => !used.has(t.id))) ap(M, h("div", { class: "card flush" }, taskCard(c, t)));
+  if (!tasks.length && !pg.intro && !(pg.facts || []).length) ap(M, h("p", { class: "muted" }, "Nothing here yet."));
+}
 function tabProjects(c, M) {
   const L = LBL(c); const hw = allTasks().filter(t => t.project != null || t.notebook);
   const done = hw.filter(t => taskProg(t) >= 1).length;
   ap(M, h("div", { class: "card row between" }, h("div", null, h("h3", null, L.projects), h("p", { class: "small muted" }, L.projectsIntro || "The " + hw.length + " projects of this course, scheduled after the lessons they need.")), h("div", { class: "big-num" }, h("b", null, done + "/" + hw.length), h("small", null, "complete"))));
+  const projs = (planOf() && planOf().projects) || [];
+  if (projs.length) {
+    for (const pr of projs) { const ts = hw.filter(t => t.project === pr.id); if (!ts.length) continue; const p = ts.reduce((s, t) => s + taskProg(t), 0) / ts.length;
+      const det = h("details", { class: "week", open: (S.openProj && S.openProj.has(pr.id)) || null, ontoggle: e => { S.openProj = S.openProj || new Set(); e.target.open ? S.openProj.add(pr.id) : S.openProj.delete(pr.id); } },
+        h("summary", null, ring(p), h("div", null, h("b", null, pr.title), pr.what ? h("div", { class: "small muted" }, pr.what) : null), h("span", { class: "muted small" }, ts.filter(t => taskProg(t) >= 1).length + "/" + ts.length + " steps")));
+      for (const t of ts) ap(det, h("div", { class: "card flush" }, h("p", { class: "small muted pad" }, L.unit + " " + t.week), taskCard(c, t)));
+      ap(M, det); }
+    const rest = hw.filter(t => !projs.some(pr => pr.id === t.project));
+    for (const t of rest) ap(M, h("div", { class: "card flush" }, h("p", { class: "small muted pad" }, L.unit.toLowerCase() + " " + t.week), taskCard(c, t)));
+    return;
+  }
   for (const t of hw) ap(M, h("div", { class: "card flush" }, h("p", { class: "small muted pad" }, (t.project != null ? L.project + " " + t.project + " · " : "") + L.unit.toLowerCase() + " " + t.week), taskCard(c, t)));
 }
 
@@ -457,7 +502,7 @@ function viewDrill(c, id) {
 function examItems(ex) {
   return ex.items.map(ref => {
     if (ref.startsWith("drill:")) return { ref, kind: "drill", d: drillById(ref.slice(6)) };
-    const [lid, bid] = ref.split(":"); const l = S.lessons[lid]; const b = l && (l.blocks || []).find(x => x.id === bid);
+    const [lid, bid] = ref.split(":"); const l = lid === "own" ? { id: "cp-" + ex.id, title: ex.title, blocks: ex.blocks || [] } : S.lessons[lid]; const b = l && (l.blocks || []).find(x => x.id === bid);
     return { ref, kind: "block", l, b };
   }).filter(it => it.kind === "drill" ? it.d : it.b);
 }
@@ -482,6 +527,7 @@ function viewExam(c, id) {
     const ready = ex.lessons.every(learned); const x = g.exams[ex.id];
     return h("article", { class: "lesson exam" }, h("p", { class: "crumbs" }, h("a", { href: back }, "← Back")), h("h1", null, ex.title),
       h("p", { class: "lede" }, items.length + " items · " + ex.minutes + " minutes · pass mark " + ex.pass + "%"),
+      ex.intro ? mdEl(ex.intro) : null,
       x ? h("p", null, "Best so far: ", pill(x.best + "%", x.best >= ex.pass ? "ok" : "bad"), " after " + x.attempts.length + " attempt" + (x.attempts.length > 1 ? "s" : "") + ".") : null,
       h("p", { class: "muted" }, "Timed and closed-book: no notes, no lessons, and Ask is off until you submit. Answers save as you go and are marked when you submit or when time runs out."),
       ready ? null : h("p", { class: "note" }, "Learn its lessons first: " + ex.lessons.filter(l => !learned(l)).map(l => (S.lessons[l] || {}).title || l).join(", ") + "."),

@@ -36,8 +36,10 @@ function practiceBlock(p, L, k, pack) {
     case "write": return { t: "write", q: p.prompt, min: p.min || 30, model: p.solution || why || "A good answer explains the idea in your own words with one concrete example.", rubric: why };
     case "run": return { t: "run", lang: "python", q: p.prompt, starter: p.starter || undefined, test: p.test || "", expect: p.expect, solution: p.solution || "", why };
     case "local": {
-      const code = (pack.localCode || {})[L.id + "#" + k] || (hasPython(pack) ? firstCode(p.prompt) : null);
-      return { t: "output", lang: "python", q: p.prompt, code: code || undefined, expect: p.expect, min: p.min || 1, why };
+      // pack.localRun lists the tracks whose "local" items can run on the page; left out, all can.
+      const canRun = hasPython(pack) && (!pack.localRun || pack.localRun.includes(L.track));
+      const code = (pack.localCode || {})[L.id + "#" + k] || (canRun ? firstCode(p.prompt) : null);
+      return { t: "output", lang: "python", q: p.prompt, code: code || undefined, expect: p.expect, min: p.expect.length ? p.min || 1 : Math.max(2, p.min || 1), why };
     }
   }
   throw new Error("unknown practice type " + p.type + " in " + L.title);
@@ -50,8 +52,11 @@ function convert(id, designFile) {
   const pack = JSON.parse(fs.readFileSync(path.join(dir, "course.json"), "utf8"));
   designFile = designFile || path.join(__dirname, "designs", id + ".json");
   const extra = fs.existsSync(designFile) ? JSON.parse(fs.readFileSync(designFile, "utf8")) : {};
-  const lessons = [];
-  for (const f of pack.lessons) lessons.push(...parseLessons(fs.readFileSync(path.join(dir, f), "utf8")));
+  const parsed = [];
+  for (const f of pack.lessons) parsed.push(...parseLessons(fs.readFileSync(path.join(dir, f), "utf8")));
+  // A checkpoint may keep its own questions in a "bank" lesson, which is not a lesson of the course.
+  const bankIds = new Set((pack.exams || []).map(x => x.bank).filter(Boolean));
+  const lessons = parsed.filter(l => !bankIds.has(l.id)), banks = Object.fromEntries(parsed.filter(l => bankIds.has(l.id)).map(l => [l.id, l]));
   const drills = pack.drills ? JSON.parse(fs.readFileSync(path.join(dir, pack.drills), "utf8")) : [];
   const notebooks = pack.notebooks && hasPython(pack) ? JSON.parse(fs.readFileSync(path.join(dir, pack.notebooks), "utf8")) : {};
 
@@ -80,9 +85,10 @@ function convert(id, designFile) {
   }
   const plan = weeks.length ? {
     phases: (pack.phases || []).map(ph => ({ id: ph.id, title: ph.title, goal: ph.goal, weeks: ph.weeks })),
+    projects: pack.projects && pack.projects.length ? pack.projects : undefined,
     weeks: weeks.map(w => {
       const o = { title: w.title, goal: w.goal, tasks: w.tasks.map(t => {
-        const task = { id: t.id, title: t.title, desc: t.desc, track: t.track, core: !!t.core, h: t.h, lessons: t.lessons, res: t.res, due: t.due,
+        const task = { id: t.id, title: t.title, desc: t.desc, track: t.track, core: !!t.core, h: t.h, lessons: t.lessons, res: t.res, due: t.due, page: t.page, group: t.group,
           project: t.project != null ? String(t.project) : t.hw != null ? String(t.hw) : undefined, notebook: notebooks[t.id] ? t.id : undefined,
           crit: t.crit.map(c => { const o = Object.assign({}, c, { t: CRIT[c.t] || c.t }); if (o.t === "link" && !o.hosts) o.hosts = pack.linkHosts || []; return o; }) };
         for (const key of Object.keys(task)) if (task[key] === undefined) delete task[key];
@@ -93,7 +99,12 @@ function convert(id, designFile) {
       return o;
     }),
   } : undefined;
-  const checkpoints = (pack.exams || []).map(x => ({ id: x.id, title: x.title, week: x.week, minutes: x.minutes, pass: x.pass, lessons: x.lessons,
+  const checkpoints = (pack.exams || []).map(x => x.bank ? (() => {
+    const B = banks[x.bank]; if (!B) throw new Error("checkpoint " + x.id + ": no bank lesson " + x.bank);
+    const blocks = B.practice.map((p, k) => Object.assign(practiceBlock(p, B, k, pack), { id: bid(B.id, k) }));
+    for (const b of blocks) for (const key of Object.keys(b)) if (b[key] === undefined) delete b[key];
+    return { id: x.id, title: x.title, week: x.week, minutes: x.minutes, pass: x.pass, lessons: x.lessons, intro: B.body.trim(), blocks, items: blocks.map(b => "own:" + b.id) };
+  })() : ({ id: x.id, title: x.title, week: x.week, minutes: x.minutes, pass: x.pass, lessons: x.lessons,
     items: x.items.map(ref => { if (ref.startsWith("D:")) return "drill:" + ref.slice(2); const b = practiceIds[ref]; if (!b) throw new Error("checkpoint " + x.id + ": no practice item " + ref); const [lid] = ref.split("#"); return lid + ":" + b; }) }));
   const outDrills = drills.map(d => { const o = Object.assign({}, d); if (d.tests) o.lang = "python"; if (!d.tests) { delete o.tests; delete o.expect; } if (o.starter == null) delete o.starter; if (o.format == null) delete o.format; return o; });
   const nbs = {};
@@ -108,11 +119,12 @@ function convert(id, designFile) {
   };
   if (hasPython(pack)) course.runtimes = { python: Object.assign({ engine: "pyodide" }, anyApp ? { apps: true } : {}, pack.python && pack.python.packages ? { packages: pack.python.packages } : {}) };
   if (pack.data && pack.data.length) course.files = pack.data.map(n => ({ name: n, url: "data/" + id + "/" + n }));
-  if (weeks.length) course.schedule = { unitDays: 7 };
+  if (weeks.length) course.schedule = Object.assign({ unitDays: 7 }, pack.schedule && pack.schedule.fixed ? { start: pack.schedule.start } : {});
   const file = { coursekit: CK.FORMAT, course, lessons: outLessons };
   if (plan) file.plan = plan;
   if (outDrills.length) file.drills = outDrills;
   if (checkpoints.length) file.checkpoints = checkpoints;
+  if (pack.pages && pack.pages.length) file.pages = pack.pages;
   if (Object.keys(nbs).length) file.notebooks = nbs;
   for (const x of extra.lessons || []) { const i = file.lessons.findIndex(l => l.id === x.after); x.blocks.forEach((b, k) => b.id = b.id || bid(x.id, k)); const l = Object.assign({}, x); delete l.after; file.lessons.splice(i >= 0 ? i + 1 : file.lessons.length, 0, l); }
   return { file, pack, lessons, drills, notebooks };
