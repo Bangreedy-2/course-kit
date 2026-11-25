@@ -128,6 +128,35 @@ function lessonDrillsNote(c, l) {
   return h("p", { class: "muted small" }, "Its drills (" + ds.map(d => d.title).join(", ") + ") unlock the day after you learn it.");
 }
 
+/* ---------- the course's overall progress meter (design.meter) ---------- */
+function courseProgress(c) {
+  if (planOf()) return overall();
+  const ls = orderedLessons(c); return ls.length ? ls.filter(l => learned(l.id)).length / ls.length : 0;
+}
+function meter(c) {
+  const kind = (c.design && c.design.meter) || "bar"; const p = Math.max(0, Math.min(1, courseProgress(c))); const pct = Math.round(p * 100);
+  const NS = "http://www.w3.org/2000/svg"; const svg = (w, hgt, inner) => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 " + w + " " + hgt); s.setAttribute("role", "img"); s.setAttribute("aria-label", "Overall progress " + pct + "%"); s.innerHTML = inner; return s; };
+  const mono = 'font-family="var(--font-m)" fill="var(--muted)"';
+  if (kind === "sigmoid") {
+    const W = 340, H = 64, pad = 8, X = x => pad + (x + 6) / 12 * (W - 2 * pad), Y = y => H - pad - y * (H - 2 * pad), sg = x => 1 / (1 + Math.exp(-x));
+    const pp = Math.min(.995, Math.max(.005, p)), xc = Math.max(-6, Math.min(6, Math.log(pp / (1 - pp))));
+    let d = "", dd = ""; for (let k = 0; k <= 60; k++) { const x = -6 + k * 0.2; const pt = X(x).toFixed(1) + " " + Y(sg(x)).toFixed(1); d += (k ? "L" : "M") + pt; if (x <= xc) dd += (k ? "L" : "M") + pt; }
+    return h("div", { class: "meter m-sigmoid" }, svg(W, H, '<line x1="' + pad + '" x2="' + (W - pad) + '" y1="' + Y(.5) + '" y2="' + Y(.5) + '" stroke="var(--line)" stroke-dasharray="3 4"/>' +
+      '<path d="' + d + '" fill="none" stroke="var(--line)" stroke-width="2.5"/><path d="' + dd + '" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="' + X(xc).toFixed(1) + '" cy="' + Y(sg(xc)).toFixed(1) + '" r="5.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>' +
+      '<text x="' + (W - pad) + '" y="' + (H - 2) + '" text-anchor="end" font-size="10.5" ' + mono + '>σ(progress) = ' + pct + '%</text>'));
+  }
+  if (kind === "ring") {
+    const r = 26, C = 2 * Math.PI * r;
+    return h("div", { class: "meter m-ring" }, svg(64, 64, '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="32" cy="32" r="' + r + '" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ink)">' + pct + '%</text>'));
+  }
+  if (kind === "steps") {
+    const p2 = planOf(); const n = p2 ? p2.weeks.length : c.units.length; const done = Math.round(p * n);
+    return h("div", { class: "meter m-steps", role: "img", "aria-label": "Overall progress " + pct + "%" }, Array.from({ length: n }, (_, i) => h("i", { class: i < done ? "on" : "" })), h("small", null, pct + "%"));
+  }
+  return h("div", { class: "meter m-bar" }, h("div", { class: "bar", role: "progressbar", "aria-valuenow": pct, "aria-valuemax": 100, "aria-label": "Overall progress" }, h("i", { style: "width:" + pct + "%" })), h("small", { class: "muted" }, pct + "% overall"));
+}
+
 /* ================= course home: a dashboard with tabs ================= */
 function courseTabs(c) {
   const L = LBL(c); const p = planOf(); const tabs = [];
@@ -172,8 +201,7 @@ function dashHero(c) {
   return h("section", { class: "hero dhero" },
     h("div", { class: "emblem big", "aria-hidden": "true" }, c.design.emblem),
     h("div", { class: "hero-text" },
-      c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null,
-      h("h1", null, c.title),
+      h("div", { class: "dh-top" }, h("div", null, c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null, h("h1", null, c.title)), meter(c)),
       h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
       timeline,
       h("div", { class: "row" },

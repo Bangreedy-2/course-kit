@@ -371,3 +371,13 @@ img.fig{display:block;max-width:100%;background:#fff;border-radius:var(--radius)
   .task{grid-template-columns:minmax(0,1fr)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* overall progress meter (design.meter) */
+.dh-top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.meter{flex:0 1 auto;display:flex;align-items:center;gap:8px}
+.meter svg{display:block}
+.m-sigmoid{width:340px;max-width:100%}.m-sigmoid svg{width:100%;height:auto}
+.m-ring svg{width:64px;height:64px}
+.m-bar{flex-direction:column;align-items:stretch;min-width:200px}.m-bar .bar{width:100%}
+.m-steps{gap:4px}.m-steps i{width:14px;height:22px;border-radius:3px;background:var(--line)}.m-steps i.on{background:var(--accent)}.m-steps small{margin-left:6px;color:var(--muted)}
+@media (max-width:720px){.m-sigmoid{width:100%}}
