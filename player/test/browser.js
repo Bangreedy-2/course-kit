@@ -197,6 +197,23 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Lessons,Plan,Drills,Homework,Record", "tabs follow the order Ask set");
   await page.click(".dtabs a:has-text('Plan')"); await page.waitForSelector("details.week");
   ok((await page.$$eval("details.week", e => e.length)) === 10, "the plan still has its 10 weeks");
+  // A clearer visualization on the dashboard: a home widget drawn from live progress
+  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/t/today"); await page.waitForSelector(".dtabs");
+  await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
+  await page.evaluate(() => window.__mockTools.push([
+    { name: "set_widget", input: { widget: "week-map", title: "Weeks at a glance", html: "<div id=o></div><button id=b>plan</button><script>document.getElementById('o').textContent='weeks:'+ck.course.weeks.length+' now:'+ck.course.currentWeek;document.getElementById('b').onclick=()=>ck.open('week:3')<\/script>", height: 200 } },
+    { name: "update_course", input: { design: { home: ["week-map"] } } }]));
+  await page.fill("#ask-input", "put a clearer week visualization on the dashboard"); await page.click("#ask .btn.primary");
+  await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn);
+  await page.click("#ask .icon[aria-label=Close]");
+  const hw = await page.waitForSelector(".home-widgets iframe", { timeout: 5000 }).catch(() => null);
+  ok(hw, "the widget shows on the dashboard, above the tabs");
+  if (hw) { const fr = await hw.contentFrame(); await fr.waitForSelector("#o:has-text('weeks:')");
+    ok((await fr.textContent("#o")) === "weeks:10 now:1", "the home widget reads live progress (" + await fr.textContent("#o") + ")");
+    await fr.click("#b"); await page.waitForSelector("details.week[open]");
+    ok(/t\/plan$/.test(await page.evaluate(() => location.hash)), "the home widget can open the plan"); }
+  const lastCall = await page.evaluate(() => window.__mockCalls[window.__mockCalls.length - 1].input[0].content);
+  ok(/CURRENT DESIGN/.test(lastCall) && /Hidden now: .*progress bars/.test(lastCall), "the tutor is told the saved design and what is hidden");
 
   const havePy = !!process.env.CK_PY && fs.existsSync(path.join(process.env.CK_PY, "py/pyodide.mjs"));
   // Lesson with a run block: check the model answer passes and a wrong one fails

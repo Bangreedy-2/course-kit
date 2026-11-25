@@ -177,7 +177,7 @@ function viewCourse(c, tab) {
   const tabs = courseTabs(c);
   if (tabs.length <= 1) return classicHome(c);
   const cur = tabs.find(t => t[0] === tab) ? tab : tabs[0][0];
-  const wrap = h("div", { class: "course dash" }, dashHero(c),
+  const wrap = h("div", { class: "course dash" }, dashHero(c), homeWidgets(c),
     h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
   if (S.courseMenu) ap(wrap, courseMenu(c));
   if (!S.courseLoaded) { ap(wrap, h("p", { class: "muted" }, "Loading lessons…")); return wrap; }
@@ -211,6 +211,26 @@ function dashHero(c) {
       h("div", { class: "row" },
         h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
         pendingLessons(c.id).length && S.sample && !(S.writer && S.writer.running) ? h("button", { class: "btn small", onclick: () => startWriter(c.id) }, "Write " + pendingLessons(c.id).length + " waiting lessons") : null)));
+}
+
+/* Live progress handed to home widgets as window.ck.course. */
+function homeData(c) {
+  const p = planOf(); const ls = orderedLessons(c); const cw = p ? curWeek(c) : 0;
+  const weeks = p ? p.weeks.map(w => { const core = w.tasks.filter(t => t.core); const hrs = core.reduce((s, t) => s + t.h, 0);
+    const pr = hrs ? core.reduce((s, t) => s + taskProg(Object.assign({ week: w.n }, t)) * t.h, 0) / hrs : 0; const [a, b] = weekRange(c, w.n);
+    return { n: w.n, title: w.title, goal: w.goal || "", progress: Math.round(pr * 1000) / 1000, current: w.n === cw, done: pr >= 1, start: a, end: b,
+      tasks: w.tasks.map(t => ({ id: t.id, title: t.title, core: !!t.core, progress: Math.round(taskProg(Object.assign({ week: w.n }, t)) * 1000) / 1000 })) }; }) : [];
+  const g = G();
+  return { title: c.title, today: TODAY(), overall: p ? Math.round(overall() * 1000) / 1000 : (ls.length ? ls.filter(l => learned(l.id)).length / ls.length : 0),
+    learned: ls.filter(l => learned(l.id)).length, lessons: ls.length, streak: streak(), due: dueCards(c).length + dueDrills().length, currentWeek: cw, weeks,
+    units: c.units.map(u => ({ id: u.id, title: u.title, lessons: u.lessons.map(id => S.lessons[id]).filter(Boolean).map(l => ({ id: l.id, title: l.title, learned: learned(l.id) })) })),
+    checkpoints: cpsOf().map(x => ({ id: x.id, title: x.title, pass: x.pass, best: (g.exams[x.id] || {}).best ?? null, ready: x.lessons.every(learned) })),
+    drills: { total: drillsOf().length, due: dueDrills().length } };
+}
+function homeWidgets(c) {
+  const ids = (c.design.home || []).filter(id => c.widgets && c.widgets[id]);
+  if (!ids.length) return null;
+  return h("div", { class: "home-widgets" }, ids.map(id => renderWidget(c, null, { widget: id, id: "home-" + id })));
 }
 
 /* ---------- Today ---------- */
