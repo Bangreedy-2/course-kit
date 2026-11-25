@@ -25,7 +25,8 @@ const skills = path.join(__dirname, "..", "plugin", "skills");
     "  function get(i) { return fetch(\"player-code-\" + (i + 1) + \".txt\").then(function (r) { if (!r.ok) throw new Error(\"part \" + (i + 1) + \" missing\"); return r.text(); }).then(function (t) { got[i] = t; }); }\n" +
     "  var all = []; for (var i = 0; i < n; i++) all.push(get(i));\n  Promise.all(all).then(function () { var s = document.createElement(\"script\"); s.textContent = got.join(\"\"); document.body.appendChild(s); }, fail);\n})();";
   const page = src("shell.html").replace("/*@CSS@*/", () => src("player.css")).replace("/*@JS@*/", () => loader);
-  fs.writeFileSync(path.join(dir, "coursekit-player.html"), page);
+  const old = path.join(dir, "coursekit-player.html"); if (fs.existsSync(old)) fs.unlinkSync(old);
+  fs.writeFileSync(path.join(dir, "coursekit-player-page.txt"), page);
   console.log("wrote plugin player page", (page.length / 1024).toFixed(1) + " KB and", parts.length, "code parts");
 }
 const ref = "# Coursekit reference\n\nGenerated from `player/src/core.js` by `node player/build.js`. Do not edit by hand.\n\n## Rules as the player states them\n\n" +

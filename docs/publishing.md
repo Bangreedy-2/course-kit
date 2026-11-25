@@ -8,7 +8,7 @@ How a new person gets Coursekit, and what the maintainer has to keep in place.
 |---|---|---|
 | Plugin | `plugin/` (marketplace file in `.claude-plugin/`) | Skills `coursekit-setup`, `coursekit-player`, `coursekit-design`. Holds only text, JSON and images, which is what the directory accepts |
 | Runner plugin | `runner/` (plugin `coursekit-runner` in the same marketplace) | The local runner as an MCP server. Not for the directory: it only accepts local servers and scripts from Verified organizations |
-| Player page | `plugin/skills/coursekit-player/coursekit-player.html` plus `player-code-N.txt` (each under the directory's 256 KiB inspection limit), built by `node player/build.js` | Published into each person's own account by the setup skill |
+| Player page | `plugin/skills/coursekit-player/coursekit-player-page.txt` (the HTML page stored as text, because the directory accepts only text files) plus `player-code-N.txt` (each under the directory's 256 KiB inspection limit), built by `node player/build.js` | Published into each person's own account by the setup skill |
 | Python pack | pack artifact listed in `runtimes/registry.json` | Copied into a player so Python runs in the page |
 | Landing page | `site/index.html` | The front door: what Coursekit is, the plugin step, the one button |
 | Runner extension | `python3 tools/build-runner-extension.py` → `coursekit-runner.mcpb` | Double-click install of the runner for the Claude desktop app |

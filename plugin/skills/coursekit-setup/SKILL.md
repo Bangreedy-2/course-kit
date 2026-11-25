@@ -13,7 +13,7 @@ Coursekit needs a paid Claude plan. If publishing an artifact is refused for pla
 
 List the person's artifacts and look for one titled "Coursekit". If it exists, read it and treat this as an update: publish the new page to that same URL (step 2 and 3 still apply).
 
-Otherwise publish `../coursekit-player/coursekit-player.html` **unchanged** as a new artifact, title "Coursekit", icon "book", together with every `player-code-N.txt` file from that same folder, each published under its own name beside the page (the `files` map). The page loads its code from those files. Use exactly these capabilities:
+Otherwise take `../coursekit-player/coursekit-player-page.txt` (a text file holding the complete HTML page), copy it byte for byte to a working file named `coursekit-player.html`, and publish that copy **unchanged** as a new artifact, title "Coursekit", icon "book", together with every `player-code-N.txt` file from that same folder, each published under its own name beside the page (the `files` map). The page loads its code from those files. Use exactly these capabilities:
 
 ```json
 {
