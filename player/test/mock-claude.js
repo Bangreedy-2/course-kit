@@ -53,6 +53,16 @@
   };
   sample.limits = async () => ({ maxPromptBytes: 262144, tools: { maxCount: 16 } });
   const downloads = { save: async r => { window.__mockDownload = r; return { status: "saved" }; } };
-  const caps = { db, user, sample, downloads };
+  // A stand-in for the Coursekit runner behind the Claude desktop app: "js" really runs, in this page.
+  window.__mockRunner = { on: false, calls: [] };
+  const mcp = { callTool: async (server, tool, input) => {
+    if (server !== "host:coursekit" || !window.__mockRunner.on) throw { code: "server_not_connected", message: "no host" };
+    window.__mockRunner.calls.push({ tool, lang: input && input.lang });
+    if (tool === "runner_info") return { payload: { runner: "test", platform: "linux", languages: { js: { label: "JavaScript (Node)", version: "v22" } } } };
+    let out = ""; const log = (...a) => { out += a.join(" ") + "\n"; };
+    try { new Function("console", input.code)({ log }); return { payload: { ok: true, out, err: "", code: 0 } }; }
+    catch (e) { return { payload: { ok: false, out, err: String(e), code: 1 } }; }
+  } };
+  const caps = { db, user, sample, downloads, mcp };
   window.claude = { use: async n => caps[n] || null };
 })();

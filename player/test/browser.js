@@ -206,6 +206,38 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok(/Today/.test(jtabs) && /Plan/.test(jtabs) && /Drills/.test(jtabs) && /Apply/.test(jtabs), "the created programme has the full dashboard (" + jtabs + ")");
   if (shots) await page.screenshot({ path: shots + "/5b-created-programme.png", fullPage: true });
 
+  // A course that runs code on the learner's own computer: nothing runs until the runner is connected and the course is allowed
+  {
+    const teach = "A function takes inputs and returns a result, and naming the steps is most of the work. ".repeat(20);
+    const file = { coursekit: 1, course: { id: "local-node", title: "Node on my machine", description: "Runs locally.", runtimes: { js: { engine: "local" } }, units: [{ title: "One", lessons: ["sum"] }] },
+      lessons: [{ id: "sum", title: "Sum", summary: "Add", blocks: [{ t: "md", md: "## Idea\n\n" + teach }, { t: "run", q: "Write `add(a, b)`.", lang: "js", starter: "", test: "console.log(add(2, 3));", expect: ["5"], solution: "function add(a, b) { return a + b; }" }, { t: "choice", q: "2 + 3?", options: ["5", "6"], answer: 0, why: "Sum." }] }] };
+    await page.evaluate(f => { window.__mockDocs.set("data/users/u1/cmd~local", { kind: "cmd", status: "new", op: "import", file: f }); }, file);
+    await page.evaluate(() => location.hash = "#/");
+    await page.waitForFunction(() => window.__ck.courses["local-node"], null, { timeout: 10000 });
+    await page.evaluate(() => location.hash = "#/c/local-node/l/sum");
+    await page.waitForSelector(".blk-run textarea");
+    ok(await page.$$eval("#banners", e => e.some(x => /runs JavaScript \(Node\) on your own computer/.test(x.textContent))), "a course with a local runtime explains what it needs");
+    await page.fill(".blk-run textarea", "console.log('start');\nfunction add(a, b) { return a + b; }");
+    await page.click(".blk-run button:has-text('Run and check')");
+    await page.waitForSelector(".blk-run .fb .bad, .blk-run .err, .blk-run .out", { timeout: 10000 }).catch(() => {});
+    ok(await page.evaluate(() => window.__mockRunner.calls.length === 0), "no code reaches the computer before the learner connects and allows the course");
+    await page.evaluate(() => { window.__mockRunner.on = true; });
+    await page.click("#banners button:has-text('Connect')");
+    await page.waitForFunction(() => window.CKRun.local.state === "ready", null, { timeout: 10000 });
+    await page.waitForTimeout(300);
+    await page.click(".blk-run button:has-text('Run and check')");
+    ok(await page.waitForSelector(".blk-run .fb .ok", { timeout: 10000 }).then(() => true, () => false), "after Connect, the answer runs on the runner and passes its hidden test");
+    await page.fill(".blk-run textarea", "function add(a, b) { return a - b; }");
+    await page.click(".blk-run button:has-text('Run and check')");
+    ok(await page.waitForSelector(".blk-run .fb .bad", { timeout: 10000 }).then(() => true, () => false), "a wrong answer fails on the runner");
+    await page.evaluate(() => window.__mockTools.push([{ name: "run_code", input: { lang: "js", code: "console.log(1)" } }]));
+    const before = await page.evaluate(() => window.__mockRunner.calls.length);
+    await page.click(".ask-btn"); await page.waitForSelector("#ask-input"); await page.fill("#ask-input", "run this for me"); await page.click("#ask .btn.primary");
+    await page.waitForFunction(() => !window.__ck.ask.busy);
+    ok(await page.evaluate(n => window.__mockRunner.calls.length === n && /only when they press Run/.test(String(window.__mockToolResults[0])), before), "the tutor cannot run code on the learner's computer");
+    await page.click("#ask .icon[aria-label=Close]");
+  }
+
   // Sigmoid: every feature of the old app, with real Python when py/ is available
   const sig = JSON.parse(fs.readFileSync(path.join(root, "courses/sigmoid-ml.coursekit.json"), "utf8"));
   const yday = Date.now() - 86400000 * 1.2;
@@ -348,7 +380,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   if (shots) await page.screenshot({ path: shots + "/7-phone.png" });
   await page.evaluate(() => location.hash = "#/");
   await page.waitForSelector(".ccard");
-  ok((await page.$$eval(".ccard", e => e.length)) === 4, "library lists 4 courses");
+  ok((await page.$$eval(".ccard", e => e.length)) === 5, "library lists 5 courses");
   if (shots) { await page.setViewportSize({ width: 1280, height: 900 }); await page.waitForTimeout(200); await page.screenshot({ path: shots + "/8-library.png" }); }
 
   // Project command channel

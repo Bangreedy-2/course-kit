@@ -77,9 +77,12 @@ function modsFromDocs(docs) {
 /* The runtimes of the open course. */
 function RT() { const c = S.courses[S.cid]; if (!c) return CKRun.forCourse(null); if (!S.rtFor || S.rtFor.c !== c.runtimes || S.rtFor.f !== c.files) S.rtFor = { c: c.runtimes, f: c.files, rt: CKRun.forCourse(c) }; return S.rtFor.rt; }
 function put(key, body) { return S.store.put(key, body); }
+function localAllowed(cid) { if (!cid) return false; if (S.localOk && S.localOk[cid]) return true; try { return localStorage.getItem("ck-local-ok:" + cid) === "1"; } catch (e) { return false; } }
 
 async function boot() {
   CKRun.onPack(() => { try { renderBanners(); } catch (e) {} });
+  CKRun.local.on(() => { try { renderBanners(); } catch (e) {} });
+  CKRun.local.setAllowed(() => localAllowed(S.cid));
   render();
   let cap = {};
   if (window.claude && claude.use) {
@@ -269,6 +272,23 @@ function renderBanners() {
     else if (b.op === "ask") items.push(banner("Your project asks: " + (b.text || ""), [["Do it", () => { doneCmd(id); if (b.course && S.route.cid !== b.course) go("#/c/" + b.course); setTimeout(() => { openAsk(); sendAsk(b.text, { from: "project" }); }, 60); }], ["Dismiss", () => doneCmd(id, "dismissed")]]));
     else if (b.op === "write") items.push(banner(b.text || "Your project queued lessons to be written.", [["Write them", () => { doneCmd(id); startWriter(b.course); }], ["Later", () => doneCmd(id, "dismissed")]]));
   }
+  { const c = S.courses[S.route && S.route.cid]; const langs = c ? CKRun.local.uses(c) : [];
+    if (c && langs.length && !(S.localDismissed || {})[c.id]) {
+      const names = langs.map(l => CK.LOCAL_LANGS[l].label).join(", "); const L = CKRun.local;
+      const missing = L.state === "ready" ? langs.filter(l => !L.langs[l]) : [];
+      if (L.state === "ready" && localAllowed(c.id) && missing.length) items.push(banner(missing.map(l => CK.LOCAL_LANGS[l].label).join(", ") + " is not installed on this computer yet. Install it, then reload this page.", [["OK", () => { S.localDismissed = Object.assign({}, S.localDismissed, { [c.id]: true }); render(); }]]));
+      else if (!(L.state === "ready" && localAllowed(c.id))) {
+        const offer = S.localOffer || "runner"; if (!S.localOfferAsked) { S.localOfferAsked = true; L.offer().then(o => { S.localOffer = o; renderBanners(); }); }
+        const text = "This course runs " + names + " on your own computer. " + (L.state === "ready" ? "Allow it only for a course you trust: its code runs with your own access to this computer, and only when you press Run."
+          : offer === "install" ? "Install this player as an app and it can run your code here, with nothing else to set up."
+          : offer === "allow" ? "Allow this app to run programs and your code runs here, only when you press Run."
+          : "Open this player in the Claude desktop app with the Coursekit runner on (it comes with the Coursekit plugin), then press Connect. Without it, lessons still work and you run code yourself and paste the output." + (L.lastError && S.localTried ? " (Last try: " + L.lastError + ")" : ""));
+        const act = L.state === "ready" ? ["Allow for this course", () => { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); render(); }]
+          : offer === "install" ? ["Install as app", async () => { const r = await L.install().catch(() => "failed"); if (r !== "installed") toast("The app was not installed."); }]
+          : [offer === "allow" ? "Allow running programs" : "Connect", async () => { S.localTried = true; const ok = await L.connect(true); if (ok) { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); toast("Connected. " + Object.keys(L.langs).length + " languages found on this computer."); } else toast(L.note || "This page could not reach your computer."); render(); }];
+        items.push(banner(text, [act, ["Not now", () => { S.localDismissed = Object.assign({}, S.localDismissed, { [c.id]: true }); render(); }]]));
+      }
+    } }
   { const c = S.courses[S.route && S.route.cid]; if (c) for (const name of CKRun.packsFor(c)) if (CKRun.packState(name) === "missing" && !(S.packDismissed || {})[name])
       items.push(banner("This course runs " + CKRun.PACKS[name].title.toLowerCase().replace("python", "Python").replace("streamlit", "Streamlit") + " in the page, and that is not installed in this player yet. In Claude, with the Coursekit plugin, say: “" + CKRun.PACKS[name].ask + "”, then reload. Until then, lessons and written practice work, and code can be run on your own computer.", [["OK", () => { S.packDismissed = Object.assign({}, S.packDismissed, { [name]: true }); render(); }]])); }
   const w = S.writer;
@@ -392,7 +412,7 @@ const OUTLINE_SHAPE = `{"title": string, "subtitle": string, "description": "1-2
  "tutor": {"name": "a short name that fits the course", "persona": "2-3 sentences: how this tutor teaches"},
  "design": <design object>,
  "paced": true when the units are weeks of a study plan (any course of two weeks or more), false for a short topic,
- "runtime": "python" | "js" | "" (a language the learner writes and runs in the page; "" when the subject has no code),
+ "runtime": "python" | "js" | "" (a language the learner writes and runs in the page; "" when the subject has no code)@LOCAL@,
  "tracks": {"short-id": "Strand of the subject"} (2-8 strands, e.g. theory, practice, tools),
  "phases": [{"title": string, "goal": "what is true at the end of this phase", "weeks": [1,2,3]}] (1-4, only when paced),
  "units": [{"title": string, "goal": "what the learner can do after it", "lessons": [{"title": string, "summary": "what it teaches and what its practice must prove, 1-2 sentences", "minutes": 10-40, "track": "track id", "code": true when the learner must write runnable code in it}]}],
@@ -409,6 +429,7 @@ async function createCourse({ topic, about, intake, files, log }) {
   for (const f of files || []) { log("Reading " + f.name + "…"); const t = await fileText(f); source += "\n\n===== " + f.name + " =====\n" + t; names.push(f.name); }
   source = source.trim();
   if (source.length > 600000) { log("Your files are long; Claude will use the first 600,000 characters."); source = source.slice(0, 600000); }
+  const localLangs = CKRun.local.state === "ready" ? Object.keys(CKRun.local.langs) : [];
   log("Planning the whole programme: weeks, lessons, projects, checkpoints and design…");
   const weeksLeft = intake.deadline ? Math.max(1, Math.floor((new Date(intake.deadline + "T00:00:00") - new Date(todayIso() + "T00:00:00")) / (7 * 864e5))) : 0;
   const hours = intake.hours || 0;
@@ -434,7 +455,7 @@ async function createCourse({ topic, about, intake, files, log }) {
 - Facts you are not certain of (dates, fees, rules, eligibility) must not be stated as certain: put them on a page with a "note" telling the learner to confirm them at the official source, and say which source.
 - Never plan filler: no "Introduction", "Overview", "Conclusion" or "Summary" lessons.`,
     CK.DESIGN_DOC,
-    "Reply with only JSON of this shape:\n" + OUTLINE_SHAPE,
+    "Reply with only JSON of this shape:\n" + OUTLINE_SHAPE.replace("@LOCAL@", localLangs.length ? ". This learner's computer is connected and can also run: " + localLangs.join(", ") + " (use that name as the runtime when the course teaches one of them)" : ""),
   ].filter(Boolean).join("\n\n");
   let plan = null, lastErr = null;
   for (let attempt = 0; attempt < 2 && !plan; attempt++) {
@@ -443,9 +464,9 @@ async function createCourse({ topic, about, intake, files, log }) {
   }
   if (!plan) throw lastErr || new Error("Claude's plan could not be read. Try again.");
   if (!Array.isArray(plan.units) || !plan.units.length) throw new Error("Claude's plan had no units. Try again.");
-  const bp = blueprintOf(plan, intake);
+  const bp = blueprintOf(plan, intake, localLangs);
   for (const u of plan.units) for (const l of u.lessons || []) l.pending = true;
-  if (bp.runtime) plan.runtimes = bp.runtime === "python" ? { python: { engine: "pyodide" } } : { js: { engine: "js" } };
+  if (bp.runtime) plan.runtimes = bp.runtime === "python" ? { python: { engine: "pyodide" } } : bp.runtime === "js" ? { js: { engine: "js" } } : { [bp.runtime]: { engine: "local" } };
   if (bp.paced) plan.schedule = { unitDays: 7, start: todayIso() };
   let imp;
   try { imp = CK.importCourse({ course: plan, lessons: [] }, { lenient: true }); }
@@ -466,12 +487,12 @@ async function createCourse({ topic, about, intake, files, log }) {
   return cid;
 }
 /* The parts of Claude's plan that are not lessons, cleaned to plain data. */
-function blueprintOf(plan, intake) {
+function blueprintOf(plan, intake, localLangs) {
   const str = (v, n) => String(v == null ? "" : v).slice(0, n).trim();
   const nUnits = plan.units.length; const wk = v => CK.clamp(Math.round(Number(v) || 1), 1, nUnits);
   const proof = x => ({ proof: ["link", "number", "text", "check"].includes(x && x.proof) ? x.proof : "text", proofLabel: str(x && x.proofLabel, 200), min: Number(x && x.min), max: Number(x && x.max), unit: str(x && x.unit, 30) });
   return {
-    v: 1, paced: plan.paced !== false && nUnits >= 2, runtime: ["python", "js"].includes(plan.runtime) ? plan.runtime : "",
+    v: 1, paced: plan.paced !== false && nUnits >= 2, runtime: ["python", "js"].includes(plan.runtime) ? plan.runtime : (localLangs || []).includes(CK.langOf(plan.runtime)) ? CK.langOf(plan.runtime) : "",
     intake: { hours: intake.hours || 0, deadline: intake.deadline || "", level: intake.level || "" },
     phases: (Array.isArray(plan.phases) ? plan.phases : []).slice(0, 6).map(p => ({ title: str(p && p.title, 120), goal: str(p && p.goal, 600), weeks: (Array.isArray(p && p.weeks) ? p.weeks : []).map(Number).filter(n => n >= 1 && n <= nUnits) })).filter(p => p.title && p.weeks.length),
     projects: (Array.isArray(plan.projects) ? plan.projects : []).slice(0, 8).map((p, i) => ({ id: String(i + 1), title: str(p && p.title, 140) || "Project " + (i + 1), what: str(p && p.what, 500),
@@ -556,7 +577,9 @@ function outlineText(c, markId) {
    the code of each predict and output block, and each drill's solution against its tests.
    Returns what failed, in words Claude can act on. Nothing is reported when the runtime cannot load. */
 async function verifyLesson(c, lesson, drills) {
-  const rt = CKRun.forCourse(c); const bad = []; let ran = 0, dead = false;
+  const rt0 = CKRun.forCourse(c); const bad = []; let ran = 0, dead = false;
+  // Code is never sent to the learner's own computer without their click, so local runtimes are not test-run here.
+  const rt = Object.assign({}, rt0, { has: lang => rt0.has(lang) && rt0.engine(lang).kind !== "local" });
   const short = t => String(t || "").trim().slice(0, 500);
   const run = async (lang, code, test, expect) => { const r = await rt.check(lang, code, test, expect); if (r.boot || /did not load|cannot run|not installed/i.test(r.err || "")) dead = true; ran++; return r; };
   const say = (what, r, expect) => r.reachedTests === false ? what + ": the model solution itself fails with: " + short(r.err) : r.err ? what + ": the test code fails with: " + short(r.err) : what + ": the solution with the test prints\n" + short(r.testOut) + "\nbut \"expect\" says\n" + expect.join("\n");
@@ -602,7 +625,7 @@ async function writeLesson(cid, l, ctl) {
   const prev = idx > 0 ? S.lessons[order[idx - 1]] : null;
   const rewriting = !!l.rewrite && !l.pending;
   const bp = S.mods.blueprint || null; const info = (bp && bp.lessons && bp.lessons[l.id]) || {};
-  const langs = Object.keys(c.runtimes || {}); const runnable = langs.length > 0; const extras = !!bp && !rewriting;
+  const langs = Object.keys(c.runtimes || {}); const runnable = langs.length > 0; const onlyLocal = runnable && langs.every(x => c.runtimes[x].engine === "local"); const extras = !!bp && !rewriting;
   const base = [
     "You are writing one lesson of the Coursekit course “" + c.title + "”. " + (c.description || ""),
     CK.DESIGN_RULES,
@@ -619,7 +642,8 @@ async function writeLesson(cid, l, ctl) {
 - Teach first, in depth: 600-1200 words of explanation across md and callout blocks. Start from why the idea matters for this learner's goal, explain it step by step, show at least one fully worked example, and name the mistake people actually make. Use a table, a formula or a small widget where it explains better than prose. Never pad.
 - Then 4-7 practice blocks of at least 2 types, ordered from easy to hard. Each tests understanding of this lesson, not recall of a sentence. Every block has a "why" (or a solution) that teaches. Wrong options must be the plausible mistakes.
 - End with one cards block of 3-6 recall cards: each card one fact or one step worth remembering in a month.` +
-    (runnable ? `
+    (runnable && onlyLocal ? `
+- The learner runs ${langs.map(x => CK.LOCAL_LANGS[x] ? CK.LOCAL_LANGS[x].label : x).join(" and ")} on their own computer from this page, as one source file per run. ${info.code ? "Include 1-3 \"run\" blocks: the learner writes a function or a few lines, and \"test\" is source code appended to theirs that prints results which \"expect\" lists exactly (for C, C++, Rust, Go or Java the learner writes the functions and the test holds main)." : "Use \"run\" or \"predict\" blocks where code helps."} Your code is NOT run before the lesson is saved, so trace every output by hand, keep tests small and deterministic, and use only the standard library.` : runnable ? `
 - The page runs ${langs.join(" and ")}. ${info.code ? "Include 1-3 \"run\" blocks: the learner writes a function or a few lines, and \"test\" calls it and prints results that \"expect\" lists exactly." : "Use \"run\" or \"predict\" blocks where code helps."} Your code is executed before the lesson is saved: every "solution" is run with its "test" and must print exactly "expect"; the code inside each predict block is run and must print exactly its "expect". So work every output out carefully, keep tests deterministic (fixed inputs, no randomness without a seed, no time, no network, no input()), print rounded numbers, and never let the starter code pass the test.` : info.code ? `
 - The page cannot run this lesson's language. Show real code in "code" blocks, practise with "predict" (what does this print) and "task" (do it on your machine, with the solution).` : ""),
     extras ? `Also write, for this lesson:
@@ -1656,6 +1680,7 @@ function courseTools(c, tx, changes) {
     }),
     T("run_code", "Runs code in one of the course's runtimes in a fresh namespace and returns its output (and errors). Use it to check an example, a solution or a test before you give or save it.", { lang: { type: "string" }, code: { type: "string" } }, ["lang", "code"], async i => {
       if (!RT().has(i.lang)) throw new Error("This course has no runtime for " + i.lang + ".");
+      if (RT().engine(i.lang).kind === "local") throw new Error(i.lang + " runs on the learner's own computer, and only when they press Run. You cannot run it. Reason about the code instead, or ask the learner to run it and tell you the output.");
       const r = await RT().run(i.lang, String(i.code), { limitMs: 60000 });
       return { ok: r.ok, output: String(r.out || "").slice(-8000), value: r.value, error: r.error, figures: (r.imgs || []).length };
     }),

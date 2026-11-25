@@ -4,6 +4,21 @@ Coursekit is an application that helps you create an interactive course with the
 
 No API keys are needed. The tutor is the AI subscription you already have.
 
+## Quick start
+
+1. In Claude, open **Customize → Plugins → Add marketplace** and paste `Bangreedy-2/course-kit`. Add the Coursekit plugin.
+2. Tell Claude: **Set up Coursekit for me.** It publishes your private player, adds Python, checks it and gives you the link.
+3. Open the player, press **New course** and say what you want to learn, with your weekly time and any deadline.
+
+You need a paid Claude plan. Nothing else to install: Python and JavaScript run inside the page.
+
+To learn a language that cannot run in a page (Elixir, C, C++, Rust, Go, Java and more), or to use your own Python libraries and GPU, courses run code on your own computer:
+
+- **Mac or Windows:** open the player in the Claude desktop app and press **Install as app** when a course asks.
+- **Linux, Cowork or Claude Code:** the plugin's runner (`plugin/runner/coursekit-runner.js`, Node 18+) does it; the course shows a **Connect** button. For plain chat in the desktop app, add the runner as a local MCP server named `coursekit`, or install `coursekit-runner.mcpb` (build it with `python3 tools/build-runner-extension.py`).
+
+Code is sent to your computer only when you press Run, and each course must be allowed once. See `docs/publishing.md` for how the landing page, the plugin directory listing and the runtime packs fit together.
+
 ## The player
 
 The newest part of Coursekit is the **player**: one private page in your Claude account that holds all your courses. Describe a course and Claude plans it, designs it and writes it. Ask the course's tutor anything from any page, and it can reshape the course while you learn, with every change checked against strict design rules and undoable. Progress follows you to every device. Share a course as a file. See [docs/player.md](docs/player.md).

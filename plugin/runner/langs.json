@@ -1,0 +1,98 @@
+{
+ "python": {
+  "label": "Python",
+  "ext": "py",
+  "cmd": "python3 {file}",
+  "win": "python {file}",
+  "probe": "python3 --version",
+  "winProbe": "python --version"
+ },
+ "js": {
+  "label": "JavaScript (Node)",
+  "ext": "js",
+  "cmd": "node {file}",
+  "probe": "node --version"
+ },
+ "elixir": {
+  "label": "Elixir",
+  "ext": "exs",
+  "cmd": "elixir {file}",
+  "probe": "elixir --version"
+ },
+ "c": {
+  "label": "C",
+  "ext": "c",
+  "cmd": "cc {file} -o {exe} -lm && {exe}",
+  "win": "gcc {file} -o {exe} && {exe}",
+  "probe": "cc --version",
+  "winProbe": "gcc --version"
+ },
+ "cpp": {
+  "label": "C++",
+  "ext": "cpp",
+  "cmd": "c++ -std=c++17 {file} -o {exe} && {exe}",
+  "win": "g++ -std=c++17 {file} -o {exe} && {exe}",
+  "probe": "c++ --version",
+  "winProbe": "g++ --version"
+ },
+ "rust": {
+  "label": "Rust",
+  "ext": "rs",
+  "cmd": "rustc -O {file} -o {exe} && {exe}",
+  "probe": "rustc --version"
+ },
+ "go": {
+  "label": "Go",
+  "ext": "go",
+  "cmd": "go run {file}",
+  "probe": "go version"
+ },
+ "java": {
+  "label": "Java",
+  "ext": "java",
+  "cmd": "java {file}",
+  "probe": "java -version"
+ },
+ "ruby": {
+  "label": "Ruby",
+  "ext": "rb",
+  "cmd": "ruby {file}",
+  "probe": "ruby --version"
+ },
+ "bash": {
+  "label": "Bash",
+  "ext": "sh",
+  "cmd": "bash {file}",
+  "probe": "bash --version"
+ },
+ "r": {
+  "label": "R",
+  "ext": "R",
+  "cmd": "Rscript {file}",
+  "probe": "Rscript --version"
+ },
+ "julia": {
+  "label": "Julia",
+  "ext": "jl",
+  "cmd": "julia {file}",
+  "probe": "julia --version"
+ },
+ "haskell": {
+  "label": "Haskell",
+  "ext": "hs",
+  "cmd": "runghc {file}",
+  "probe": "runghc --version"
+ },
+ "lua": {
+  "label": "Lua",
+  "ext": "lua",
+  "cmd": "lua {file}",
+  "probe": "lua -v"
+ },
+ "php": {
+  "label": "PHP",
+  "ext": "php",
+  "cmd": "php {file}",
+  "probe": "php --version"
+ }
+}

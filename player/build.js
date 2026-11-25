@@ -20,3 +20,9 @@ const ref = "# Coursekit reference\n\nGenerated from `player/src/core.js` by `no
   Object.entries(CK.LIMITS).map(([k, v]) => "- " + k + ": " + v).join("\n") + "\n";
 fs.writeFileSync(path.join(skills, "coursekit-design", "reference.md"), ref);
 console.log("wrote plugin skill files");
+
+// The runner (plugin MCP server and desktop extension) uses the same language table as the page.
+const runner = path.join(__dirname, "..", "plugin", "runner");
+fs.mkdirSync(runner, { recursive: true });
+fs.writeFileSync(path.join(runner, "langs.json"), JSON.stringify(CK.LOCAL_LANGS, null, 1) + "\n");
+console.log("wrote plugin/runner/langs.json");
