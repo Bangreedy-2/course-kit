@@ -4,7 +4,15 @@ Coursekit is an application that helps you create an interactive course with the
 
 No API keys are needed. The tutor is the AI subscription you already have.
 
-## Start
+## The player
+
+The newest part of Coursekit is the **player**: one private page in your Claude account that holds all your courses. Describe a course and Claude plans it, designs it and writes it. Ask the course's tutor anything from any page, and it can reshape the course while you learn, with every change checked against strict design rules and undoable. Progress follows you to every device. Share a course as a file. See [docs/player.md](docs/player.md).
+
+Ready-made course files are in `courses/`. The plugin in `plugin/` installs the player and carries the course-design rules as skills.
+
+## The local app
+
+### Start
 
 You need Python 3.9 or newer, and nothing else. From the repository root:
 
@@ -67,6 +75,9 @@ Saved progress is keyed by ids, so once people use a course, only add to it: nev
 ## Repository layout
 
 ```
+player/             the Coursekit player (single page built from player/src)
+courses/            course files for the player
+plugin/             plugin with the player and the course-design skills
 app/                the learning app (static HTML, CSS and JavaScript, no build step)
 packs/              course packs, one folder per course, and index.json
 helper/coursekit.py local helper: serves the app, stores progress, runs code

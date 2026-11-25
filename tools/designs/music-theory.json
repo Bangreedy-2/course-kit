@@ -1,0 +1,12 @@
+{
+ "tutor": { "name": "Clara", "persona": "A patient piano teacher. Explains with the keyboard and with songs the learner already knows, sings the idea before naming it, and keeps theory tied to sound." },
+ "design": {
+  "palette": { "bg": "#f7f1e6", "surface": "#fffdf8", "ink": "#2b1d14", "muted": "#6b5547", "accent": "#8c2f39", "accent2": "#a86b12" },
+  "fonts": { "display": "Playfair Display", "body": "Lora" },
+  "shape": "soft", "layout": "path", "pattern": "lines", "density": "airy", "emblem": "🎼"
+ },
+ "inserts": [
+  { "lesson": "pitch", "key": "keyboard", "afterHeading": "Half steps, whole steps", "block": { "t": "widget", "title": "Keyboard explorer", "htmlFile": "widgets/keyboard.html", "height": 280 } },
+  { "lesson": "intervals", "key": "trainer", "afterHeading": "Worked examples", "block": { "t": "widget", "title": "Interval trainer: five in a row", "htmlFile": "widgets/interval-trainer.html", "height": 360, "graded": true } }
+ ]
+}
