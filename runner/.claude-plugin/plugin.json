@@ -2,8 +2,15 @@
   "name": "coursekit-runner",
   "version": "1.0.0",
   "description": "Optional companion to Coursekit: lets your courses run code on this computer (Elixir, C, C++, Rust, Go, Java, Python with your own libraries and GPU, and more). Runs only what you send from your Coursekit player when you press Run.",
-  "author": { "name": "Bangreedy-2" },
+  "author": {
+    "name": "Bangreedy-2"
+  },
   "homepage": "https://github.com/Bangreedy-2/course-kit",
   "repository": "https://github.com/Bangreedy-2/course-kit",
-  "keywords": ["learning", "courses", "code runner"]
+  "keywords": [
+    "learning",
+    "courses",
+    "code runner"
+  ],
+  "license": "MIT"
 }

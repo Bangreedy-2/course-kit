@@ -5,18 +5,49 @@
   "version": "1.0.0",
   "description": "Lets your Coursekit courses run code on this computer, in any language you have installed.",
   "long_description": "Coursekit is a course player that lives in your Claude account. This extension is its local runner: when you press Run in a lesson that teaches Elixir, C, Rust, Go or Python with your own libraries and GPU, the code runs here and the output goes back to the lesson. It runs only what you send from the player, in a temporary folder, with a time limit.",
-  "author": { "name": "Bangreedy-2", "url": "https://github.com/Bangreedy-2" },
+  "author": {
+    "name": "Bangreedy-2",
+    "url": "https://github.com/Bangreedy-2"
+  },
   "homepage": "https://github.com/Bangreedy-2/course-kit",
-  "repository": { "type": "git", "url": "https://github.com/Bangreedy-2/course-kit" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bangreedy-2/course-kit"
+  },
   "server": {
     "type": "node",
     "entry_point": "coursekit-runner.js",
-    "mcp_config": { "command": "node", "args": ["${__dirname}/coursekit-runner.js"] }
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/coursekit-runner.js"
+      ]
+    }
   },
   "tools": [
-    { "name": "runner_info", "description": "What this computer can run" },
-    { "name": "run_code", "description": "Run a program and return its output" }
+    {
+      "name": "runner_info",
+      "description": "What this computer can run"
+    },
+    {
+      "name": "run_code",
+      "description": "Run a program and return its output"
+    }
   ],
-  "keywords": ["learning", "courses", "code runner"],
-  "compatibility": { "platforms": ["darwin", "win32", "linux"], "runtimes": { "node": ">=18" } }
+  "keywords": [
+    "learning",
+    "courses",
+    "code runner"
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=18"
+    }
+  },
+  "license": "MIT"
 }
