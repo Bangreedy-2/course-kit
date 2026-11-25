@@ -13,7 +13,7 @@ Coursekit needs a paid Claude plan. If publishing an artifact is refused for pla
 
 List the person's artifacts and look for one titled "Coursekit". If it exists, read it and treat this as an update: publish the new page to that same URL (step 2 and 3 still apply).
 
-Otherwise publish `../coursekit-player/coursekit-player.html` **unchanged** as a new artifact, title "Coursekit", icon "book", with exactly these capabilities:
+Otherwise publish `../coursekit-player/coursekit-player.html` **unchanged** as a new artifact, title "Coursekit", icon "book", together with every `player-code-N.txt` file from that same folder, each published under its own name beside the page (the `files` map). The page loads its code from those files. Use exactly these capabilities:
 
 ```json
 {
@@ -52,6 +52,6 @@ Offer to pin it to their sidebar. Do not explain packs, runners or records unles
 Courses in Python and JavaScript run inside the page. Other languages (Elixir, C, C++, Rust, Go, Java, Ruby, R, Julia and more), and Python with their own libraries or GPU, run on their computer through one of:
 
 - **Mac or Windows:** in the Claude desktop app, open the player and press "Install as app" in the course's note (or in the artifact's menu). The first Run asks once to allow running programs. Nothing else to install.
-- **Any system with the Claude desktop app, including Linux:** the Coursekit runner, a small local server in this plugin at `runner/coursekit-runner.js` (needs Node 18+). In Cowork and Claude Code the plugin starts it by itself. For plain chat in the desktop app, add it to the app's local MCP servers under the name `coursekit` with command `node` and the full path to that file, or install the `coursekit-runner.mcpb` extension from the repository's releases by double-click. Then open the player in the desktop app and press "Connect" in the course's note.
+- **Any system with the Claude desktop app, including Linux:** the Coursekit runner, a small local server (needs Node 18+). It is a separate, optional plugin named `coursekit-runner` in the same marketplace (`Bangreedy-2/course-kit`); in Cowork and Claude Code that plugin starts it by itself. For plain chat in the desktop app, add `runner/coursekit-runner.js` from the repository to the app's local MCP servers under the name `coursekit` with command `node`, or install `coursekit-runner.mcpb` by double-click. Then open the player in the desktop app and press "Connect" in the course's note.
 
 The language itself must be installed on the computer; the runner reports which ones it finds. The page sends code only when the learner presses Run, and each course must be allowed once.

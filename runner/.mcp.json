@@ -2,7 +2,7 @@
   "mcpServers": {
     "coursekit": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/runner/coursekit-runner.js"]
+      "args": ["${CLAUDE_PLUGIN_ROOT}/coursekit-runner.js"]
     }
   }
 }

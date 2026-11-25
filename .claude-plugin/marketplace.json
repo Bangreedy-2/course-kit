@@ -1,11 +1,18 @@
 {
   "name": "coursekit",
-  "owner": { "name": "Bangreedy-2" },
+  "owner": {
+    "name": "Bangreedy-2"
+  },
   "plugins": [
     {
       "name": "coursekit",
       "source": "./plugin",
       "description": "Coursekit: a course player that lives in your Claude account, plus the strict course-design rules for making and changing courses on any topic."
+    },
+    {
+      "name": "coursekit-runner",
+      "source": "./runner",
+      "description": "Optional: lets Coursekit courses run code on this computer in any installed language. Add it only if a course needs it."
     }
   ]
 }

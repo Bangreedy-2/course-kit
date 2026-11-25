@@ -14,7 +14,20 @@ console.log("wrote", path.relative(process.cwd(), out), (html.length / 1024).toF
 // The plugin ships the same page and a reference generated from the rules in core.js.
 const CK = require("./src/core.js");
 const skills = path.join(__dirname, "..", "plugin", "skills");
-fs.copyFileSync(out, path.join(skills, "coursekit-player", "coursekit-player.html"));
+// The plugin directory inspects files up to 256 KiB, so the plugin carries the page in parts: a small page
+// that loads its own code from text files published beside it. The single-file page in dist/ is the same code.
+{
+  const dir = path.join(skills, "coursekit-player"); const MAX = 200 * 1024; const parts = [];
+  for (let i = 0; i < js.length;) { let j = Math.min(js.length, i + MAX); if (j < js.length) { const nl = js.lastIndexOf("\n", j); if (nl > i) j = nl + 1; } parts.push(js.slice(i, j)); i = j; }
+  for (const f of fs.readdirSync(dir)) if (/^player-code-\d+\.txt$/.test(f)) fs.unlinkSync(path.join(dir, f));
+  parts.forEach((p, i) => fs.writeFileSync(path.join(dir, "player-code-" + (i + 1) + ".txt"), p));
+  const loader = "(function () {\n  var n = " + parts.length + ", got = [];\n  function fail(e) { document.getElementById(\"main\").textContent = \"Coursekit could not load its code (\" + e + \"). The player was published without its player-code files: ask Claude to set up Coursekit again.\"; }\n" +
+    "  function get(i) { return fetch(\"player-code-\" + (i + 1) + \".txt\").then(function (r) { if (!r.ok) throw new Error(\"part \" + (i + 1) + \" missing\"); return r.text(); }).then(function (t) { got[i] = t; }); }\n" +
+    "  var all = []; for (var i = 0; i < n; i++) all.push(get(i));\n  Promise.all(all).then(function () { var s = document.createElement(\"script\"); s.textContent = got.join(\"\"); document.body.appendChild(s); }, fail);\n})();";
+  const page = src("shell.html").replace("/*@CSS@*/", () => src("player.css")).replace("/*@JS@*/", () => loader);
+  fs.writeFileSync(path.join(dir, "coursekit-player.html"), page);
+  console.log("wrote plugin player page", (page.length / 1024).toFixed(1) + " KB and", parts.length, "code parts");
+}
 const ref = "# Coursekit reference\n\nGenerated from `player/src/core.js` by `node player/build.js`. Do not edit by hand.\n\n## Rules as the player states them\n\n" +
   CK.DESIGN_RULES + "\n\n## Blocks\n\n" + CK.BLOCK_DOC + "\n\n## Course modules\n\n" + CK.MODULES_DOC + "\n\n## Design\n\n" + CK.DESIGN_DOC + "\n\n## Limits\n\n" +
   Object.entries(CK.LIMITS).map(([k, v]) => "- " + k + ": " + v).join("\n") + "\n";
@@ -22,7 +35,7 @@ fs.writeFileSync(path.join(skills, "coursekit-design", "reference.md"), ref);
 console.log("wrote plugin skill files");
 
 // The runner (plugin MCP server and desktop extension) uses the same language table as the page.
-const runner = path.join(__dirname, "..", "plugin", "runner");
+const runner = path.join(__dirname, "..", "runner");
 fs.mkdirSync(runner, { recursive: true });
 fs.writeFileSync(path.join(runner, "langs.json"), JSON.stringify(CK.LOCAL_LANGS, null, 1) + "\n");
-console.log("wrote plugin/runner/langs.json");
+console.log("wrote runner/langs.json");
