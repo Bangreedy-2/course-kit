@@ -579,6 +579,120 @@ function checkModuleRefs(mods, lessonsById) {
   }
   return out;
 }
+/* ---------- quality: what a written lesson must have, and how a whole course measures up ---------- */
+const AUTO_CHECKED = ["choice", "answer", "order", "match", "predict", "run"];
+const wordCount = t => (str(t).match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) || []).length;
+function lessonDepth(l) {
+  const o = { words: 0, practice: 0, types: new Set(), cards: 0, run: 0, auto: 0, why: 0, widgets: 0, code: 0 };
+  for (const b of (l && l.blocks) || []) {
+    if (b.t === "md" || b.t === "callout") o.words += wordCount(b.md);
+    else if (b.t === "code") o.code++;
+    else if (b.t === "widget") o.widgets++;
+    else if (b.t === "cards") o.cards += (b.cards || []).length;
+    if (PRACTICE.includes(b.t)) { o.practice++; o.types.add(b.t); if (b.t === "run") o.run++; if (AUTO_CHECKED.includes(b.t)) o.auto++; if (b.why || b.solution || b.model) o.why++; }
+  }
+  o.types = [...o.types]; return o;
+}
+/* Returns the list of things a freshly written lesson is missing. Empty means it meets the bar. */
+function lessonIssues(l, opts) {
+  opts = opts || {}; const st = lessonDepth(l); const out = [];
+  const minWords = opts.minutes && opts.minutes <= 12 ? 250 : 450;
+  if (st.words < minWords) out.push("the teaching is too thin: " + st.words + " words of explanation, and a lesson needs at least " + minWords + " (explain the idea, show a worked example, name the common mistake)");
+  if (st.practice < 4) out.push("it has " + st.practice + " practice blocks; write at least 4");
+  if (st.types.length < 2 && st.practice >= 2) out.push("every practice block is of type \"" + st.types[0] + "\"; use at least 2 different types");
+  if (st.auto < 2) out.push("at least 2 practice blocks must be checked by the page (choice, answer, order, match, predict or run)");
+  if (st.cards < 3) out.push("it needs one cards block with at least 3 recall cards");
+  if (opts.code && opts.runnable && !st.run) out.push("this is a coding lesson in a course that runs code: include at least one \"run\" block where the learner writes code that the tests check");
+  if (opts.code && !st.code && !st.run) out.push("this is a coding lesson: show real code in \"code\" blocks");
+  const first = (l.blocks || [])[0]; if (first && PRACTICE.includes(first.t)) out.push("teach before you test: the first block must be teaching");
+  return out;
+}
+/* Builds the plan and the checkpoints of a created course from its blueprint and what has been
+   written so far. Deterministic, and ids never change, so it can run again after every lesson. */
+function growModules(a) {
+  const meta = a.meta, L = a.lessons || {}, bp = a.bp || {}, drills = a.drills || [], old = a.plan || null;
+  const units = meta.units || []; const quiz = bp.quiz || {};
+  const critOf = (x, label) => {
+    const lab = str(x.proofLabel, 200).trim() || label;
+    if (x.doc) return [{ t: "text", label: lab || "Your document", min: Number(x.min) > 0 ? Math.round(Number(x.min)) : 40, doc: x.doc, tpl: x.tpl || undefined }];
+    if (x.proof === "link") return [{ t: "link", label: lab || "Link to your work" }];
+    if (x.proof === "number" && isFinite(x.min) && isFinite(x.max) && Number(x.min) <= Number(x.max)) return [{ t: "number", label: lab || "Your result", min: Number(x.min), max: Number(x.max), unit: x.unit || undefined }];
+    if (x.proof === "check") return [{ t: "check", label: lab || "Done" }];
+    return [{ t: "text", label: lab || "What you did and what came out", min: 15 }];
+  };
+  const cps = [];
+  (bp.checkpoints || []).forEach((x, k) => {
+    const from = k ? bp.checkpoints[k - 1].afterWeek : 0; const ids = [];
+    units.forEach((u, i) => { if (i + 1 > from && i + 1 <= x.afterWeek) ids.push(...u.lessons); });
+    const cap = clamp(Math.round(x.minutes / 3), 6, 30); const items = []; const per = Math.max(1, Math.min(3, Math.ceil(cap / Math.max(1, ids.length))));
+    for (const id of ids) { const l = L[id]; if (!l || l.pending || l.archived) continue; const bs = (l.blocks || []).filter(b => AUTO_CHECKED.includes(b.t)); for (const b of bs.slice(-per)) items.push(id + ":" + b.id); }
+    const ds = drills.filter(d => d.tests && ids.includes(d.lesson)).slice(0, Math.max(1, Math.round(cap / 5))).map(d => "drill:" + d.id);
+    const all = items.slice(0, cap - ds.length).concat(ds);
+    if (all.length >= 3) cps.push({ id: "cp" + (k + 1), title: x.title, week: x.afterWeek, minutes: x.minutes, pass: 70, lessons: ids.filter(id => L[id] && !L[id].archived), items: all,
+      intro: "Timed and closed-book: no notes, no lessons, no searching. It draws on " + ids.length + " lessons. Pass mark 70%." });
+  });
+  const weeks = units.map((u, i) => {
+    const n = i + 1; const tasks = [];
+    for (const id of u.lessons) { const l = L[id]; if (!l || l.archived) continue; tasks.push({ id: "l-" + id, title: l.title, desc: l.summary || undefined, track: l.track, h: Math.round(((l.minutes || 20) * 1.5 / 60) * 4) / 4 || 0.5, lessons: [id], crit: [{ t: "lesson", id }] }); }
+    const wd = drills.filter(d => u.lessons.includes(d.lesson));
+    if (wd.length) tasks.push({ id: "w" + n + "-drills", title: "Drills from memory", desc: "Each drill unlocks the day after its lesson. Close the lesson and solve it from a blank page.", h: Math.round(wd.reduce((x, d) => x + (d.mins || 10), 0) / 60 * 4) / 4 || 0.25, crit: wd.map(d => ({ t: "drill", id: d.id })) });
+    (bp.projects || []).forEach(p => p.steps.forEach((st, k) => { if (st.week === n) tasks.push({ id: "p" + p.id + "-" + (k + 1), title: st.title, desc: st.desc || undefined, project: p.id, h: st.h, crit: critOf(st) }); }));
+    (bp.pages || []).forEach(pg => (pg.tasks || []).forEach((t, k) => { if (t.week === n) tasks.push({ id: "pg-" + pg.id + "-" + (k + 1), title: t.title, desc: t.desc || undefined, page: pg.id, group: t.group || undefined, due: t.due || undefined, h: t.h, crit: critOf(t) }); }));
+    for (const x of cps) if (x.week === n) tasks.push({ id: "t-" + x.id, title: x.title, desc: "Timed, closed-book. Opens when the lessons it covers are learned.", h: Math.round(x.minutes / 60 * 4) / 4, crit: [{ t: "checkpoint", id: x.id }] });
+    if (bp.paced && u.lessons.length > 1) tasks.push({ id: "w" + n + "-days", title: "Study on 3 separate days", desc: "Spread the week out: memory needs the gaps.", core: false, h: 0.1, crit: [{ t: "days", w: n, n: 3 }] });
+    // Anything the learner or the tutor added to this week by hand is kept.
+    const mine = new Set(tasks.map(t => t.id)); const gen = /^(l-|pg-|t-cp\d|p\d+-\d+$|w\d+-(drills|days)$)/;
+    for (const t of (old && old.weeks && old.weeks[i] && old.weeks[i].tasks) || []) if (!mine.has(t.id) && !gen.test(t.id)) tasks.push(t);
+    const w = { title: u.title, goal: u.goal || undefined, tasks };
+    const qs = []; for (const id of u.lessons) for (const q of (quiz[id] || []).slice(0, 3)) qs.push(q);
+    if (qs.length >= 3) { w.quiz = qs.slice(0, 12); w.quizMax = Math.floor(w.quiz.length * 0.25); }
+    if (!w.tasks.length) w.tasks.push({ id: "w" + n + "-open", title: "Open week", desc: "Nothing is planned here yet.", core: false, crit: [{ t: "check", label: "Done" }] });
+    return w;
+  });
+  const plan = { weeks, phases: (bp.phases || []).map(p => ({ title: p.title, goal: p.goal, weeks: p.weeks })), projects: (bp.projects || []).map(p => ({ id: p.id, title: p.title, what: p.what })) };
+  return { plan: normalizePlan(plan), checkpoints: cps.length ? normalizeCheckpoints(cps, { runtimes: meta.runtimes || {} }) : [] };
+}
+/* Numbers that describe a whole course file, for comparing a generated course with a reference. */
+function courseStats(file) {
+  const ls = (file.lessons || []).filter(l => !l.pending && !l.archived); const n = ls.length || 1;
+  const t = { lessons: ls.length, pending: (file.lessons || []).filter(l => l.pending).length, words: 0, practice: 0, auto: 0, run: 0, cards: 0, types: new Set(), thin: 0, noRun: 0 };
+  for (const l of ls) { const s = lessonDepth(l); t.words += s.words; t.practice += s.practice; t.auto += s.auto; t.run += s.run; t.cards += s.cards; s.types.forEach(x => t.types.add(x)); if (s.words < 450 || s.practice < 4) t.thin++; }
+  const plan = file.plan, drills = file.drills || [], cps = file.checkpoints || [];
+  const tasks = plan ? plan.weeks.flatMap(w => w.tasks) : [];
+  return {
+    lessons: t.lessons, unwritten: t.pending, weeks: plan ? plan.weeks.length : 0,
+    wordsPerLesson: Math.round(t.words / n), practicePerLesson: +(t.practice / n).toFixed(1), checkedPerLesson: +(t.auto / n).toFixed(1), cardsPerLesson: +(t.cards / n).toFixed(1),
+    runBlocks: t.run, practiceTypes: t.types.size, thinLessons: t.thin,
+    drills: drills.length, testedDrills: drills.filter(d => d.tests).length, drillsPerLesson: +(drills.length / n).toFixed(2),
+    checkpoints: cps.length, checkpointItems: cps.reduce((x, c) => x + c.items.length, 0),
+    projects: plan && plan.projects ? plan.projects.length : 0, tasks: tasks.length, proofTasks: tasks.filter(x => x.crit.some(c => ["link", "number", "text"].includes(c.t))).length,
+    quizQuestions: plan ? plan.weeks.reduce((x, w) => x + (w.quiz ? w.quiz.length : 0), 0) : 0, pages: (file.pages || []).length,
+    hasPace: !!(file.course && file.course.schedule), hasRuntime: !!(file.course && file.course.runtimes && Object.keys(file.course.runtimes).length),
+  };
+}
+/* The measures of the reference course (the hand-built CERN preparation programme). */
+const REF_STATS = {"lessons":84,"unwritten":0,"weeks":22,"wordsPerLesson":1151,"practicePerLesson":6.4,"checkedPerLesson":4.4,"cardsPerLesson":5.1,"runBlocks":56,"practiceTypes":5,"thinLessons":0,"drills":107,"testedDrills":39,"drillsPerLesson":1.27,"checkpoints":4,"checkpointItems":57,"projects":5,"tasks":202,"proofTasks":120,"quizQuestions":115,"pages":1,"hasPace":true,"hasRuntime":true};
+/* Scores a course against a reference on the measures that carry the product's quality. 0-100. */
+function scoreCourse(stats, ref) {
+  ref = ref || REF_STATS;
+  const r = (a, b) => b > 0 ? Math.min(1, a / b) : 1;
+  const parts = [
+    ["Teaching depth (words per lesson)", 20, r(stats.wordsPerLesson, Math.min(ref.wordsPerLesson, 800))],
+    ["Practice per lesson", 15, r(stats.practicePerLesson, Math.min(ref.practicePerLesson, 5))],
+    ["Practice the page checks", 10, r(stats.checkedPerLesson, Math.min(ref.checkedPerLesson, 3))],
+    ["Recall cards per lesson", 5, r(stats.cardsPerLesson, Math.min(ref.cardsPerLesson, 3))],
+    ["Variety of practice types", 5, r(stats.practiceTypes, Math.min(ref.practiceTypes, 5))],
+    ["Code the page runs and checks", 10, ref.runBlocks && stats.hasRuntime ? r(stats.runBlocks / Math.max(1, stats.lessons), Math.min(ref.runBlocks / Math.max(1, ref.lessons), 0.5)) : ref.runBlocks && !stats.hasRuntime ? null : 1],
+    ["Drills from memory", 10, r(stats.drillsPerLesson, Math.min(ref.drillsPerLesson, 0.8))],
+    ["Weekly plan with tasks", 8, stats.weeks ? r(stats.tasks / stats.weeks, 4) : 0],
+    ["Timed checkpoints", 7, r(stats.checkpoints, Math.min(ref.checkpoints, Math.max(1, Math.round(stats.weeks / 5))))],
+    ["Projects with proof", 5, r(stats.proofTasks, Math.min(ref.proofTasks, Math.max(2, stats.weeks)))],
+    ["Self-check quizzes", 3, stats.weeks ? r(stats.quizQuestions / stats.weeks, 3) : 0],
+    ["No thin or unwritten lessons", 2, stats.lessons ? 1 - Math.min(1, (stats.thinLessons + stats.unwritten) / (stats.lessons + stats.unwritten)) : 0],
+  ].filter(p => p[2] != null);
+  const total = parts.reduce((x, p) => x + p[1], 0);
+  return { score: Math.round(parts.reduce((x, p) => x + p[1] * p[2], 0) / total * 100), parts: parts.map(p => ({ name: p[0], weight: p[1], got: Math.round(p[2] * 100) })) };
+}
 const MODULES_DOC =
 `Course modules (all optional; add the ones the subject needs):
 - runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
@@ -825,7 +939,7 @@ const api = {
   hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
-  ENGINES, MODULE_KEYS, normalizePages, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  ENGINES, MODULE_KEYS, normalizePages, lessonDepth, lessonIssues, growModules, courseStats, scoreCourse, REF_STATS, normalizeDrill, normalizeQuiz, AUTO_CHECKED, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
   normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
   normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };

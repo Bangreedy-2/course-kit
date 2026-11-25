@@ -147,8 +147,14 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     window.__mockJson.push({ title: "Espresso at Home", subtitle: "For a home barista", description: "Dial in shots.", language: "en", tutor: { name: "Bea", persona: "Warm." },
       design: { palette: { bg: "#1c1410", surface: "#261b15", ink: "#f3e6d8", muted: "#c8b29e", accent: "#e08a3c", accent2: "#d4b26a" }, fonts: { display: "Fraunces", body: "Work Sans" }, shape: "round", layout: "tabs", pattern: "dots", density: "normal", emblem: "☕" },
       units: [{ title: "Extraction", goal: "Pull a balanced shot", lessons: [{ title: "What extraction is", summary: "Solubles", minutes: 12 }, { title: "Brew ratio", summary: "Dose and yield", minutes: 12 }] }] });
-    const lesson = () => ({ summary: "s", minutes: 12, blocks: [{ t: "md", md: "## Idea\n\n" + "Espresso extraction dissolves flavour from coffee grounds into water under pressure. ".repeat(8) }, { t: "choice", q: "What does a finer grind do?", options: ["Slows the flow", "Speeds the flow"], answer: 0 }] });
-    window.__mockJson.push(lesson, lesson);
+    const teach = "Espresso extraction dissolves flavour from coffee grounds into water under pressure, and the grind sets how fast that happens. ".repeat(24);
+    const practice = [{ t: "choice", q: "What does a finer grind do?", options: ["Slows the flow", "Speeds the flow"], answer: 0, why: "Finer grounds pack tighter." }, { t: "answer", q: "A 1:2 ratio from 18 g gives how many grams?", accept: ["36"], why: "18 × 2." },
+      { t: "order", q: "Order the steps", items: ["Grind", "Tamp", "Brew"], why: "That is the workflow." }, { t: "choice", q: "A sour shot is usually…", options: ["Under-extracted", "Over-extracted"], answer: 0, why: "Acids come out first." }];
+    const cards = { t: "cards", cards: [{ q: "Finer grind?", a: "Slower flow" }, { q: "1:2 from 18 g?", a: "36 g" }, { q: "Sour means?", a: "Under-extracted" }] };
+    window.__lessonOk = (extra) => ({ summary: "s", minutes: 12, blocks: [{ t: "md", md: "## Idea\n\n" + teach }].concat(extra || []).concat(practice, [cards]),
+      drills: [{ title: "Explain it", prompt: "Explain extraction from memory.", mins: 5, solution: "Water dissolves solubles." }], quiz: [{ q: "Finer grind?", o: ["Slower", "Faster"], a: 0, why: "Packs tighter." }, { q: "Sour?", o: ["Under", "Over"], a: 0, why: "Acids first." }] });
+    window.__mockJson.push(() => ({ summary: "s", minutes: 12, blocks: [{ t: "md", md: teach.slice(0, 700) }, { t: "choice", q: "What does a finer grind do?", options: ["Slows the flow", "Speeds the flow"], answer: 0 }] }));
+    window.__mockJson.push((p) => { window.__sawFeedback = /too thin/.test(String(p)) && /at least 4/.test(String(p)); return window.__lessonOk(); }, () => window.__lessonOk());
   });
   await page.evaluate(() => location.hash = "#/new");
   await page.fill("#nc-topic", "How espresso extraction works");
@@ -156,9 +162,49 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.waitForFunction(() => location.hash.startsWith("#/c/espresso-at-home"), null, { timeout: 10000 });
   await page.waitForFunction(() => { const l = window.__ck.lessons; return Object.keys(l).length === 2 && Object.values(l).every(x => !x.pending); }, null, { timeout: 10000 });
   ok(true, "a course is planned and every lesson written");
-  await page.waitForSelector(".tabbar");
-  ok(await page.$(".tabbar"), "the new course uses the tabs layout it chose");
+  ok(await page.evaluate(() => window.__sawFeedback), "a thin lesson is sent back with what it lacks, and the rewrite is the one saved");
+  ok(await page.evaluate(() => Object.values(window.__ck.lessons).every(l => l.blocks.length >= 6) && (window.__ck.mods.drills || []).length === 2), "each lesson meets the bar and brings its drill");
+  await page.waitForSelector(".dtabs");
+  ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Lessons,Drills,Record", "a short created course gets Today, Lessons, Drills and Record");
   if (shots) await page.screenshot({ path: shots + "/5-created.png" });
+
+  // Create a paced programme with code: the plan, drills, quiz and checkpoint grow as lessons are written, and code is run before it is saved
+  await page.evaluate(() => {
+    window.__mockJson.push({ title: "JS for Data", subtitle: "Six weeks", description: "Learn to write small programs.", language: "en", tutor: { name: "Kit", persona: "Direct." }, paced: true, runtime: "js",
+      tracks: { core: "Core", lab: "Lab" }, phases: [{ title: "Foundations", goal: "Write loops", weeks: [1, 2] }],
+      units: [{ title: "Values", goal: "Use numbers", lessons: [{ title: "Adding numbers", summary: "Sum", minutes: 20, track: "core", code: true }, { title: "Loops", summary: "For", minutes: 20, track: "core", code: true }] },
+        { title: "Lists", goal: "Use arrays", lessons: [{ title: "Arrays", summary: "Lists", minutes: 20, track: "lab", code: true }] }],
+      projects: [{ title: "Tiny tool", what: "A script that sums a file", steps: [{ week: 2, title: "Publish the script", desc: "Push it.", h: 2, proof: "link", proofLabel: "Repository link" }, { week: 2, title: "Measure it", desc: "Time it.", proof: "number", min: 1, max: 100, unit: "ms" }] }],
+      checkpoints: [{ title: "Checkpoint 1", afterWeek: 2, minutes: 30 }],
+      pages: [{ id: "apply", title: "Apply", intro: "Steps.", note: "Confirm the deadline on the official page.", groups: { docs: "Documents" }, tasks: [{ week: 1, title: "Draft the CV", desc: "One page.", group: "docs", proof: "text", doc: "cv", tpl: "NAME\n" }] }] });
+    const run = (expect, starter) => ({ t: "run", q: "Write `add(a, b)`.", lang: "js", starter: starter || "function add(a, b) {\n}\n", test: "console.log(add(2, 3));", expect: [expect], solution: "function add(a, b) { return a + b; }", why: "Return the sum." });
+    const pred = { t: "predict", q: "What does this print?\n\n```js\nconsole.log([1,2,3].length);\n```", expect: ["3"], why: "Three items." };
+    const drill = (expect) => [{ title: "Sum from memory", prompt: "Write `total(xs)`.", mins: 10, lang: "js", solution: "function total(xs){return xs.reduce((a,b)=>a+b,0)}", tests: "console.log(total([1,2,3]));", expect: [expect], hints: ["Use reduce"] }];
+    window.__codeFeedback = [];
+    window.__mockJson.push(() => Object.assign(window.__lessonOk([run("6"), pred]), { drills: drill("6") }));
+    window.__mockJson.push((p) => { window.__codeFeedback.push(String(p).split("was not good enough:")[1] || ""); return Object.assign(window.__lessonOk([run("5"), pred]), { drills: drill("6") }); });
+    window.__mockJson.push(() => Object.assign(window.__lessonOk([run("5"), pred]), { drills: drill("7") }), () => Object.assign(window.__lessonOk([run("5"), pred]), { drills: drill("7") }), () => Object.assign(window.__lessonOk([run("5"), pred]), { drills: drill("7") }));
+    window.__mockJson.push(() => Object.assign(window.__lessonOk([run("5"), pred]), { drills: drill("6") }));
+  });
+  await page.evaluate(() => location.hash = "#/new");
+  await page.fill("#nc-topic", "JavaScript for data work"); await page.fill("#nc-hours", "6");
+  if (shots) await page.screenshot({ path: shots + "/5a-new-form.png" });
+  await page.click(".newc .btn.primary");
+  await page.waitForFunction(() => location.hash.startsWith("#/c/js-for-data"), null, { timeout: 10000 });
+  await page.waitForFunction(() => window.__ck.modsLoaded && window.__ck.mods.pages, null, { timeout: 10000 });
+  await page.waitForFunction(() => { const l = window.__ck.lessons; return window.__ck.cid === "js-for-data" && Object.keys(l).length === 3 && Object.values(l).every(x => !x.pending) && !(window.__ck.writer && window.__ck.writer.running); }, null, { timeout: 30000 });
+  const grown = await page.evaluate(() => { const m = window.__ck.mods, c = window.__ck.courses["js-for-data"]; return { fb: window.__codeFeedback, weeks: m.plan && m.plan.weeks.map(w => w.tasks.map(t => t.id)), quiz: m.plan && m.plan.weeks.map(w => (w.quiz || []).length), drills: (m.drills || []).map(d => [d.lesson, !!d.tests]), cps: (m.checkpoints || []).map(x => x.items.length), projects: m.plan && m.plan.projects, review: m.blueprint.review, checked: m.blueprint.checked, sched: c.schedule, rt: c.runtimes, runs: Object.values(window.__ck.lessons).map(l => l.blocks.filter(b => b.t === "run").length) }; });
+  ok(grown.fb.length >= 1 && /prints\s+5\s+but "expect" says\s+6/.test(grown.fb[0]), "a wrong expected output is caught by running the solution, and Claude is told what the code really printed");
+  ok(grown.runs.join() === "1,1,1", "every saved run block passed its own tests (" + grown.runs.join() + ")");
+  ok(grown.drills.length === 2 && grown.drills.every(d => d[1]) && grown.review && Object.keys(grown.review).length === 1, "a drill whose solution never passed is dropped and noted; verified drills are kept");
+  ok(grown.weeks && grown.weeks.length === 2 && grown.weeks[0].some(i => i.startsWith("l-")) && grown.weeks[0].includes("w1-drills") && grown.weeks[0].includes("pg-apply-1") && grown.weeks[1].includes("p1-1") && grown.weeks[1].includes("t-cp1"), "the plan grows from the blueprint: lesson, drill, project, page and checkpoint tasks");
+  ok(grown.quiz[0] >= 4 && grown.cps[0] >= 3 && grown.projects.length === 1 && grown.sched && grown.rt.js, "weekly quiz, checkpoint, project, pace and runtime are in place");
+  const sc = await page.evaluate(() => window.__ck.mods.blueprint.score);
+  ok(sc && sc.score > 50 && sc.parts.length >= 10, "the finished course is scored against the reference (" + (sc && sc.score) + "/100)");
+  await page.evaluate(() => location.hash = "#/c/js-for-data"); await page.waitForSelector(".dtabs");
+  const jtabs = (await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",");
+  ok(/Today/.test(jtabs) && /Plan/.test(jtabs) && /Drills/.test(jtabs) && /Apply/.test(jtabs), "the created programme has the full dashboard (" + jtabs + ")");
+  if (shots) await page.screenshot({ path: shots + "/5b-created-programme.png", fullPage: true });
 
   // Sigmoid: every feature of the old app, with real Python when py/ is available
   const sig = JSON.parse(fs.readFileSync(path.join(root, "courses/sigmoid-ml.coursekit.json"), "utf8"));
@@ -299,7 +345,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   if (shots) await page.screenshot({ path: shots + "/7-phone.png" });
   await page.evaluate(() => location.hash = "#/");
   await page.waitForSelector(".ccard");
-  ok((await page.$$eval(".ccard", e => e.length)) === 3, "library lists 3 courses");
+  ok((await page.$$eval(".ccard", e => e.length)) === 4, "library lists 4 courses");
   if (shots) { await page.setViewportSize({ width: 1280, height: 900 }); await page.waitForTimeout(200); await page.screenshot({ path: shots + "/8-library.png" }); }
 
   // Project command channel
