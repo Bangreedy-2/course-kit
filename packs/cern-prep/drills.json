@@ -1,0 +1,1845 @@
+[
+ {
+  "id": "p1",
+  "track": "py",
+  "level": 1,
+  "week": 1,
+  "mins": 5,
+  "title": "Reverse the words",
+  "prompt": "Write reverse_words(s) that returns the words of s in reverse order, separated by single spaces.\nreverse_words(\"hello big world\") -> \"world big hello\"",
+  "hints": [
+   "str.split() with no argument splits on any run of whitespace.",
+   "Slicing with [::-1] reverses a list; \" \".join(list) glues it back."
+  ],
+  "solution": "def reverse_words(s):\n    return \" \".join(s.split()[::-1])",
+  "lesson": "py1",
+  "tests": "print(reverse_words(\"hello big world\"))\nprint(reverse_words(\"  one   two \"))\nprint(repr(reverse_words(\"\")))",
+  "expect": [
+   "world big hello",
+   "two one",
+   "''"
+  ]
+ },
+ {
+  "id": "p2",
+  "track": "py",
+  "level": 1,
+  "week": 1,
+  "mins": 8,
+  "title": "Count words without Counter",
+  "prompt": "Write top_words(text, k) that returns the k most common words as (word, count) pairs, most common first. Lower-case everything. Do not import anything.",
+  "hints": [
+   "Use a dict and d.get(word, 0) + 1.",
+   "sorted(d.items(), key=lambda kv: kv[1], reverse=True)[:k]"
+  ],
+  "solution": "def top_words(text, k):\n    counts = {}\n    for w in text.lower().split():\n        counts[w] = counts.get(w, 0) + 1\n    return sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:k]",
+  "lesson": "py2",
+  "tests": "print(top_words(\"the cat and the dog and the bird\", 2))\nprint(top_words(\"B b a B\", 1))\nprint(top_words(\"x\", 5))",
+  "expect": [
+   "[('the', 3), ('and', 2)]",
+   "[('b', 3)]",
+   "[('x', 1)]"
+  ]
+ },
+ {
+  "id": "p3",
+  "track": "py",
+  "level": 1,
+  "week": 1,
+  "mins": 5,
+  "title": "Count non-empty lines",
+  "prompt": "Write count_lines(path) that opens a text file safely and returns how many lines are not blank.",
+  "hints": [
+   "Use a with block so the file closes itself.",
+   "line.strip() is empty for blank lines."
+  ],
+  "solution": "def count_lines(path):\n    with open(path) as f:\n        return sum(1 for line in f if line.strip())",
+  "lesson": "py3"
+ },
+ {
+  "id": "p4",
+  "track": "py",
+  "level": 1,
+  "week": 2,
+  "mins": 8,
+  "title": "A Particle class",
+  "prompt": "Write a class Particle with name and mass (GeV). Add __repr__ returning Particle('muon', 0.106) and a method heavier_than(other) returning a bool.",
+  "hints": [
+   "__init__(self, name, mass) stores self.name, self.mass.",
+   "Use !r inside an f-string to get quotes: f\"Particle({self.name!r}, {self.mass})\""
+  ],
+  "solution": "class Particle:\n    def __init__(self, name, mass):\n        self.name = name\n        self.mass = mass\n\n    def __repr__(self):\n        return f\"Particle({self.name!r}, {self.mass})\"\n\n    def heavier_than(self, other):\n        return self.mass > other.mass",
+  "lesson": "py4",
+  "tests": "mu = Particle(\"muon\", 0.106)\ne = Particle(\"electron\", 0.000511)\nprint(mu)\nprint(mu.heavier_than(e), e.heavier_than(mu))\nprint(mu.name, mu.mass)",
+  "expect": [
+   "Particle('muon', 0.106)",
+   "True False",
+   "muon 0.106"
+  ]
+ },
+ {
+  "id": "p5",
+  "track": "py",
+  "level": 1,
+  "week": 2,
+  "mins": 6,
+  "title": "Parse a CSV and sort",
+  "prompt": "Lines look like \"name,energy\" (energy is a float). Write read_events(path) that returns a list of (name, energy) tuples sorted by energy, highest first. Skip the header line.",
+  "hints": [
+   "import csv; csv.reader(f) gives lists of strings; next(reader) skips the header.",
+   "sorted(rows, key=lambda r: r[1], reverse=True)"
+  ],
+  "solution": "import csv\n\ndef read_events(path):\n    with open(path, newline=\"\") as f:\n        reader = csv.reader(f)\n        next(reader)\n        rows = [(name, float(e)) for name, e in reader]\n    return sorted(rows, key=lambda r: r[1], reverse=True)",
+  "lesson": "py3"
+ },
+ {
+  "id": "p6",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Mean and standard deviation by hand",
+  "prompt": "Write mean_std(xs) returning (mean, population standard deviation) without numpy or statistics.",
+  "hints": [
+   "mean = sum(xs) / len(xs)",
+   "variance = sum((x - mean) ** 2 for x in xs) / len(xs); std = variance ** 0.5"
+  ],
+  "solution": "def mean_std(xs):\n    n = len(xs)\n    m = sum(xs) / n\n    var = sum((x - m) ** 2 for x in xs) / n\n    return m, var ** 0.5",
+  "lesson": "py5",
+  "tests": "m, s = mean_std([2, 4, 4, 4, 5, 5, 7, 9])\nprint(m, s)\nm, s = mean_std([10])\nprint(m, s)\nprint(round(mean_std([1, 2, 3, 4])[1], 3))",
+  "expect": [
+   "5.0 2.0",
+   "10.0 0.0",
+   "1.118"
+  ]
+ },
+ {
+  "id": "p7",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Group records by key",
+  "prompt": "Given a list of dicts like {\"det\": \"ATLAS\", \"run\": 12}, write group_by(rows, key) returning {value: [rows...]}. Use collections.defaultdict.",
+  "hints": [
+   "from collections import defaultdict; groups = defaultdict(list)",
+   "groups[row[key]].append(row), then return dict(groups)"
+  ],
+  "solution": "from collections import defaultdict\n\ndef group_by(rows, key):\n    groups = defaultdict(list)\n    for row in rows:\n        groups[row[key]].append(row)\n    return dict(groups)",
+  "lesson": "py2",
+  "tests": "rows = [{\"det\": \"ATLAS\", \"run\": 1}, {\"det\": \"CMS\", \"run\": 2}, {\"det\": \"ATLAS\", \"run\": 3}]\ng = group_by(rows, \"det\")\nprint(sorted(g.keys()))\nprint([r[\"run\"] for r in g[\"ATLAS\"]], [r[\"run\"] for r in g[\"CMS\"]])\nprint(dict(group_by([], \"det\")))",
+  "expect": [
+   "['ATLAS', 'CMS']",
+   "[1, 3] [2]",
+   "{}"
+  ]
+ },
+ {
+  "id": "p8",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 6,
+  "title": "Fibonacci generator",
+  "prompt": "Write a generator fib(limit) that yields Fibonacci numbers 0, 1, 1, 2, … while they are at most limit.",
+  "hints": [
+   "A generator uses yield instead of return.",
+   "Keep two variables a, b and update with a, b = b, a + b."
+  ],
+  "solution": "def fib(limit):\n    a, b = 0, 1\n    while a <= limit:\n        yield a\n        a, b = b, a + b",
+  "lesson": "py5",
+  "tests": "print(list(fib(10)))\nprint(list(fib(0)))\nprint(sum(fib(100)))",
+  "expect": [
+   "[0, 1, 1, 2, 3, 5, 8]",
+   "[0]",
+   "232"
+  ]
+ },
+ {
+  "id": "p9",
+  "track": "py",
+  "level": 2,
+  "week": 4,
+  "mins": 8,
+  "title": "NumPy cut and histogram",
+  "prompt": "energies is a NumPy array. Keep values above 20, then return the counts and bin edges of a 30-bin histogram over [20, 200].",
+  "hints": [
+   "Boolean mask: energies[energies > 20]",
+   "np.histogram(values, bins=30, range=(20, 200))"
+  ],
+  "solution": "import numpy as np\n\ndef cut_and_hist(energies):\n    sel = energies[energies > 20]\n    counts, edges = np.histogram(sel, bins=30, range=(20, 200))\n    return counts, edges",
+  "lesson": "py6"
+ },
+ {
+  "id": "p10",
+  "track": "py",
+  "level": 2,
+  "week": 5,
+  "mins": 10,
+  "title": "Invariant mass of two particles",
+  "prompt": "Each particle is a tuple (E, px, py, pz) in GeV. Write inv_mass(p1, p2) returning the invariant mass of the pair: m² = (E1+E2)² − |p1+p2|².",
+  "hints": [
+   "Add component-wise first: E = E1+E2, px = px1+px2, …",
+   "math.sqrt(max(m2, 0.0)) protects against tiny negative values from rounding."
+  ],
+  "solution": "import math\n\ndef inv_mass(p1, p2):\n    E, px, py, pz = (a + b for a, b in zip(p1, p2))\n    m2 = E**2 - (px**2 + py**2 + pz**2)\n    return math.sqrt(max(m2, 0.0))",
+  "lesson": "py7",
+  "tests": "print(round(inv_mass((10.0, 0.0, 0.0, 10.0), (10.0, 0.0, 0.0, -10.0)), 3))\nprint(round(inv_mass((5.0, 3.0, 0.0, 4.0), (10.0, 6.0, 0.0, 8.0)), 3))\nprint(round(inv_mass((45.6, 45.6, 0.0, 0.0), (45.6, -45.6, 0.0, 0.0)), 3))",
+  "expect": [
+   "20.0",
+   "0.0",
+   "91.2"
+  ]
+ },
+ {
+  "id": "p11",
+  "track": "py",
+  "level": 3,
+  "week": 5,
+  "mins": 10,
+  "title": "A timing decorator",
+  "prompt": "Write a decorator @timed that prints how long the wrapped function took and returns its result. Keep the function's name with functools.wraps.",
+  "hints": [
+   "def timed(fn): @wraps(fn) def wrapper(*args, **kwargs): …",
+   "time.perf_counter() before and after the call."
+  ],
+  "solution": "import time\nfrom functools import wraps\n\ndef timed(fn):\n    @wraps(fn)\n    def wrapper(*args, **kwargs):\n        t0 = time.perf_counter()\n        result = fn(*args, **kwargs)\n        print(f\"{fn.__name__} took {time.perf_counter() - t0:.4f}s\")\n        return result\n    return wrapper",
+  "lesson": "py8"
+ },
+ {
+  "id": "p12",
+  "track": "py",
+  "level": 3,
+  "week": 5,
+  "mins": 10,
+  "title": "Binary search",
+  "prompt": "Write binary_search(xs, target) for a sorted list. Return the index of target or -1. No bisect module.",
+  "hints": [
+   "lo, hi = 0, len(xs) - 1; loop while lo <= hi.",
+   "mid = (lo + hi) // 2; move lo = mid + 1 or hi = mid - 1."
+  ],
+  "solution": "def binary_search(xs, target):\n    lo, hi = 0, len(xs) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if xs[mid] == target:\n            return mid\n        if xs[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+  "lesson": "py9",
+  "tests": "xs = [1, 3, 5, 7, 9, 11]\nprint([binary_search(xs, t) for t in (1, 7, 11, 4, 12)])\nprint(binary_search([], 3))\nprint(binary_search([5], 5))",
+  "expect": [
+   "[0, 3, 5, -1, -1]",
+   "-1",
+   "0"
+  ]
+ },
+ {
+  "id": "p13",
+  "track": "py",
+  "level": 3,
+  "week": 6,
+  "mins": 8,
+  "title": "Context manager class",
+  "prompt": "Write a class Timer usable as  with Timer() as t: …  that stores the elapsed seconds in t.elapsed when the block ends.",
+  "hints": [
+   "__enter__ returns self.",
+   "__exit__(self, exc_type, exc, tb) computes the time and returns False so exceptions still propagate."
+  ],
+  "solution": "import time\n\nclass Timer:\n    def __enter__(self):\n        self.start = time.perf_counter()\n        return self\n\n    def __exit__(self, exc_type, exc, tb):\n        self.elapsed = time.perf_counter() - self.start\n        return False",
+  "lesson": "py8"
+ },
+ {
+  "id": "p14",
+  "track": "py",
+  "level": 3,
+  "week": 7,
+  "mins": 8,
+  "title": "Dataclass and sorting",
+  "prompt": "Define a frozen dataclass Muon with pt, eta and charge. Write leading_two(muons) returning the two highest-pt muons.",
+  "hints": [
+   "from dataclasses import dataclass; @dataclass(frozen=True)",
+   "sorted(muons, key=lambda m: m.pt, reverse=True)[:2]"
+  ],
+  "solution": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Muon:\n    pt: float\n    eta: float\n    charge: int\n\ndef leading_two(muons):\n    return sorted(muons, key=lambda m: m.pt, reverse=True)[:2]",
+  "lesson": "py4"
+ },
+ {
+  "id": "c1",
+  "track": "cpp",
+  "level": 1,
+  "week": 1,
+  "mins": 6,
+  "title": "Sum numbers from input",
+  "prompt": "Write a complete program that reads integers from standard input until end of input and prints their sum. Includes and main() too.",
+  "hints": [
+   "#include <iostream>; while (std::cin >> x) keeps reading until input ends.",
+   "Use long long for the sum to avoid overflow."
+  ],
+  "solution": "#include <iostream>\n\nint main() {\n    long long sum = 0;\n    int x;\n    while (std::cin >> x) {\n        sum += x;\n    }\n    std::cout << sum << '\\n';\n    return 0;\n}",
+  "lesson": "c1"
+ },
+ {
+  "id": "c2",
+  "track": "cpp",
+  "level": 1,
+  "week": 2,
+  "mins": 4,
+  "title": "Swap with references",
+  "prompt": "Write void swap_ints(int& a, int& b) and show a call in main that swaps two variables and prints them.",
+  "hints": [
+   "Use a temporary: int tmp = a;",
+   "References mean you call swap_ints(x, y), with no & at the call site."
+  ],
+  "solution": "#include <iostream>\n\nvoid swap_ints(int& a, int& b) {\n    int tmp = a;\n    a = b;\n    b = tmp;\n}\n\nint main() {\n    int x = 1, y = 2;\n    swap_ints(x, y);\n    std::cout << x << ' ' << y << '\\n';\n}",
+  "lesson": "c2"
+ },
+ {
+  "id": "c3",
+  "track": "cpp",
+  "level": 1,
+  "week": 2,
+  "mins": 6,
+  "title": "Max and average of a vector",
+  "prompt": "Write a function that takes const std::vector<double>& and returns a struct Stats {double max; double mean;}. Use a range-for loop. Assume the vector is not empty.",
+  "hints": [
+   "Start max at v[0] (or v.front()).",
+   "Pass by const reference so nothing is copied."
+  ],
+  "solution": "#include <vector>\n\nstruct Stats { double max; double mean; };\n\nStats stats(const std::vector<double>& v) {\n    double mx = v.front();\n    double sum = 0.0;\n    for (double x : v) {\n        if (x > mx) mx = x;\n        sum += x;\n    }\n    return {mx, sum / v.size()};\n}",
+  "lesson": "c3"
+ },
+ {
+  "id": "c4",
+  "track": "cpp",
+  "level": 1,
+  "week": 2,
+  "mins": 5,
+  "title": "Palindrome check",
+  "prompt": "Write bool is_palindrome(const std::string& s) using two indices moving towards each other.",
+  "hints": [
+   "size_t i = 0, j = s.size(); careful with empty strings.",
+   "Loop while i < j, comparing s[i] and s[j - 1]."
+  ],
+  "solution": "#include <string>\n\nbool is_palindrome(const std::string& s) {\n    std::size_t i = 0, j = s.size();\n    while (i < j) {\n        if (s[i] != s[j - 1]) return false;\n        ++i;\n        --j;\n    }\n    return true;\n}",
+  "lesson": "c2"
+ },
+ {
+  "id": "c5",
+  "track": "cpp",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Word count with std::map",
+  "prompt": "Write a function that takes a sentence and returns std::map<std::string, int> with how often each word appears. Use std::istringstream.",
+  "hints": [
+   "#include <sstream>; std::istringstream in(text); while (in >> word)",
+   "counts[word]++ creates the entry at 0 if it is missing."
+  ],
+  "solution": "#include <map>\n#include <sstream>\n#include <string>\n\nstd::map<std::string, int> word_count(const std::string& text) {\n    std::map<std::string, int> counts;\n    std::istringstream in(text);\n    std::string word;\n    while (in >> word) {\n        ++counts[word];\n    }\n    return counts;\n}",
+  "lesson": "c4"
+ },
+ {
+  "id": "c6",
+  "track": "cpp",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Sort structs with a lambda",
+  "prompt": "struct Event { int id; double energy; }; Sort a std::vector<Event> by energy, highest first, using std::sort and a lambda.",
+  "hints": [
+   "#include <algorithm>",
+   "std::sort(v.begin(), v.end(), [](const Event& a, const Event& b) { return … ; });"
+  ],
+  "solution": "#include <algorithm>\n#include <vector>\n\nstruct Event { int id; double energy; };\n\nvoid sort_by_energy(std::vector<Event>& events) {\n    std::sort(events.begin(), events.end(),\n              [](const Event& a, const Event& b) {\n                  return a.energy > b.energy;\n              });\n}",
+  "lesson": "c5"
+ },
+ {
+  "id": "c7",
+  "track": "cpp",
+  "level": 2,
+  "week": 4,
+  "mins": 12,
+  "title": "A tiny histogram class",
+  "prompt": "Write class Histogram with a constructor (nbins, lo, hi), fill(double x) that ignores values outside [lo, hi), and count(int bin).",
+  "hints": [
+   "Store counts in std::vector<int> counts_(nbins, 0).",
+   "bin = static_cast<int>((x - lo) / (hi - lo) * nbins)"
+  ],
+  "solution": "#include <vector>\n\nclass Histogram {\npublic:\n    Histogram(int nbins, double lo, double hi)\n        : lo_(lo), hi_(hi), counts_(nbins, 0) {}\n\n    void fill(double x) {\n        if (x < lo_ || x >= hi_) return;\n        int bin = static_cast<int>((x - lo_) / (hi_ - lo_) * counts_.size());\n        ++counts_[bin];\n    }\n\n    int count(int bin) const { return counts_.at(bin); }\n\nprivate:\n    double lo_, hi_;\n    std::vector<int> counts_;\n};",
+  "lesson": "c6"
+ },
+ {
+  "id": "c8",
+  "track": "cpp",
+  "level": 2,
+  "week": 4,
+  "mins": 10,
+  "title": "Polymorphism with unique_ptr",
+  "prompt": "Write an abstract class Shape with virtual double area() const, and Circle and Square that override it. Store them in std::vector<std::unique_ptr<Shape>> and print the total area.",
+  "hints": [
+   "virtual double area() const = 0; and a virtual destructor in Shape.",
+   "shapes.push_back(std::make_unique<Circle>(1.0));"
+  ],
+  "solution": "#include <iostream>\n#include <memory>\n#include <vector>\n\nstruct Shape {\n    virtual ~Shape() = default;\n    virtual double area() const = 0;\n};\n\nstruct Circle : Shape {\n    double r;\n    explicit Circle(double r) : r(r) {}\n    double area() const override { return 3.14159265 * r * r; }\n};\n\nstruct Square : Shape {\n    double s;\n    explicit Square(double s) : s(s) {}\n    double area() const override { return s * s; }\n};\n\nint main() {\n    std::vector<std::unique_ptr<Shape>> shapes;\n    shapes.push_back(std::make_unique<Circle>(1.0));\n    shapes.push_back(std::make_unique<Square>(2.0));\n    double total = 0;\n    for (const auto& s : shapes) total += s->area();\n    std::cout << total << '\\n';\n}",
+  "lesson": "c7"
+ },
+ {
+  "id": "c9",
+  "track": "cpp",
+  "level": 2,
+  "week": 4,
+  "mins": 6,
+  "title": "Count lines in a file",
+  "prompt": "Write int count_lines(const std::string& path) using std::ifstream and std::getline. Return -1 if the file cannot be opened.",
+  "hints": [
+   "#include <fstream>; std::ifstream in(path); if (!in) return -1;",
+   "while (std::getline(in, line)) ++n;"
+  ],
+  "solution": "#include <fstream>\n#include <string>\n\nint count_lines(const std::string& path) {\n    std::ifstream in(path);\n    if (!in) return -1;\n    std::string line;\n    int n = 0;\n    while (std::getline(in, line)) ++n;\n    return n;\n}",
+  "lesson": "c4"
+ },
+ {
+  "id": "c10",
+  "track": "cpp",
+  "level": 2,
+  "week": 5,
+  "mins": 8,
+  "title": "ROOT macro: Gaussian histogram",
+  "prompt": "Write a ROOT macro gaus_hist() that fills a TH1F with 10000 Gaussian numbers (mean 0, sigma 1), fits it with \"gaus\" and draws it.",
+  "hints": [
+   "TH1F* h = new TH1F(\"h\", \"title;x;entries\", 100, -5, 5);",
+   "gRandom->Gaus(0, 1); then h->Fit(\"gaus\"); h->Draw();"
+  ],
+  "solution": "void gaus_hist() {\n    TH1F* h = new TH1F(\"h\", \"Gaussian;x;Entries\", 100, -5, 5);\n    for (int i = 0; i < 10000; ++i) {\n        h->Fill(gRandom->Gaus(0, 1));\n    }\n    h->Fit(\"gaus\");\n    h->Draw();\n}",
+  "lesson": "c8"
+ },
+ {
+  "id": "c11",
+  "track": "cpp",
+  "level": 3,
+  "week": 5,
+  "mins": 6,
+  "title": "Function template",
+  "prompt": "Write a function template max_of that takes const std::vector<T>& and returns the largest element. Do not use std::max_element.",
+  "hints": [
+   "template <typename T> T max_of(const std::vector<T>& v)",
+   "Start with v.front() and compare with <."
+  ],
+  "solution": "#include <vector>\n\ntemplate <typename T>\nT max_of(const std::vector<T>& v) {\n    T best = v.front();\n    for (const T& x : v) {\n        if (best < x) best = x;\n    }\n    return best;\n}",
+  "lesson": "c9"
+ },
+ {
+  "id": "c12",
+  "track": "cpp",
+  "level": 3,
+  "week": 6,
+  "mins": 12,
+  "title": "Rule of three: own a buffer",
+  "prompt": "Write class Buffer that owns a double* from new double[n]. Give it a constructor, destructor, copy constructor and copy assignment that deep-copy correctly.",
+  "hints": [
+   "Copy assignment: guard against self-assignment, or use copy-and-swap.",
+   "Destructor: delete[] data_; (with brackets)."
+  ],
+  "solution": "#include <algorithm>\n#include <cstddef>\n\nclass Buffer {\npublic:\n    explicit Buffer(std::size_t n) : n_(n), data_(new double[n]()) {}\n    ~Buffer() { delete[] data_; }\n\n    Buffer(const Buffer& other) : n_(other.n_), data_(new double[other.n_]) {\n        std::copy(other.data_, other.data_ + n_, data_);\n    }\n\n    Buffer& operator=(const Buffer& other) {\n        if (this == &other) return *this;\n        double* fresh = new double[other.n_];\n        std::copy(other.data_, other.data_ + other.n_, fresh);\n        delete[] data_;\n        data_ = fresh;\n        n_ = other.n_;\n        return *this;\n    }\n\nprivate:\n    std::size_t n_;\n    double* data_;\n};",
+  "lesson": "c10"
+ },
+ {
+  "id": "c13",
+  "track": "cpp",
+  "level": 3,
+  "week": 7,
+  "mins": 12,
+  "title": "Four-vector with operator+",
+  "prompt": "Write struct FourVec {double E, px, py, pz;} with operator+ and a mass() method. Then compute the invariant mass of two muons.",
+  "hints": [
+   "FourVec operator+(const FourVec& o) const { return {E + o.E, …}; }",
+   "mass: std::sqrt(std::max(0.0, E*E - (px*px + py*py + pz*pz)))"
+  ],
+  "solution": "#include <algorithm>\n#include <cmath>\n\nstruct FourVec {\n    double E, px, py, pz;\n\n    FourVec operator+(const FourVec& o) const {\n        return {E + o.E, px + o.px, py + o.py, pz + o.pz};\n    }\n\n    double mass() const {\n        double m2 = E * E - (px * px + py * py + pz * pz);\n        return std::sqrt(std::max(0.0, m2));\n    }\n};\n\n// double m = (mu1 + mu2).mass();",
+  "lesson": "py7"
+ },
+ {
+  "id": "c14",
+  "track": "cpp",
+  "level": 3,
+  "week": 7,
+  "mins": 8,
+  "title": "Algorithms instead of loops",
+  "prompt": "Given std::vector<double> v, compute the sum of squares using std::transform into a second vector, then std::accumulate.",
+  "hints": [
+   "#include <numeric> for std::accumulate, <algorithm> for std::transform.",
+   "std::accumulate(sq.begin(), sq.end(), 0.0): the 0.0 matters, 0 would make it int."
+  ],
+  "solution": "#include <algorithm>\n#include <numeric>\n#include <vector>\n\ndouble sum_squares(const std::vector<double>& v) {\n    std::vector<double> sq(v.size());\n    std::transform(v.begin(), v.end(), sq.begin(),\n                   [](double x) { return x * x; });\n    return std::accumulate(sq.begin(), sq.end(), 0.0);\n}",
+  "lesson": "c5"
+ },
+ {
+  "id": "s1",
+  "track": "linux",
+  "level": 1,
+  "week": 1,
+  "mins": 4,
+  "title": "Branch, commit, push",
+  "prompt": "Write the commands to: create and switch to a branch drills/day1, stage every file, commit with a message, and push the branch to origin for the first time.",
+  "hints": [
+   "git switch -c (or git checkout -b) creates and switches.",
+   "The first push needs -u to set the upstream."
+  ],
+  "solution": "git switch -c drills/day1\ngit add -A\ngit commit -m \"Day 1 drills\"\ngit push -u origin drills/day1",
+  "lesson": "s1"
+ },
+ {
+  "id": "s2",
+  "track": "linux",
+  "level": 2,
+  "week": 3,
+  "mins": 5,
+  "title": "Find, grep and count",
+  "prompt": "From the current folder, list every .cpp file (recursively) that contains TH1F, then print how many files that is.",
+  "hints": [
+   "grep -rl searches recursively and prints only file names.",
+   "--include='*.cpp' limits the search; pipe to wc -l to count."
+  ],
+  "solution": "grep -rl --include='*.cpp' 'TH1F' .\ngrep -rl --include='*.cpp' 'TH1F' . | wc -l",
+  "lesson": "s2"
+ },
+ {
+  "id": "s3",
+  "track": "linux",
+  "level": 2,
+  "week": 4,
+  "mins": 6,
+  "title": "A build-and-run script",
+  "prompt": "Write a bash script run.sh that takes a .cpp file as its first argument, compiles it with C++17 and warnings into ./a.out, and runs it only if compilation succeeded. Stop on any error.",
+  "hints": [
+   "Start with #!/usr/bin/env bash and set -euo pipefail.",
+   "\"$1\" is the first argument; quote it."
+  ],
+  "solution": "#!/usr/bin/env bash\nset -euo pipefail\n\ng++ -std=c++17 -Wall -Wextra -O2 \"$1\" -o a.out\n./a.out",
+  "lesson": "s3"
+ },
+ {
+  "id": "p25",
+  "track": "py",
+  "level": 1,
+  "week": 1,
+  "mins": 5,
+  "title": "Parse a line of numbers",
+  "prompt": "Write parse_floats(line) that turns \"3.5, 2 ,,7.25 \" into [3.5, 2.0, 7.25]: split on commas, strip the spaces, skip empty pieces and convert the rest to float.",
+  "hints": [
+   "line.split(\",\") gives the pieces, some of them empty or padded with spaces.",
+   "piece.strip() removes the spaces; an empty string is falsy, so 'if piece.strip()' skips it."
+  ],
+  "solution": "def parse_floats(line):\n    out = []\n    for piece in line.split(\",\"):\n        piece = piece.strip()\n        if piece:\n            out.append(float(piece))\n    return out",
+  "lesson": "py1",
+  "tests": "print(parse_floats(\"3.5, 2 ,,7.25 \"))\nprint(parse_floats(\"\"))\nprint(parse_floats(\"10\"))",
+  "expect": [
+   "[3.5, 2.0, 7.25]",
+   "[]",
+   "[10.0]"
+  ]
+ },
+ {
+  "id": "p26",
+  "track": "py",
+  "level": 2,
+  "week": 1,
+  "mins": 8,
+  "title": "Fill a histogram by hand",
+  "prompt": "Write histogram(values, lo, hi, nbins) that returns a dict {bin index: count} for the values in [lo, hi). Bin 0 starts at lo and every bin has the width (hi - lo) / nbins. Ignore values outside the range, and only include bins that received a value.",
+  "hints": [
+   "The bin index of v is int((v - lo) / width).",
+   "counts[i] = counts.get(i, 0) + 1 counts without checking whether the key exists."
+  ],
+  "solution": "def histogram(values, lo, hi, nbins):\n    width = (hi - lo) / nbins\n    counts = {}\n    for v in values:\n        if lo <= v < hi:\n            i = int((v - lo) / width)\n            counts[i] = counts.get(i, 0) + 1\n    return counts",
+  "lesson": "py2",
+  "tests": "print(histogram([0.5, 1.5, 1.7, 9.99, 10.0, -1], 0, 10, 10))\nprint(histogram([2.0, 2.4, 2.5, 3.0], 2, 3, 2))\nprint(histogram([], 0, 1, 4))",
+  "expect": [
+   "{0: 1, 1: 2, 9: 1}",
+   "{0: 2, 1: 1}",
+   "{}"
+  ]
+ },
+ {
+  "id": "p27",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 6,
+  "title": "Convert text to numbers safely",
+  "prompt": "Write to_floats(words) that takes a list of strings and returns two lists: the values that convert to float, and the strings that don't. Use try and except, and catch only the error that float() raises.",
+  "hints": [
+   "float(\"abc\") raises ValueError.",
+   "try: good.append(float(w))  except ValueError: bad.append(w)"
+  ],
+  "solution": "def to_floats(words):\n    good, bad = [], []\n    for w in words:\n        try:\n            good.append(float(w))\n        except ValueError:\n            bad.append(w)\n    return good, bad",
+  "lesson": "py10",
+  "tests": "print(to_floats([\"3.5\", \"abc\", \"-2\", \"1e3\", \"\"]))\nprint(to_floats([]))",
+  "expect": [
+   "([3.5, -2.0, 1000.0], ['abc', ''])",
+   "([], [])"
+  ]
+ },
+ {
+  "id": "p28",
+  "track": "py",
+  "level": 2,
+  "week": 2,
+  "mins": 10,
+  "title": "A vector class with operators",
+  "prompt": "Write a class Vec2 with x and y. Support v + w, v - w, v * k (k is a number), v == w, abs(v) for the length, and a repr that looks like Vec2(1, 2).",
+  "hints": [
+   "Each operator is a method: __add__, __sub__, __mul__, __eq__, __abs__. Each of the first three returns a new Vec2.",
+   "abs(v) calls v.__abs__(), which returns (self.x ** 2 + self.y ** 2) ** 0.5."
+  ],
+  "solution": "class Vec2:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\n    def __add__(self, other):\n        return Vec2(self.x + other.x, self.y + other.y)\n\n    def __sub__(self, other):\n        return Vec2(self.x - other.x, self.y - other.y)\n\n    def __mul__(self, k):\n        return Vec2(self.x * k, self.y * k)\n\n    def __eq__(self, other):\n        return self.x == other.x and self.y == other.y\n\n    def __abs__(self):\n        return (self.x ** 2 + self.y ** 2) ** 0.5\n\n    def __repr__(self):\n        return f\"Vec2({self.x}, {self.y})\"",
+  "lesson": "py4",
+  "tests": "a = Vec2(3, 4)\nb = Vec2(1, 2)\nprint(a + b, a - b, b * 3)\nprint(abs(a), a == Vec2(3, 4), a == b)",
+  "expect": [
+   "Vec2(4, 6) Vec2(2, 2) Vec2(3, 6)",
+   "5.0 True False"
+  ]
+ },
+ {
+  "id": "p29",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 6,
+  "title": "Leading muon per event",
+  "prompt": "events is a list of events, and each event is a list of muon pT values (possibly empty). Write leading(events, min_pt) as a single comprehension: the highest pT of every event that has at least one muon, kept only if it is above min_pt.",
+  "hints": [
+   "An empty list is falsy, so 'if ev' skips events without muons.",
+   "[max(ev) for ev in events if ev and max(ev) > min_pt]"
+  ],
+  "solution": "def leading(events, min_pt):\n    return [max(ev) for ev in events if ev and max(ev) > min_pt]",
+  "lesson": "py5",
+  "tests": "print(leading([[12.0, 30.5], [], [8.0], [45.0, 3.0, 20.0]], 10))\nprint(leading([[], []], 0))\nprint(leading([[5.0, 6.0]], 6.0))",
+  "expect": [
+   "[30.5, 45.0]",
+   "[]",
+   "[]"
+  ]
+ },
+ {
+  "id": "p30",
+  "track": "py",
+  "level": 3,
+  "week": 5,
+  "mins": 10,
+  "title": "Merge two sorted lists",
+  "prompt": "Write merge(a, b) that combines two sorted lists into one sorted list in a single pass, with one index into each list. Do not call sort or sorted.",
+  "hints": [
+   "Keep i and j. While both are inside their lists, append the smaller of a[i] and b[j] and advance that index.",
+   "When one list runs out, add what is left of the other: out.extend(a[i:]) and out.extend(b[j:])."
+  ],
+  "solution": "def merge(a, b):\n    out = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            out.append(a[i])\n            i += 1\n        else:\n            out.append(b[j])\n            j += 1\n    out.extend(a[i:])\n    out.extend(b[j:])\n    return out",
+  "lesson": "py9",
+  "tests": "print(merge([1, 4, 9], [2, 3, 10, 11]))\nprint(merge([], [5]))\nprint(merge([1, 1], [1]))",
+  "expect": [
+   "[1, 2, 3, 4, 9, 10, 11]",
+   "[5]",
+   "[1, 1, 1]"
+  ]
+ },
+ {
+  "id": "p31",
+  "track": "py",
+  "level": 3,
+  "week": 5,
+  "mins": 10,
+  "title": "Balanced brackets",
+  "prompt": "Write balanced(s) that returns True when every (, [ and { in s is closed by the matching bracket in the right order. Ignore all other characters. Use a list as a stack.",
+  "hints": [
+   "Push every opening bracket with stack.append(ch). On a closing bracket, the top of the stack must be its partner.",
+   "A dict {')': '(', ']': '[', '}': '{'} maps each closer to its opener. At the end the stack must be empty."
+  ],
+  "solution": "def balanced(s):\n    pairs = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n    stack = []\n    for ch in s:\n        if ch in \"([{\":\n            stack.append(ch)\n        elif ch in pairs:\n            if not stack or stack.pop() != pairs[ch]:\n                return False\n    return not stack",
+  "lesson": "py9",
+  "tests": "print(balanced(\"f(a[1], {b: (c)})\"))\nprint(balanced(\"(]\"), balanced(\"((\"), balanced(\")(\"))\nprint(balanced(\"\"))",
+  "expect": [
+   "True",
+   "False False False",
+   "True"
+  ]
+ },
+ {
+  "id": "p32",
+  "track": "py",
+  "level": 3,
+  "week": 5,
+  "mins": 12,
+  "title": "A retry decorator",
+  "prompt": "Write retry(times), a decorator with an argument: the wrapped function is called again whenever it raises an exception, up to times attempts in total. If the last attempt fails too, the exception goes through to the caller.",
+  "hints": [
+   "Three levels: retry(times) returns decorator(fn), which returns wrapper(*args, **kwargs).",
+   "Loop over range(times) with try/except around the call. On the last attempt, re-raise with a bare 'raise'."
+  ],
+  "solution": "def retry(times):\n    def decorator(fn):\n        def wrapper(*args, **kwargs):\n            for attempt in range(times):\n                try:\n                    return fn(*args, **kwargs)\n                except Exception:\n                    if attempt == times - 1:\n                        raise\n        return wrapper\n    return decorator",
+  "lesson": "py8",
+  "tests": "calls = []\n\n@retry(3)\ndef flaky(x):\n    calls.append(x)\n    if len(calls) < 3:\n        raise ValueError(\"not yet\")\n    return x * 2\n\nprint(flaky(21), len(calls))\n\n@retry(2)\ndef broken():\n    calls.append(\"b\")\n    raise KeyError(\"always\")\n\ntry:\n    broken()\n    print(\"no error\")\nexcept KeyError:\n    print(\"KeyError after\", calls.count(\"b\"), \"tries\")",
+  "expect": [
+   "42 3",
+   "KeyError after 2 tries"
+  ]
+ },
+ {
+  "id": "p15",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Write tests that catch a bug",
+  "prompt": "clamp(x, lo, hi) should return x limited to the range lo..hi. Write three test functions with plain assert statements: test_inside, test_below and test_above. They are run against a correct clamp, where all must pass, and then against a broken one, where at least two must fail.",
+  "hints": [
+   "A test is a function that calls the code and asserts on the result: assert clamp(5, 0, 10) == 5.",
+   "A test only catches a bug if it uses an input where the broken code gives a different answer. Test a value below lo and one above hi."
+  ],
+  "solution": "def test_inside():\n    assert clamp(5, 0, 10) == 5\n\ndef test_below():\n    assert clamp(-3, 0, 10) == 0\n\ndef test_above():\n    assert clamp(42, 0, 10) == 10",
+  "lesson": "py10",
+  "tests": "def clamp(x, lo, hi):\n    return max(lo, min(x, hi))\n\ntest_inside(); test_below(); test_above()\nprint(\"all pass on the correct clamp\")\n\ndef clamp(x, lo, hi):\n    return x\n\ncaught = 0\nfor t in (test_inside, test_below, test_above):\n    try:\n        t()\n    except AssertionError:\n        caught += 1\nprint(\"bug caught\" if caught >= 2 else \"bug missed: only \" + str(caught) + \" of your tests failed on the broken clamp\")",
+  "expect": [
+   "all pass on the correct clamp",
+   "bug caught"
+  ]
+ },
+ {
+  "id": "p16",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Transverse momentum and pseudorapidity",
+  "prompt": "Write pt_eta(px, py, pz) that returns (pT, eta) with pT = sqrt(px² + py²) and eta = asinh(pz / pT). Use the math module.",
+  "hints": [
+   "math.sqrt(px * px + py * py), or math.hypot(px, py).",
+   "math.asinh is the inverse hyperbolic sine: eta = math.asinh(pz / pt)."
+  ],
+  "solution": "import math\n\ndef pt_eta(px, py, pz):\n    pt = math.sqrt(px * px + py * py)\n    return pt, math.asinh(pz / pt)",
+  "lesson": "ph4",
+  "tests": "for p in ((3.0, 4.0, 0.0), (3.0, 4.0, 5.0), (0.0, -2.0, -2.0)):\n    pt, eta = pt_eta(*p)\n    print(round(pt, 3), round(eta, 3))",
+  "expect": [
+   "5.0 0.0",
+   "5.0 0.881",
+   "2.0 -0.881"
+  ]
+ },
+ {
+  "id": "p17",
+  "track": "py",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Angular distance ΔR",
+  "prompt": "Write delta_r(eta1, phi1, eta2, phi2) = sqrt(Δη² + Δφ²). The angles are in radians, and Δφ must first be wrapped into the range from -π to π.",
+  "hints": [
+   "Two particles at phi = 3.0 and phi = -3.0 are close together: the raw difference 6.0 must become 6.0 - 2π.",
+   "dphi = (dphi + math.pi) % (2 * math.pi) - math.pi wraps any angle into -π..π."
+  ],
+  "solution": "import math\n\ndef delta_r(eta1, phi1, eta2, phi2):\n    deta = eta1 - eta2\n    dphi = (phi1 - phi2 + math.pi) % (2 * math.pi) - math.pi\n    return math.sqrt(deta * deta + dphi * dphi)",
+  "lesson": "ph4",
+  "tests": "print(round(delta_r(0.0, 0.0, 0.3, 0.4), 3))\nprint(round(delta_r(1.0, 3.0, 1.0, -3.0), 3))\nprint(round(delta_r(0.5, 0.1, -0.5, 0.1), 3))",
+  "expect": [
+   "0.5",
+   "0.283",
+   "1.0"
+  ]
+ },
+ {
+  "id": "p18",
+  "track": "py",
+  "level": 2,
+  "week": 4,
+  "mins": 6,
+  "title": "Counts with their uncertainties",
+  "prompt": "Write poisson_errors(counts) that returns a list of (count, error, relative error) tuples. The error is the square root of the count, and the relative error is error / count, or 0.0 for an empty bin.",
+  "hints": [
+   "n ** 0.5 or math.sqrt(n) gives the error.",
+   "Guard the division: rel = err / n if n > 0 else 0.0."
+  ],
+  "solution": "def poisson_errors(counts):\n    out = []\n    for n in counts:\n        err = n ** 0.5\n        rel = err / n if n > 0 else 0.0\n        out.append((n, err, rel))\n    return out",
+  "lesson": "ph5",
+  "tests": "for n, err, rel in poisson_errors([100, 4, 0]):\n    print(n, round(err, 3), round(rel, 3))",
+  "expect": [
+   "100 10.0 0.1",
+   "4 2.0 0.5",
+   "0 0.0 0.0"
+  ]
+ },
+ {
+  "id": "p19",
+  "track": "py",
+  "level": 2,
+  "week": 5,
+  "mins": 8,
+  "title": "Chi-square by hand",
+  "prompt": "Write chi2(ys, errs, model): the sum over all points of ((y - m) / err)², where ys are the measured values, errs their uncertainties and model the predicted values. Then write chi2_ndf(ys, errs, model, n_params), which divides it by the degrees of freedom: the number of points minus the number of fitted parameters.",
+  "hints": [
+   "zip(ys, errs, model) walks the three lists together.",
+   "ndf = len(ys) - n_params."
+  ],
+  "solution": "def chi2(ys, errs, model):\n    return sum(((y - m) / e) ** 2 for y, e, m in zip(ys, errs, model))\n\ndef chi2_ndf(ys, errs, model, n_params):\n    return chi2(ys, errs, model) / (len(ys) - n_params)",
+  "lesson": "ph6",
+  "tests": "ys = [10.0, 12.0, 9.0, 11.0]\nerrs = [1.0, 2.0, 1.0, 0.5]\nmodel = [11.0, 10.0, 9.0, 10.0]\nprint(chi2(ys, errs, model))\nprint(chi2_ndf(ys, errs, model, 2))",
+  "expect": [
+   "6.0",
+   "3.0"
+  ]
+ },
+ {
+  "id": "p20",
+  "track": "py",
+  "level": 3,
+  "week": 6,
+  "mins": 12,
+  "title": "Fit a Gaussian with curve_fit",
+  "prompt": "x and y are NumPy arrays with the bin centres and counts around one peak. Write fit_peak(x, y) that fits a Gaussian A·exp(-(x-mu)²/(2·sigma²)) with scipy's curve_fit, uses √y as the uncertainties, starts from sensible values, and returns (mu, sigma, uncertainty of mu).",
+  "hints": [
+   "Define gauss(x, A, mu, sigma) first. Starting values: A = y.max(), mu = x[np.argmax(y)], sigma = a sixth of the x range.",
+   "popt, pcov = curve_fit(gauss, x, y, p0=p0, sigma=errors, absolute_sigma=True); the uncertainties are np.sqrt(np.diag(pcov))."
+  ],
+  "solution": "import numpy as np\nfrom scipy.optimize import curve_fit\n\ndef gauss(x, A, mu, sigma):\n    return A * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))\n\ndef fit_peak(x, y):\n    p0 = [y.max(), x[np.argmax(y)], (x[-1] - x[0]) / 6]\n    errors = np.sqrt(np.maximum(y, 1))\n    popt, pcov = curve_fit(gauss, x, y, p0=p0, sigma=errors, absolute_sigma=True)\n    perr = np.sqrt(np.diag(pcov))\n    return popt[1], abs(popt[2]), perr[1]",
+  "lesson": "py12"
+ },
+ {
+  "id": "p21",
+  "track": "py",
+  "level": 2,
+  "week": 4,
+  "mins": 10,
+  "title": "Histogram with error bars",
+  "prompt": "masses is a NumPy array in GeV. Write plot_hist(masses, path) that histograms it in 50 bins from 2 to 4 GeV, draws the counts as points with √N error bars, labels both axes with units, and saves the figure to path.",
+  "hints": [
+   "counts, edges = np.histogram(masses, bins=50, range=(2, 4)); centres = (edges[:-1] + edges[1:]) / 2",
+   "fig, ax = plt.subplots(); ax.errorbar(centres, counts, yerr=np.sqrt(counts), fmt=\"o\"); fig.savefig(path)"
+  ],
+  "solution": "import numpy as np\nimport matplotlib.pyplot as plt\n\ndef plot_hist(masses, path):\n    counts, edges = np.histogram(masses, bins=50, range=(2, 4))\n    centres = (edges[:-1] + edges[1:]) / 2\n    fig, ax = plt.subplots()\n    ax.errorbar(centres, counts, yerr=np.sqrt(counts), fmt=\"o\", markersize=3)\n    ax.set_xlabel(\"Dimuon mass [GeV]\")\n    ax.set_ylabel(\"Events / 0.04 GeV\")\n    fig.savefig(path, dpi=150)",
+  "lesson": "py11"
+ },
+ {
+  "id": "p22",
+  "track": "py",
+  "level": 2,
+  "week": 7,
+  "mins": 8,
+  "title": "Signal and background efficiency",
+  "prompt": "y_true holds the labels (1 = signal, 0 = background) and scores a classifier's outputs. Write rates(y_true, scores, threshold): an event is selected when its score is at least the threshold. Return (true positive rate, false positive rate).",
+  "hints": [
+   "Count four things: signal events, background events, selected signal (TP), selected background (FP).",
+   "TPR = TP / number of signal events. FPR = FP / number of background events."
+  ],
+  "solution": "def rates(y_true, scores, threshold):\n    tp = fp = n_sig = n_bkg = 0\n    for y, s in zip(y_true, scores):\n        if y == 1:\n            n_sig += 1\n            if s >= threshold:\n                tp += 1\n        else:\n            n_bkg += 1\n            if s >= threshold:\n                fp += 1\n    return tp / n_sig, fp / n_bkg",
+  "lesson": "ml2",
+  "tests": "y = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]\ns = [0.9, 0.8, 0.6, 0.3, 0.7, 0.4, 0.2, 0.2, 0.1, 0.05]\nfor t in (0.5, 0.25, 1.1):\n    tpr, fpr = rates(y, s, t)\n    print(round(tpr, 3), round(fpr, 3))",
+  "expect": [
+   "0.75 0.167",
+   "1.0 0.333",
+   "0.0 0.0"
+  ]
+ },
+ {
+  "id": "p23",
+  "track": "py",
+  "level": 3,
+  "week": 7,
+  "mins": 10,
+  "title": "ROC AUC by counting pairs",
+  "prompt": "The area under the ROC curve equals the probability that a randomly chosen signal event scores higher than a randomly chosen background event. Write auc(y_true, scores) by going through every signal-background pair: count 1 when the signal scores higher, 0.5 for a tie, and divide by the number of pairs.",
+  "hints": [
+   "Split the scores first: sig = [s for y, s in zip(y_true, scores) if y == 1], and the same for background.",
+   "Two nested loops over sig and bkg; the result is total / (len(sig) * len(bkg))."
+  ],
+  "solution": "def auc(y_true, scores):\n    sig = [s for y, s in zip(y_true, scores) if y == 1]\n    bkg = [s for y, s in zip(y_true, scores) if y == 0]\n    total = 0.0\n    for s in sig:\n        for b in bkg:\n            if s > b:\n                total += 1\n            elif s == b:\n                total += 0.5\n    return total / (len(sig) * len(bkg))",
+  "lesson": "ml2",
+  "tests": "y = [1, 1, 1, 0, 0, 0, 0]\ns = [0.9, 0.6, 0.4, 0.7, 0.4, 0.2, 0.1]\nprint(round(auc(y, s), 4))\nprint(auc([1, 0], [0.8, 0.3]))\nprint(auc([1, 0], [0.3, 0.8]))",
+  "expect": [
+   "0.7917",
+   "1.0",
+   "0.0"
+  ]
+ },
+ {
+  "id": "p24",
+  "track": "py",
+  "level": 3,
+  "week": 7,
+  "mins": 12,
+  "title": "Train and score a boosted classifier",
+  "prompt": "X is a feature matrix and y the 0/1 labels. Write train_bdt(X, y): hold back 25% as a test set (stratified, random_state=42), train a HistGradientBoostingClassifier, and return (training AUC, test AUC).",
+  "hints": [
+   "train_test_split(X, y, test_size=0.25, stratify=y, random_state=42) returns X_train, X_test, y_train, y_test.",
+   "roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]): column 1 is the probability of class 1."
+  ],
+  "solution": "from sklearn.ensemble import HistGradientBoostingClassifier\nfrom sklearn.metrics import roc_auc_score\nfrom sklearn.model_selection import train_test_split\n\ndef train_bdt(X, y):\n    X_tr, X_te, y_tr, y_te = train_test_split(\n        X, y, test_size=0.25, stratify=y, random_state=42)\n    model = HistGradientBoostingClassifier(random_state=42)\n    model.fit(X_tr, y_tr)\n    auc_train = roc_auc_score(y_tr, model.predict_proba(X_tr)[:, 1])\n    auc_test = roc_auc_score(y_te, model.predict_proba(X_te)[:, 1])\n    return auc_train, auc_test",
+  "lesson": "ml3"
+ },
+ {
+  "id": "p33",
+  "track": "py",
+  "level": 3,
+  "week": 9,
+  "mins": 10,
+  "title": "Leading muon pT with awkward arrays",
+  "prompt": "A ROOT file has a tree called Events with a jagged branch Muon_pt: one list of muon pT values per event. With uproot and awkward, write leading_pt(path) that returns a NumPy array with the highest muon pT of every event that has at least two muons.",
+  "hints": [
+   "with uproot.open(path) as f: pt = f[\"Events\"][\"Muon_pt\"].array()",
+   "ak.num(pt) counts the muons per event; ak.max(pt, axis=1) takes the maximum inside each event."
+  ],
+  "solution": "import awkward as ak\nimport uproot\n\ndef leading_pt(path):\n    with uproot.open(path) as f:\n        pt = f[\"Events\"][\"Muon_pt\"].array()\n    pt = pt[ak.num(pt) >= 2]\n    return ak.to_numpy(ak.max(pt, axis=1))",
+  "lesson": "py13"
+ },
+ {
+  "id": "c20",
+  "track": "cpp",
+  "level": 2,
+  "week": 2,
+  "mins": 8,
+  "title": "Median of a vector",
+  "prompt": "Write double median(std::vector<double> v) that returns the middle value after sorting, or the mean of the two middle values when the size is even. The vector is passed by value on purpose, so the caller's data stays in its original order. Assume it is not empty.",
+  "hints": [
+   "std::sort(v.begin(), v.end()) from <algorithm> sorts in place.",
+   "With n = v.size(): odd n gives v[n / 2], even n gives (v[n / 2 - 1] + v[n / 2]) / 2.0."
+  ],
+  "solution": "#include <algorithm>\n#include <vector>\n\ndouble median(std::vector<double> v) {\n    std::sort(v.begin(), v.end());\n    std::size_t n = v.size();\n    if (n % 2 == 1) return v[n / 2];\n    return (v[n / 2 - 1] + v[n / 2]) / 2.0;\n}",
+  "lesson": "c3"
+ },
+ {
+  "id": "c21",
+  "track": "cpp",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "Split a string",
+  "prompt": "Write std::vector<std::string> split(const std::string& s, char sep) that cuts s at every sep. split(\"a,b,,c\", ',') gives {\"a\", \"b\", \"\", \"c\"}.",
+  "hints": [
+   "Put the string into a std::istringstream from <sstream>.",
+   "std::getline(in, piece, sep) reads up to the next sep and returns false when nothing is left."
+  ],
+  "solution": "#include <sstream>\n#include <string>\n#include <vector>\n\nstd::vector<std::string> split(const std::string& s, char sep) {\n    std::vector<std::string> parts;\n    std::istringstream in(s);\n    std::string piece;\n    while (std::getline(in, piece, sep)) {\n        parts.push_back(piece);\n    }\n    return parts;\n}",
+  "lesson": "c4"
+ },
+ {
+  "id": "c22",
+  "track": "cpp",
+  "level": 2,
+  "week": 3,
+  "mins": 6,
+  "title": "Remove elements in place",
+  "prompt": "Write void drop_negative(std::vector<double>& v) that removes every negative value from v, using std::remove_if with a lambda, followed by erase.",
+  "hints": [
+   "std::remove_if moves the elements to keep to the front and returns an iterator to the start of the leftovers.",
+   "v.erase(that_iterator, v.end()) then cuts the leftovers off."
+  ],
+  "solution": "#include <algorithm>\n#include <vector>\n\nvoid drop_negative(std::vector<double>& v) {\n    auto last = std::remove_if(v.begin(), v.end(),\n                               [](double x) { return x < 0; });\n    v.erase(last, v.end());\n}",
+  "lesson": "c5"
+ },
+ {
+  "id": "c23",
+  "track": "cpp",
+  "level": 2,
+  "week": 4,
+  "mins": 10,
+  "title": "Running statistics class",
+  "prompt": "Write a class RunningStats that is fed numbers one at a time with add(double x) and can report count(), mean() and variance() (population variance) at any moment, without storing the numbers. Keep the data private and mark the three getters const.",
+  "hints": [
+   "Three members are enough: the count, the sum, and the sum of squares.",
+   "variance = mean of the squares minus the square of the mean."
+  ],
+  "solution": "class RunningStats {\npublic:\n    void add(double x) {\n        ++n_;\n        sum_ += x;\n        sum2_ += x * x;\n    }\n    int count() const { return n_; }\n    double mean() const { return n_ > 0 ? sum_ / n_ : 0.0; }\n    double variance() const {\n        if (n_ == 0) return 0.0;\n        double m = mean();\n        return sum2_ / n_ - m * m;\n    }\n\nprivate:\n    int n_ = 0;\n    double sum_ = 0.0;\n    double sum2_ = 0.0;\n};",
+  "lesson": "c6"
+ },
+ {
+  "id": "c15",
+  "track": "cpp",
+  "level": 2,
+  "week": 3,
+  "mins": 8,
+  "title": "A CMakeLists.txt from memory",
+  "prompt": "Write the CMakeLists.txt of a project called stats: C++17 required, a library stats built from src/stats.cpp with its headers in include/, an executable stats_app built from src/main.cpp and linked to the library, and the warnings -Wall -Wextra on both.",
+  "hints": [
+   "Start with cmake_minimum_required(VERSION 3.16) and project(stats LANGUAGES CXX).",
+   "add_library, target_include_directories(stats PUBLIC include), add_executable, target_link_libraries(stats_app PRIVATE stats)."
+  ],
+  "solution": "cmake_minimum_required(VERSION 3.16)\nproject(stats LANGUAGES CXX)\n\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nadd_library(stats src/stats.cpp)\ntarget_include_directories(stats PUBLIC include)\ntarget_compile_options(stats PRIVATE -Wall -Wextra)\n\nadd_executable(stats_app src/main.cpp)\ntarget_link_libraries(stats_app PRIVATE stats)\ntarget_compile_options(stats_app PRIVATE -Wall -Wextra)",
+  "lesson": "c11"
+ },
+ {
+  "id": "c16",
+  "track": "cpp",
+  "level": 2,
+  "week": 5,
+  "mins": 8,
+  "title": "A doctest test file",
+  "prompt": "stats.h declares double mean(const std::vector<double>& v), which throws std::invalid_argument for an empty vector. Write a complete doctest file with two test cases: the mean of {1, 2, 3, 4} is 2.5 (compare with doctest::Approx), and the empty vector throws.",
+  "hints": [
+   "The first two lines are #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN and #include \"doctest.h\".",
+   "CHECK(mean(v) == doctest::Approx(2.5)); and CHECK_THROWS_AS(mean(empty), std::invalid_argument);"
+  ],
+  "solution": "#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN\n#include \"doctest.h\"\n#include \"stats.h\"\n\n#include <stdexcept>\n#include <vector>\n\nTEST_CASE(\"mean of four numbers\") {\n    std::vector<double> v{1, 2, 3, 4};\n    CHECK(mean(v) == doctest::Approx(2.5));\n}\n\nTEST_CASE(\"mean of an empty vector throws\") {\n    std::vector<double> empty;\n    CHECK_THROWS_AS(mean(empty), std::invalid_argument);\n}",
+  "lesson": "c12"
+ },
+ {
+  "id": "c17",
+  "track": "cpp",
+  "level": 2,
+  "week": 6,
+  "mins": 10,
+  "title": "Parse a CSV line into a struct",
+  "prompt": "Given struct Muon { double pt; double eta; int charge; }; write bool parse(const std::string& line, Muon& m) that reads a line such as \"25.3,-1.2,1\" into m. Return false when the line does not hold three valid fields separated by commas.",
+  "hints": [
+   "Put the line into a std::istringstream and read: number, char, number, char, number.",
+   "if (!(in >> m.pt >> c1 >> m.eta >> c2 >> m.charge)) return false; then check that both chars are commas."
+  ],
+  "solution": "#include <sstream>\n#include <string>\n\nstruct Muon { double pt; double eta; int charge; };\n\nbool parse(const std::string& line, Muon& m) {\n    std::istringstream in(line);\n    char c1 = 0, c2 = 0;\n    if (!(in >> m.pt >> c1 >> m.eta >> c2 >> m.charge)) return false;\n    return c1 == ',' && c2 == ',';\n}",
+  "lesson": "c13"
+ },
+ {
+  "id": "c19",
+  "track": "cpp",
+  "level": 2,
+  "week": 8,
+  "mins": 8,
+  "title": "Time a piece of work",
+  "prompt": "Write a function template seconds(work) that calls work() once and returns how long it took in seconds as a double, using std::chrono::steady_clock.",
+  "hints": [
+   "auto t0 = std::chrono::steady_clock::now(); before the call, and the same after it.",
+   "std::chrono::duration<double>(t1 - t0).count() converts the difference to seconds."
+  ],
+  "solution": "#include <chrono>\n\ntemplate <typename F>\ndouble seconds(F work) {\n    auto t0 = std::chrono::steady_clock::now();\n    work();\n    auto t1 = std::chrono::steady_clock::now();\n    return std::chrono::duration<double>(t1 - t0).count();\n}",
+  "lesson": "c15"
+ },
+ {
+  "id": "s4",
+  "track": "linux",
+  "level": 2,
+  "week": 2,
+  "mins": 6,
+  "title": "Feature branch and merge",
+  "prompt": "You are on main with nothing uncommitted. Write the commands that create and switch to a branch fix-typo, stage and commit README.md with the message \"Fix typo\", go back to main, merge the branch and delete it.",
+  "hints": [
+   "git switch -c name creates a branch and moves to it (git checkout -b name does the same).",
+   "After the merge, git branch -d name removes the label. The commits stay."
+  ],
+  "solution": "git switch -c fix-typo\ngit add README.md\ngit commit -m \"Fix typo\"\ngit switch main\ngit merge fix-typo\ngit branch -d fix-typo",
+  "lesson": "g1"
+ },
+ {
+  "id": "s5",
+  "track": "linux",
+  "level": 2,
+  "week": 2,
+  "mins": 6,
+  "title": "Undo, four ways",
+  "prompt": "Write one command for each: (1) throw away the uncommitted edits in notes.txt, (2) take notes.txt out of the staging area but keep the edits, (3) add an already staged file to the last commit and keep its message, (4) undo commit abc1234, which is already pushed, with a new commit.",
+  "hints": [
+   "git restore works on the working folder; with --staged it works on the staging area.",
+   "--amend rewrites the last commit, which is fine before pushing. For pushed commits use git revert."
+  ],
+  "solution": "git restore notes.txt\ngit restore --staged notes.txt\ngit commit --amend --no-edit\ngit revert abc1234",
+  "lesson": "g1"
+ },
+ {
+  "id": "s6",
+  "track": "linux",
+  "level": 2,
+  "week": 2,
+  "mins": 5,
+  "title": "Count with a pipeline",
+  "prompt": "Each line of access.log starts with a user name, followed by a space and other text. Write one pipeline that prints the five users with the most lines, with their counts, the most active first.",
+  "hints": [
+   "cut -d ' ' -f 1 keeps the first space-separated field.",
+   "uniq -c only merges equal lines that are neighbours, so sort first. sort -rn then orders by the count, largest first."
+  ],
+  "solution": "cut -d ' ' -f 1 access.log | sort | uniq -c | sort -rn | head -n 5",
+  "lesson": "s2"
+ },
+ {
+  "id": "s7",
+  "track": "linux",
+  "level": 2,
+  "week": 6,
+  "mins": 8,
+  "title": "A CI workflow from memory",
+  "prompt": "Write .github/workflows/tests.yml: on every push and pull request, on ubuntu-latest, check out the code, set up Python 3.12, install the packages listed in requirements.txt and run the tests with python -m pytest.",
+  "hints": [
+   "Top-level keys: name, on, jobs. A job has runs-on and steps.",
+   "A step is either 'uses: some/action@version' or 'run: a shell command'. Quote \"3.12\" so YAML keeps it as text."
+  ],
+  "solution": "name: tests\non: [push, pull_request]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: \"3.12\"\n      - run: pip install -r requirements.txt\n      - run: python -m pytest -q",
+  "lesson": "sy3"
+ },
+ {
+  "id": "c24",
+  "track": "cpp",
+  "level": 3,
+  "week": 11,
+  "mins": 10,
+  "title": "Move constructor and move assignment",
+  "prompt": "A class Buffer owns an array through the members std::size_t n_ and double* data_. Its constructor, destructor and copy operations exist. Write the move constructor and the move assignment operator.",
+  "hints": [
+   "Both take Buffer&& other and are marked noexcept. They take over other's pointer and leave other with nullptr and size 0, so that its destructor deletes nothing.",
+   "The assignment must first release the array this object already owns, must survive a = std::move(a), and returns *this."
+  ],
+  "solution": "Buffer(Buffer&& other) noexcept : n_(other.n_), data_(other.data_) {\n    other.n_ = 0;\n    other.data_ = nullptr;\n}\n\nBuffer& operator=(Buffer&& other) noexcept {\n    if (this != &other) {\n        delete[] data_;\n        data_ = other.data_;\n        n_ = other.n_;\n        other.data_ = nullptr;\n        other.n_ = 0;\n    }\n    return *this;\n}",
+  "lesson": "c16"
+ },
+ {
+  "id": "c25",
+  "track": "cpp",
+  "level": 2,
+  "week": 11,
+  "mins": 6,
+  "title": "A sink argument",
+  "prompt": "Write a class Event with a private member std::vector<double> hits_ and a constructor that stores a vector given by the caller. A caller who passes a temporary, or who uses std::move, must pay for no copy. Then write the two lines of a caller who owns std::vector<double> mine and gives it away to a new Event.",
+  "hints": [
+   "Take the parameter by value, not by const reference.",
+   "Inside the constructor the parameter has a name, so it is an lvalue: move it into the member."
+  ],
+  "solution": "class Event {\npublic:\n    explicit Event(std::vector<double> hits) : hits_(std::move(hits)) {}\nprivate:\n    std::vector<double> hits_;\n};\n\nstd::vector<double> mine{1.0, 2.0};\nEvent ev(std::move(mine));",
+  "lesson": "c16"
+ },
+ {
+  "id": "c26",
+  "track": "cpp",
+  "level": 2,
+  "week": 11,
+  "mins": 6,
+  "title": "Sum a matrix in memory order",
+  "prompt": "A matrix with rows rows and cols columns is stored row after row in one std::vector<double> m. Write double total(const std::vector<double>& m, std::size_t rows, std::size_t cols) that adds up all elements, visiting them in the order in which they lie in memory.",
+  "hints": [
+   "Element (i, j) is at index i * cols + j.",
+   "The row index belongs in the outer loop, so that the inner loop walks along neighbours."
+  ],
+  "solution": "double total(const std::vector<double>& m, std::size_t rows, std::size_t cols) {\n    double s = 0.0;\n    for (std::size_t i = 0; i < rows; ++i) {\n        for (std::size_t j = 0; j < cols; ++j) {\n            s += m[i * cols + j];\n        }\n    }\n    return s;\n}",
+  "lesson": "c17"
+ },
+ {
+  "id": "c27",
+  "track": "cpp",
+  "level": 2,
+  "week": 11,
+  "mins": 7,
+  "title": "Parse a number, maybe",
+  "prompt": "Write std::optional<double> parse_double(std::string_view text) with std::from_chars. It returns the number only if the whole text is one, and std::nullopt otherwise.",
+  "hints": [
+   "std::from_chars(first, last, value) returns a struct with ptr, where parsing stopped, and ec, an error code. Unpack it with auto [ptr, ec].",
+   "Success means ec == std::errc{} and ptr at the end of the text."
+  ],
+  "solution": "#include <charconv>\n#include <optional>\n#include <string_view>\n\nstd::optional<double> parse_double(std::string_view text) {\n    double value = 0.0;\n    const auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), value);\n    if (ec != std::errc{} || ptr != text.data() + text.size()) return std::nullopt;\n    return value;\n}",
+  "lesson": "c18"
+ },
+ {
+  "id": "c28",
+  "track": "cpp",
+  "level": 3,
+  "week": 11,
+  "mins": 8,
+  "title": "Split a line without copying",
+  "prompt": "Write std::vector<std::string_view> split(std::string_view line, char sep). For \"a,b,,c\" and ',' it returns the four views a, b, an empty one and c. No characters may be copied.",
+  "hints": [
+   "line.find(sep) gives the position of the next separator, or std::string_view::npos. line.substr(0, end) is the field before it.",
+   "After taking a field, shorten the view with line.remove_prefix(end + 1). When find returns npos, the rest is the last field."
+  ],
+  "solution": "std::vector<std::string_view> split(std::string_view line, char sep) {\n    std::vector<std::string_view> fields;\n    while (true) {\n        const std::size_t end = line.find(sep);\n        fields.push_back(line.substr(0, end));\n        if (end == std::string_view::npos) break;\n        line.remove_prefix(end + 1);\n    }\n    return fields;\n}",
+  "lesson": "c18"
+ },
+ {
+  "id": "c29",
+  "track": "cpp",
+  "level": 2,
+  "week": 11,
+  "mins": 8,
+  "title": "Write and read a binary column",
+  "prompt": "Write void save(const std::vector<double>& v, const std::string& path) and std::vector<double> load(const std::string& path). The file holds the number of values as a std::uint64_t, followed by the raw bytes of the doubles.",
+  "hints": [
+   "Open both streams with std::ios::binary. write and read take a pointer to char and a count of bytes.",
+   "reinterpret_cast<const char*>(v.data()) presents the doubles as bytes. When loading, read the count first and size the vector before reading into it."
+  ],
+  "solution": "void save(const std::vector<double>& v, const std::string& path) {\n    std::ofstream out(path, std::ios::binary);\n    const std::uint64_t n = v.size();\n    out.write(reinterpret_cast<const char*>(&n), sizeof n);\n    out.write(reinterpret_cast<const char*>(v.data()), static_cast<std::streamsize>(n * sizeof(double)));\n}\n\nstd::vector<double> load(const std::string& path) {\n    std::ifstream in(path, std::ios::binary);\n    std::uint64_t n = 0;\n    in.read(reinterpret_cast<char*>(&n), sizeof n);\n    std::vector<double> v(n);\n    in.read(reinterpret_cast<char*>(v.data()), static_cast<std::streamsize>(n * sizeof(double)));\n    return v;\n}",
+  "lesson": "pj4"
+ },
+ {
+  "id": "c30",
+  "track": "cpp",
+  "level": 2,
+  "week": 12,
+  "mins": 6,
+  "title": "A loop the compiler can vectorise",
+  "prompt": "Write void pt_all(std::size_t n, const double* px, const double* py, double* pt) that computes the transverse momentum of n particles from columns. Below it, as comments, name the three compiler flags that let g++ vectorise it and the flag that reports whether it did.",
+  "hints": [
+   "One plain loop over i with nothing but arithmetic and std::sqrt in the body.",
+   "std::sqrt must set errno for negative input unless a flag says otherwise, and that hidden branch blocks vectorisation."
+  ],
+  "solution": "void pt_all(std::size_t n, const double* px, const double* py, double* pt) {\n    for (std::size_t i = 0; i < n; ++i) {\n        pt[i] = std::sqrt(px[i] * px[i] + py[i] * py[i]);\n    }\n}\n// -O3                        switch the vectoriser on\n// -march=native              use the widest instructions of this processor\n// -fno-math-errno            sqrt need not set errno\n// -fopt-info-vec-optimized   report the loops that were vectorised",
+  "lesson": "pf2"
+ },
+ {
+  "id": "c31",
+  "track": "cpp",
+  "level": 2,
+  "week": 12,
+  "mins": 6,
+  "title": "Reproducible random numbers",
+  "prompt": "Write std::vector<double> gaussian_sample(std::size_t n, double mean, double sigma, std::uint64_t seed). It returns n numbers from a normal distribution, and the same arguments must always give the same numbers.",
+  "hints": [
+   "An engine, std::mt19937_64 rng(seed), and a distribution, std::normal_distribution<double> dist(mean, sigma).",
+   "dist(rng) draws one number. Create the engine inside the function, so that every call starts from the seed."
+  ],
+  "solution": "#include <random>\n\nstd::vector<double> gaussian_sample(std::size_t n, double mean, double sigma, std::uint64_t seed) {\n    std::mt19937_64 rng(seed);\n    std::normal_distribution<double> dist(mean, sigma);\n    std::vector<double> out(n);\n    for (double& x : out) x = dist(rng);\n    return out;\n}",
+  "lesson": "mc1"
+ },
+ {
+  "id": "c32",
+  "track": "cpp",
+  "level": 3,
+  "week": 13,
+  "mins": 10,
+  "title": "A parallel sum with std::thread",
+  "prompt": "Write long parallel_sum(const std::vector<long>& v, unsigned threads). It splits v into as many contiguous parts as there are threads, adds up each part on its own thread, and returns the total. There must be no data race and no mutex.",
+  "hints": [
+   "Thread t handles the indices from v.size() * t / threads up to, but not including, v.size() * (t + 1) / threads.",
+   "Each thread adds into a local variable and writes it to partial[t] once. Capture t by value. Join all threads, then add up partial."
+  ],
+  "solution": "long parallel_sum(const std::vector<long>& v, unsigned threads) {\n    std::vector<long> partial(threads, 0);\n    std::vector<std::thread> pool;\n    for (unsigned t = 0; t < threads; ++t) {\n        pool.emplace_back([&v, &partial, t, threads] {\n            const std::size_t begin = v.size() * t / threads;\n            const std::size_t end = v.size() * (t + 1) / threads;\n            long local = 0;\n            for (std::size_t i = begin; i < end; ++i) local += v[i];\n            partial[t] = local;\n        });\n    }\n    for (std::thread& th : pool) th.join();\n    return std::accumulate(partial.begin(), partial.end(), 0L);\n}",
+  "lesson": "pf3"
+ },
+ {
+  "id": "c33",
+  "track": "cpp",
+  "level": 2,
+  "week": 13,
+  "mins": 6,
+  "title": "A thread-safe counter",
+  "prompt": "Write a class Counter with void add(long n) and long value() const. Any number of threads may call both at the same time. Use a mutex.",
+  "hints": [
+   "Lock with std::lock_guard<std::mutex> at the start of each function. It unlocks when the function returns.",
+   "value() is const but still has to lock. Declare the mutex mutable, which allows a const member function to change it."
+  ],
+  "solution": "class Counter {\npublic:\n    void add(long n) {\n        std::lock_guard<std::mutex> lock(m_);\n        total_ += n;\n    }\n    long value() const {\n        std::lock_guard<std::mutex> lock(m_);\n        return total_;\n    }\nprivate:\n    mutable std::mutex m_;\n    long total_ = 0;\n};",
+  "lesson": "pf3"
+ },
+ {
+  "id": "c34",
+  "track": "cpp",
+  "level": 2,
+  "week": 13,
+  "mins": 6,
+  "title": "An OpenMP reduction",
+  "prompt": "Write double mean(const std::vector<double>& v) that adds up the elements in parallel with OpenMP and returns their mean. Add a comment with the compiler flag it needs.",
+  "hints": [
+   "#pragma omp parallel for goes directly above the for loop.",
+   "Without reduction(+:sum) all threads would write to the same variable."
+  ],
+  "solution": "double mean(const std::vector<double>& v) {\n    double sum = 0.0;\n    #pragma omp parallel for reduction(+:sum)\n    for (std::size_t i = 0; i < v.size(); ++i) {\n        sum += v[i];\n    }\n    return sum / static_cast<double>(v.size());\n}\n// compile with -fopenmp",
+  "lesson": "pf4"
+ },
+ {
+  "id": "p34",
+  "track": "py",
+  "level": 1,
+  "week": 11,
+  "mins": 4,
+  "title": "Amdahl's law",
+  "prompt": "Write amdahl(p, s): the speed-up of a whole program when a fraction p of its run time is made s times faster. Then write ceiling(p): the largest speed-up possible, however fast that part becomes.",
+  "hints": [
+   "The untouched part keeps its share 1 - p. The improved part shrinks to p / s.",
+   "For the ceiling, let s grow without limit: p / s goes to zero."
+  ],
+  "solution": "def amdahl(p, s):\n    return 1 / ((1 - p) + p / s)\n\ndef ceiling(p):\n    return 1 / (1 - p)",
+  "lesson": "pf1",
+  "tests": "print(round(amdahl(0.5, 2), 3), round(amdahl(0.9, 4), 3))\nprint(round(amdahl(0.99, 4.6), 2))\nprint(round(ceiling(0.9), 1), round(ceiling(0.5), 1))",
+  "expect": [
+   "1.333 3.077",
+   "4.44",
+   "10.0 2.0"
+  ]
+ },
+ {
+  "id": "p35",
+  "track": "py",
+  "level": 3,
+  "week": 12,
+  "mins": 8,
+  "title": "A Lorentz boost along z",
+  "prompt": "Write boost_z(E, pz, beta): a particle has energy E and momentum pz along z in one frame. Return its (E, pz) in a frame that moves with velocity beta along z relative to it, so that a particle at rest ends up moving with +beta.",
+  "hints": [
+   "gamma = 1 / sqrt(1 - beta ** 2).",
+   "E' = gamma * (E + beta * pz) and pz' = gamma * (pz + beta * E)."
+  ],
+  "solution": "import math\n\ndef boost_z(E, pz, beta):\n    gamma = 1 / math.sqrt(1 - beta ** 2)\n    return gamma * (E + beta * pz), gamma * (pz + beta * E)",
+  "lesson": "mc1",
+  "tests": "a = boost_z(1.5, 0.9, 0.8)\nb = boost_z(1.5, -0.9, 0.8)\nprint(round(a[0], 6), round(a[1], 6))\nprint(round(b[0], 6), round(b[1], 6))\nc = boost_z(3.0, 0.0, 0.8)\nprint(round(c[0], 6), round(c[1], 6), round(c[0] ** 2 - c[1] ** 2, 6))\nprint(boost_z(2.0, 1.0, 0.0))",
+  "expect": [
+   "3.7 3.5",
+   "1.3 0.5",
+   "5.0 4.0 9.0",
+   "(2.0, 1.0)"
+  ]
+ },
+ {
+  "id": "p36",
+  "track": "py",
+  "level": 2,
+  "week": 14,
+  "mins": 7,
+  "title": "An RDataFrame chain",
+  "prompt": "With ROOT's RDataFrame, on all cores: open the tree mini in data.root, keep the events with exactly two leptons whose charges add up to zero, define lead_pt as the largest lepton pT in GeV (the file stores MeV), book a histogram of it with 40 bins from 0 to 200, and print how many events passed.",
+  "hints": [
+   "ROOT.EnableImplicitMT() comes before the data frame is created. The expressions inside Filter and Define are C++ strings.",
+   "Sum(lep_charge) and Max(lep_pt) work on one event's array. Book the histogram and the count first, call GetValue() last."
+  ],
+  "solution": "import ROOT\nROOT.EnableImplicitMT()\n\ndf = ROOT.RDataFrame(\"mini\", \"data.root\")\nsel = (df.Filter(\"lep_n == 2\", \"two leptons\")\n         .Filter(\"Sum(lep_charge) == 0\", \"opposite charge\")\n         .Define(\"lead_pt\", \"Max(lep_pt) / 1000.0\"))\nh = sel.Histo1D((\"lead_pt\", \";leading pT (GeV);Events\", 40, 0.0, 200.0), \"lead_pt\")\nn = sel.Count()\nprint(n.GetValue())",
+  "lesson": "rt1"
+ },
+ {
+  "id": "p37",
+  "track": "py",
+  "level": 2,
+  "week": 15,
+  "mins": 8,
+  "title": "A forward pass by hand",
+  "prompt": "Write forward(x, W1, b1, W2, b2) for one event, in plain Python. x is a list of inputs. W1 holds one list of weights per hidden neuron and b1 one bias per hidden neuron. W2 and b2 are the same for the output layer. Compute the hidden layer with ReLU, then the logits, and return the softmax probabilities as a list.",
+  "hints": [
+   "One layer is, for each neuron, the sum of weight times input, plus the bias. ReLU is max(z, 0).",
+   "Subtract the largest logit before math.exp, so that large logits don't overflow. Then divide by the sum."
+  ],
+  "solution": "import math\n\ndef forward(x, W1, b1, W2, b2):\n    hidden = [max(sum(w * xi for w, xi in zip(row, x)) + b, 0.0) for row, b in zip(W1, b1)]\n    logits = [sum(w * h for w, h in zip(row, hidden)) + b for row, b in zip(W2, b2)]\n    m = max(logits)\n    e = [math.exp(z - m) for z in logits]\n    s = sum(e)\n    return [v / s for v in e]",
+  "lesson": "dl1",
+  "tests": "W1 = [[1.0, -1.0], [0.5, 0.5], [-2.0, 1.0]]\nb1 = [0.0, -0.5, 0.5]\nW2 = [[1.0, 0.0, -1.0], [-1.0, 2.0, 0.5]]\nb2 = [0.1, -0.1]\np = forward([2.0, 1.0], W1, b1, W2, b2)\nprint([round(v, 4) for v in p], round(sum(p), 6))\np = forward([-1.0, 3.0], W1, b1, W2, b2)\nprint([round(v, 4) for v in p])\np = forward([0.0, 0.0], W1, b1, [[0.0, 0.0, 2000.0], [0.0, 0.0, 0.0]], [0.0, 0.0])\nprint([round(v, 4) for v in p])",
+  "expect": [
+   "[0.5498, 0.4502] 1.0",
+   "[0.0001, 0.9999]",
+   "[1.0, 0.0]"
+  ]
+ },
+ {
+  "id": "p38",
+  "track": "py",
+  "level": 2,
+  "week": 15,
+  "mins": 6,
+  "title": "Cross-entropy and accuracy of a batch",
+  "prompt": "probs is a list with one list of class probabilities per event, and labels holds the correct class of each event as an integer. Write cross_entropy(probs, labels), the mean over the events of minus the logarithm of the probability given to the correct class. Then write accuracy(probs, labels), the fraction of events whose most probable class is the correct one.",
+  "hints": [
+   "math.log is the natural logarithm. p[y] picks the probability of the correct class.",
+   "p.index(max(p)) is the position of the largest probability."
+  ],
+  "solution": "import math\n\ndef cross_entropy(probs, labels):\n    return -sum(math.log(p[y]) for p, y in zip(probs, labels)) / len(labels)\n\ndef accuracy(probs, labels):\n    hits = 0\n    for p, y in zip(probs, labels):\n        if p.index(max(p)) == y:\n            hits += 1\n    return hits / len(labels)",
+  "lesson": "dl1",
+  "tests": "probs = [[0.7, 0.2, 0.1], [0.1, 0.8, 0.1], [0.3, 0.4, 0.3], [0.25, 0.25, 0.5]]\nlabels = [0, 1, 2, 2]\nprint(round(cross_entropy(probs, labels), 4), accuracy(probs, labels))\nprint(round(cross_entropy([[0.5, 0.5]], [1]), 4), accuracy([[0.9, 0.1]], [1]))\nprint(round(cross_entropy([[0.2, 0.2, 0.2, 0.2, 0.2]] * 3, [0, 3, 4]), 4))",
+  "expect": [
+   "0.6192 0.75",
+   "0.6931 0.0",
+   "1.6094"
+  ]
+ },
+ {
+  "id": "p39",
+  "track": "py",
+  "level": 3,
+  "week": 15,
+  "mins": 8,
+  "title": "A numerical gradient",
+  "prompt": "Write numeric_grad(f, w, eps). f is a function that takes a list of numbers and returns one number, and w is a list of numbers. Return a list with, for every position i, the central difference: f with w[i] raised by eps, minus f with w[i] lowered by eps, divided by 2 * eps. The list w itself must not be changed.",
+  "hints": [
+   "Make two copies of w for every position, with list(w), and change one element in each.",
+   "The result has the same length as w."
+  ],
+  "solution": "def numeric_grad(f, w, eps):\n    grad = []\n    for i in range(len(w)):\n        up = list(w)\n        down = list(w)\n        up[i] += eps\n        down[i] -= eps\n        grad.append((f(up) - f(down)) / (2 * eps))\n    return grad",
+  "lesson": "dl1",
+  "tests": "def f(w):\n    return w[0] ** 2 + 3 * w[0] * w[1]\n\nw = [2.0, -1.0]\nprint([round(g, 4) for g in numeric_grad(f, w, 1e-5)], w)\nprint([round(g, 4) for g in numeric_grad(lambda v: sum(x * x for x in v), [1.0, -2.0, 0.5], 1e-5)])\nanalytic = [2 * w[0] + 3 * w[1], 3 * w[0]]\nprint(max(abs(a - n) for a, n in zip(analytic, numeric_grad(f, w, 1e-5))) < 1e-6)",
+  "expect": [
+   "[1.0, 6.0] [2.0, -1.0]",
+   "[2.0, -4.0, 1.0]",
+   "True"
+  ]
+ },
+ {
+  "id": "p40",
+  "track": "py",
+  "level": 2,
+  "week": 15,
+  "mins": 8,
+  "title": "The PyTorch training loop",
+  "prompt": "Write train(model, X, y, steps, lr): it trains model on the tensors X and y with cross-entropy and plain SGD, using all the data in every step, and returns the last loss as a Python number. Then write accuracy(model, X, y), which computes the fraction of correct predictions without recording gradients.",
+  "hints": [
+   "Five lines inside the loop: zero_grad, forward, loss, backward, step.",
+   "model.eval() and with torch.no_grad(): for the accuracy. argmax(dim=1) gives the predicted class, and .item() turns a one-element tensor into a number."
+  ],
+  "solution": "import torch\nfrom torch import nn\n\ndef train(model, X, y, steps, lr):\n    loss_fn = nn.CrossEntropyLoss()\n    optimizer = torch.optim.SGD(model.parameters(), lr=lr)\n    model.train()\n    for _ in range(steps):\n        optimizer.zero_grad()\n        loss = loss_fn(model(X), y)\n        loss.backward()\n        optimizer.step()\n    return loss.item()\n\ndef accuracy(model, X, y):\n    model.eval()\n    with torch.no_grad():\n        return (model(X).argmax(dim=1) == y).float().mean().item()",
+  "lesson": "dl2"
+ },
+ {
+  "id": "p41",
+  "track": "py",
+  "level": 2,
+  "week": 16,
+  "mins": 8,
+  "title": "The logic of early stopping",
+  "prompt": "Write early_stop(val_losses, patience). val_losses holds the validation loss after each epoch, the first epoch first. Training stops at the epoch that is the patience-th in a row without an improvement on the best loss so far. An equal loss is not an improvement. Return a tuple: the epoch at which training stops, and the epoch whose weights you would restore. Epochs count from 1. If the patience never runs out, training stops at the last epoch.",
+  "hints": [
+   "Keep three things: the best loss, its epoch, and how many epochs you have waited.",
+   "enumerate(val_losses, start=1) gives the epoch number with each loss. An improvement resets the waiting to 0."
+  ],
+  "solution": "def early_stop(val_losses, patience):\n    best = float(\"inf\")\n    best_epoch = 0\n    waited = 0\n    for epoch, loss in enumerate(val_losses, start=1):\n        if loss < best:\n            best, best_epoch, waited = loss, epoch, 0\n        else:\n            waited += 1\n            if waited == patience:\n                return epoch, best_epoch\n    return len(val_losses), best_epoch",
+  "lesson": "dl3",
+  "tests": "losses = [0.9, 0.7, 0.72, 0.69, 0.70, 0.71, 0.695, 0.5]\nprint(early_stop(losses, 3), early_stop(losses, 2))\nprint(early_stop([0.5, 0.4, 0.3], 2), early_stop([0.5, 0.5, 0.5], 2))\nprint(early_stop(losses, 10))",
+  "expect": [
+   "(7, 4) (6, 4)",
+   "(3, 3) (3, 1)",
+   "(8, 8)"
+  ]
+ },
+ {
+  "id": "p44",
+  "track": "py",
+  "level": 2,
+  "week": 16,
+  "mins": 8,
+  "title": "A model as a class",
+  "prompt": "Write a PyTorch class MLP(nn.Module). Its constructor takes n_in, a list hidden with the sizes of the hidden layers, and n_out. It builds a linear layer followed by a ReLU for every hidden size and a last linear layer without activation. forward returns the logits. Then create MLP(16, [64, 32, 32], 5) and print its number of parameters.",
+  "hints": [
+   "super().__init__() comes first. Collect the layers in a list while you keep track of the size of the previous layer.",
+   "nn.Sequential(*layers) turns the list into a model. The star unpacks the list into separate arguments."
+  ],
+  "solution": "import torch\nfrom torch import nn\n\nclass MLP(nn.Module):\n    def __init__(self, n_in, hidden, n_out):\n        super().__init__()\n        layers = []\n        size = n_in\n        for h in hidden:\n            layers.append(nn.Linear(size, h))\n            layers.append(nn.ReLU())\n            size = h\n        layers.append(nn.Linear(size, n_out))\n        self.net = nn.Sequential(*layers)\n\n    def forward(self, x):\n        return self.net(x)\n\nmodel = MLP(16, [64, 32, 32], 5)\nprint(sum(p.numel() for p in model.parameters()))    # 4389",
+  "lesson": "dl3"
+ },
+ {
+  "id": "p45",
+  "track": "py",
+  "level": 3,
+  "week": 16,
+  "mins": 10,
+  "title": "One epoch, and an evaluation",
+  "prompt": "Write train_epoch(model, loader, loss_fn, optimizer): one pass over a DataLoader in training mode, returning the mean training loss per example. Then write evaluate(model, X, y, loss_fn): the loss and the accuracy on the tensors X and y as a tuple of Python numbers, in evaluation mode and without gradients.",
+  "hints": [
+   "The loss of a batch is already a mean over that batch. Multiply it by the batch size before adding it up, and divide by the number of examples at the end.",
+   "Compute the logits once in evaluate, and use them for both the loss and the accuracy."
+  ],
+  "solution": "def train_epoch(model, loader, loss_fn, optimizer):\n    model.train()\n    total = 0.0\n    count = 0\n    for xb, yb in loader:\n        optimizer.zero_grad()\n        loss = loss_fn(model(xb), yb)\n        loss.backward()\n        optimizer.step()\n        total += loss.item() * len(yb)\n        count += len(yb)\n    return total / count\n\ndef evaluate(model, X, y, loss_fn):\n    model.eval()\n    with torch.no_grad():\n        logits = model(X)\n        loss = loss_fn(logits, y).item()\n        accuracy = (logits.argmax(dim=1) == y).float().mean().item()\n    return loss, accuracy",
+  "lesson": "dl3"
+ },
+ {
+  "id": "p46",
+  "track": "py",
+  "level": 2,
+  "week": 16,
+  "mins": 8,
+  "title": "A confusion matrix by hand",
+  "prompt": "true and pred are lists of class numbers from 0 to k - 1. Write confusion(true, pred, k): a list of k rows with k counts each, where the entry in row t and column p counts the events of true class t that were predicted as p. Then write recall(m, i), the fraction of the events of true class i that were predicted correctly, and precision(m, i), the fraction of the events predicted as i that really are class i.",
+  "hints": [
+   "Build the empty matrix with [[0] * k for _ in range(k)]. Writing [[0] * k] * k would make k references to one and the same row.",
+   "Recall divides by a row sum. Precision divides by a column sum."
+  ],
+  "solution": "def confusion(true, pred, k):\n    m = [[0] * k for _ in range(k)]\n    for t, p in zip(true, pred):\n        m[t][p] += 1\n    return m\n\ndef recall(m, i):\n    return m[i][i] / sum(m[i])\n\ndef precision(m, i):\n    return m[i][i] / sum(row[i] for row in m)",
+  "lesson": "pj5",
+  "tests": "true = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2]\npred = [0, 0, 1, 2, 1, 1, 0, 2, 2, 1]\nm = confusion(true, pred, 3)\nprint(m)\nprint(recall(m, 0), round(recall(m, 1), 4), round(recall(m, 2), 4))\nprint(round(precision(m, 0), 4), precision(m, 1), round(precision(m, 2), 4))",
+  "expect": [
+   "[[2, 1, 1], [1, 2, 0], [0, 1, 2]]",
+   "0.5 0.6667 0.6667",
+   "0.6667 0.5 0.6667"
+  ]
+ },
+ {
+  "id": "p42",
+  "track": "py",
+  "level": 2,
+  "week": 17,
+  "mins": 8,
+  "title": "Magnitude pruning",
+  "prompt": "Write prune(ws, frac) for a list of weights: return a new list in which the int(len(ws) * frac) weights with the smallest absolute values are replaced by 0.0. The other weights keep their values and their places, and ws itself is not changed. Then write sparsity(ws), the fraction of the weights that are zero.",
+  "hints": [
+   "Sort the positions, not the values: sorted(range(len(ws)), key=lambda i: abs(ws[i])).",
+   "The first k of those positions are the ones to drop. Put them in a set and build the new list with enumerate."
+  ],
+  "solution": "def prune(ws, frac):\n    k = int(len(ws) * frac)\n    order = sorted(range(len(ws)), key=lambda i: abs(ws[i]))\n    drop = set(order[:k])\n    return [0.0 if i in drop else w for i, w in enumerate(ws)]\n\ndef sparsity(ws):\n    return sum(1 for w in ws if w == 0) / len(ws)",
+  "lesson": "dl4",
+  "tests": "ws = [0.5, -0.1, 0.02, -0.9, 0.3, -0.04, 0.7, 0.15, -0.25, 0.6]\nprint([w + 0.0 for w in prune(ws, 0.3)])\nhalf = prune(ws, 0.5)\nprint([w + 0.0 for w in half], sparsity(half))\nprint(ws[1], ws[2], sparsity(ws), sparsity(prune(ws, 0.0)))",
+  "expect": [
+   "[0.5, 0.0, 0.0, -0.9, 0.3, 0.0, 0.7, 0.15, -0.25, 0.6]",
+   "[0.5, 0.0, 0.0, -0.9, 0.3, 0.0, 0.7, 0.0, 0.0, 0.6] 0.5",
+   "-0.1 0.02 0.0 0.0"
+  ]
+ },
+ {
+  "id": "p43",
+  "track": "py",
+  "level": 3,
+  "week": 17,
+  "mins": 10,
+  "title": "Export to ONNX and run it",
+  "prompt": "model is a trained PyTorch model that takes a float32 tensor of shape (N, 16) and returns probabilities, and X is a float32 NumPy array of that shape. Export the model to model.onnx with the input name features, the output name probabilities and a variable number of rows. Load the file with ONNX Runtime on the CPU and compute the probabilities for X. Then print the largest absolute difference from PyTorch's own result.",
+  "hints": [
+   "torch.onnx.export(model, (example,), path, input_names=[...], output_names=[...], dynamic_shapes=({0: \"batch\"},), external_data=False). The example is a tensor of zeros with one row.",
+   "session.run(None, {\"features\": X}) returns a list of outputs. Take element 0."
+  ],
+  "solution": "import numpy as np\nimport torch\nimport onnxruntime as ort\n\nmodel.eval()\ntorch.onnx.export(model, (torch.zeros(1, 16),), \"model.onnx\",\n                  input_names=[\"features\"], output_names=[\"probabilities\"],\n                  dynamic_shapes=({0: \"batch\"},), external_data=False)\n\nsession = ort.InferenceSession(\"model.onnx\", providers=[\"CPUExecutionProvider\"])\np_onnx = session.run(None, {\"features\": X})[0]\n\nwith torch.no_grad():\n    p_torch = model(torch.tensor(X)).numpy()\nprint(np.abs(p_onnx - p_torch).max())",
+  "lesson": "dl5"
+ },
+ {
+  "id": "p47",
+  "track": "py",
+  "level": 2,
+  "week": 18,
+  "mins": 8,
+  "title": "Checking a request body by hand",
+  "prompt": "Write check(body), the validation that a service does before it runs a model. body is the parsed JSON of a request. Return a tuple of a status code and a message. If body is not a dictionary or has no key jets: (422, 'jets is required'). If jets is not a list, or has fewer than 1 or more than 1024 items: (422, 'between 1 and 1024 jets'). If any jet is not a list of exactly 16 numbers: (422, 'every jet needs 16 numbers'). Otherwise (200, 'ok').",
+  "hints": [
+   "Check from the outside in, and return as soon as something is wrong. isinstance(x, dict) and isinstance(x, list) test the type.",
+   "A number is an int or a float: isinstance(v, (int, float)). Look at every value of every jet."
+  ],
+  "solution": "def check(body):\n    if not isinstance(body, dict) or \"jets\" not in body:\n        return (422, \"jets is required\")\n    jets = body[\"jets\"]\n    if not isinstance(jets, list) or len(jets) < 1 or len(jets) > 1024:\n        return (422, \"between 1 and 1024 jets\")\n    for jet in jets:\n        if not isinstance(jet, list) or len(jet) != 16:\n            return (422, \"every jet needs 16 numbers\")\n        for v in jet:\n            if not isinstance(v, (int, float)):\n                return (422, \"every jet needs 16 numbers\")\n    return (200, \"ok\")",
+  "lesson": "sv1",
+  "tests": "good = [0.5] * 16\nprint(check({\"jets\": [good]}), check({\"jets\": [good] * 1024}))\nprint(check({\"jets\": []}), check({\"jets\": [good] * 1025}))\nprint(check({\"jet\": [good]}), check([good]))\nprint(check({\"jets\": [good, [1.0] * 15]}), check({\"jets\": [[\"a\"] * 16]}))\nprint(check({\"jets\": \"hello\"}))",
+  "expect": [
+   "(200, 'ok') (200, 'ok')",
+   "(422, 'between 1 and 1024 jets') (422, 'between 1 and 1024 jets')",
+   "(422, 'jets is required') (422, 'jets is required')",
+   "(422, 'every jet needs 16 numbers') (422, 'every jet needs 16 numbers')",
+   "(422, 'between 1 and 1024 jets')"
+  ]
+ },
+ {
+  "id": "p48",
+  "track": "py",
+  "level": 3,
+  "week": 18,
+  "mins": 12,
+  "title": "A FastAPI service from memory",
+  "prompt": "Write app/main.py for a model service. At start-up it loads model/jet_tagger.onnx once with ONNX Runtime. GET /healthz returns a status. POST /predict takes a JSON body with a list of between 1 and 1024 jets, each a list of floats, answers 422 if a jet does not have 16 numbers, and otherwise returns the predicted label of every jet. The classes are g, q, w, z and t, and the input of the model is called features.",
+  "hints": [
+   "Four parts: a pydantic model for the body, a lifespan function that fills a dictionary with the session, the app, and the two handlers.",
+   "In the handler: check the lengths and raise HTTPException(status_code=422, ...), build a float32 array, run the session, and take argmax of every row."
+  ],
+  "solution": "from contextlib import asynccontextmanager\n\nimport numpy as np\nimport onnxruntime as ort\nfrom fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel, Field\n\nCLASSES = [\"g\", \"q\", \"w\", \"z\", \"t\"]\nstate = {}\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    state[\"session\"] = ort.InferenceSession(\n        \"model/jet_tagger.onnx\", providers=[\"CPUExecutionProvider\"])\n    yield\n    state.clear()\n\n\napp = FastAPI(lifespan=lifespan)\n\n\nclass PredictRequest(BaseModel):\n    jets: list[list[float]] = Field(min_length=1, max_length=1024)\n\n\n@app.get(\"/healthz\")\ndef healthz():\n    return {\"status\": \"ok\"}\n\n\n@app.post(\"/predict\")\ndef predict(request: PredictRequest):\n    if any(len(jet) != 16 for jet in request.jets):\n        raise HTTPException(status_code=422,\n                            detail=\"every jet needs 16 features\")\n    x = np.asarray(request.jets, dtype=np.float32)\n    p = state[\"session\"].run(None, {\"features\": x})[0]\n    return {\"labels\": [CLASSES[int(row.argmax())] for row in p]}",
+  "lesson": "sv1"
+ },
+ {
+  "id": "p49",
+  "track": "py",
+  "level": 2,
+  "week": 18,
+  "mins": 8,
+  "title": "Tests for an endpoint",
+  "prompt": "Write tests/test_api.py for the service in app/main.py. A fixture creates the test client once for the file, in a way that runs the start-up code. Then three tests: /healthz answers 200, a POST to /predict with one jet of sixteen zeros answers 200 with exactly one prediction, and a jet of two numbers is rejected with 422. The response has the form {\"predictions\": [...]}.",
+  "hints": [
+   "from fastapi.testclient import TestClient, and a fixture with scope=\"module\" that yields the client from inside a with block.",
+   "client.post(\"/predict\", json={\"jets\": [...]}) sends a JSON body. r.status_code and r.json() read the answer."
+  ],
+  "solution": "import pytest\nfrom fastapi.testclient import TestClient\n\nfrom app.main import app\n\n\n@pytest.fixture(scope=\"module\")\ndef client():\n    with TestClient(app) as c:\n        yield c\n\n\ndef test_health(client):\n    assert client.get(\"/healthz\").status_code == 200\n\n\ndef test_predict_one(client):\n    r = client.post(\"/predict\", json={\"jets\": [[0.0] * 16]})\n    assert r.status_code == 200\n    assert len(r.json()[\"predictions\"]) == 1\n\n\ndef test_wrong_length_is_rejected(client):\n    r = client.post(\"/predict\", json={\"jets\": [[1.0, 2.0]]})\n    assert r.status_code == 422",
+  "lesson": "sv1"
+ },
+ {
+  "id": "p60",
+  "track": "linux",
+  "level": 2,
+  "week": 18,
+  "mins": 8,
+  "title": "A Dockerfile for a service",
+  "prompt": "Write the Dockerfile for the tagger service. Start from python:3.12-slim and work in /srv. Install the pinned requirements before copying the folders app and model, so that a change of code doesn't reinstall the packages. Run as an ordinary user called appuser. Start uvicorn on port 8000 so that it can be reached from outside the container.",
+  "hints": [
+   "The order is: FROM, WORKDIR, COPY requirements.txt, RUN pip install, COPY the code, the user, EXPOSE, CMD.",
+   "useradd --create-home appuser creates the user and USER appuser switches to it. The server needs --host 0.0.0.0."
+  ],
+  "solution": "FROM python:3.12-slim\n\nWORKDIR /srv\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\nCOPY app/ app/\nCOPY model/ model/\n\nRUN useradd --create-home appuser\nUSER appuser\n\nEXPOSE 8000\nCMD [\"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]",
+  "lesson": "pj6"
+ },
+ {
+  "id": "p50",
+  "track": "py",
+  "level": 2,
+  "week": 18,
+  "mins": 8,
+  "title": "Three queries with placeholders",
+  "prompt": "con is an open sqlite3 connection to the database with the table events(run, event, pt1, eta1, q1, pt2, eta2, q2, mass). Write three functions. count_between(con, low, high) returns the number of events whose mass lies between low and high, both ends included. heaviest(con, n) returns a list of the n events with the largest mass as (run, event, mass) tuples, heaviest first. count_runs(con) returns the number of different runs. Every value that comes from an argument must go in through a placeholder.",
+  "hints": [
+   "con.execute(sql, (a, b)) fills the question marks. fetchone()[0] is the single number of a COUNT, and fetchall() is a list of tuples.",
+   "BETWEEN ? AND ? for the window, ORDER BY mass DESC LIMIT ? for the heaviest, and COUNT(DISTINCT run)."
+  ],
+  "solution": "def count_between(con, low, high):\n    sql = \"SELECT COUNT(*) FROM events WHERE mass BETWEEN ? AND ?\"\n    return con.execute(sql, (low, high)).fetchone()[0]\n\n\ndef heaviest(con, n):\n    sql = \"\"\"SELECT run, event, mass FROM events\n             ORDER BY mass DESC LIMIT ?\"\"\"\n    return con.execute(sql, (n,)).fetchall()\n\n\ndef count_runs(con):\n    return con.execute(\n        \"SELECT COUNT(DISTINCT run) FROM events\").fetchone()[0]",
+  "lesson": "sv2"
+ },
+ {
+  "id": "p51",
+  "track": "py",
+  "level": 3,
+  "week": 18,
+  "mins": 10,
+  "title": "GROUP BY, HAVING and a JOIN",
+  "prompt": "con is an open sqlite3 connection with the tables events(run, event, ..., mass) and runs(run, n_events). Write busy_runs(con, low, high, minimum): for the events with a mass between low and high, the runs that have at least minimum of them, as a list of (run, count) tuples with the largest count first. Then write fractions(con, low, high): for every run, the percentage of its events that lie in the mass window, rounded to two digits, as (run, percent) tuples with the largest percentage first.",
+  "hints": [
+   "The mass window is a condition on rows and goes into WHERE. The minimum is a condition on groups and goes into HAVING COUNT(*) >= ?.",
+   "Join events with runs ON e.run = r.run, group by the run, and divide 100.0 * COUNT(*) by r.n_events. The decimal point in 100.0 keeps the division from being an integer division."
+  ],
+  "solution": "def busy_runs(con, low, high, minimum):\n    sql = \"\"\"SELECT run, COUNT(*) AS n FROM events\n             WHERE mass BETWEEN ? AND ?\n             GROUP BY run\n             HAVING COUNT(*) >= ?\n             ORDER BY n DESC\"\"\"\n    return con.execute(sql, (low, high, minimum)).fetchall()\n\n\ndef fractions(con, low, high):\n    sql = \"\"\"SELECT r.run,\n                    ROUND(100.0 * COUNT(*) / r.n_events, 2) AS percent\n             FROM events AS e JOIN runs AS r ON e.run = r.run\n             WHERE e.mass BETWEEN ? AND ?\n             GROUP BY r.run\n             ORDER BY percent DESC\"\"\"\n    return con.execute(sql, (low, high)).fetchall()",
+  "lesson": "sv2"
+ },
+ {
+  "id": "p52",
+  "track": "py",
+  "level": 2,
+  "week": 18,
+  "mins": 10,
+  "title": "Three ways to wait",
+  "prompt": "fetch(i) is an ordinary function that blocks for a while and returns a value, and fetch_async(i) is a coroutine that does the same without blocking. Write three functions that each return the list of results for i from 0 to n - 1. with_threads(n) uses a pool of n threads and fetch. with_asyncio(n) runs n coroutines of fetch_async concurrently. with_limit(n, k) does the same, with at most k of them under way at any moment.",
+  "hints": [
+   "ThreadPoolExecutor(max_workers=n) and pool.map(fetch, range(n)). For asyncio: an inner async def main() that awaits asyncio.gather(...), and asyncio.run(main()).",
+   "For the limit, create asyncio.Semaphore(k) inside main, and wrap each call in a small coroutine that does 'async with gate:' before awaiting fetch_async(i)."
+  ],
+  "solution": "import asyncio\nfrom concurrent.futures import ThreadPoolExecutor\n\n\ndef with_threads(n):\n    with ThreadPoolExecutor(max_workers=n) as pool:\n        return list(pool.map(fetch, range(n)))\n\n\ndef with_asyncio(n):\n    async def main():\n        return await asyncio.gather(*[fetch_async(i) for i in range(n)])\n    return asyncio.run(main())\n\n\ndef with_limit(n, k):\n    async def one(i, gate):\n        async with gate:\n            return await fetch_async(i)\n\n    async def main():\n        gate = asyncio.Semaphore(k)\n        return await asyncio.gather(*[one(i, gate) for i in range(n)])\n    return asyncio.run(main())",
+  "lesson": "sv3"
+ },
+ {
+  "id": "p53",
+  "track": "py",
+  "level": 2,
+  "week": 18,
+  "mins": 8,
+  "title": "A worker pool on paper",
+  "prompt": "Write finish_time(jobs, workers). jobs is a list of durations, and the jobs are handed out in order to a pool with the given number of workers: each job goes to the worker that becomes free first, and to the first of them if several are free. Return the time at which the last job is finished. With no jobs the answer is 0.",
+  "hints": [
+   "Keep a list with the time at which each worker becomes free, starting with zeros.",
+   "For every job, find the smallest of those times with min and its position with index, and add the duration there. The answer is the largest time at the end."
+  ],
+  "solution": "def finish_time(jobs, workers):\n    free = [0] * workers\n    for duration in jobs:\n        i = free.index(min(free))\n        free[i] += duration\n    return max(free)",
+  "lesson": "sv3",
+  "tests": "print(finish_time([200] * 20, 1), finish_time([200] * 20, 20))\nprint(finish_time([200] * 20, 4), finish_time([200] * 20, 8))\nprint(finish_time([3, 1, 4, 1, 5], 2), finish_time([5, 5, 5], 1))\nprint(finish_time([], 3), finish_time([7], 3))",
+  "expect": [
+   "4000 200",
+   "1000 600",
+   "9 15",
+   "0 7"
+  ]
+ },
+ {
+  "id": "p59",
+  "track": "py",
+  "level": 3,
+  "week": 19,
+  "mins": 12,
+  "title": "The core of a load generator",
+  "prompt": "Write the core of a closed-loop load generator with asyncio and httpx. The coroutine user(client, url, body, deadline, latencies, errors) sends POST requests with the JSON text body until time.perf_counter() passes deadline. It appends the duration of every request that was answered with 200 to the list latencies, and counts everything else in the dictionary errors, under 'status NNN' or under the name of the exception. The coroutine run(url, body, connections, seconds) starts that many users on one shared client and returns the tuple (requests per second, p99 in milliseconds).",
+  "hints": [
+   "Time each request with two calls of time.perf_counter(). Catch httpx.HTTPError around the request, and use type(e).__name__ as the key.",
+   "async with httpx.AsyncClient(...) as client, then await asyncio.gather(*[user(...) for _ in range(connections)]). The rate is the number of latencies divided by the elapsed time."
+  ],
+  "solution": "import asyncio\nimport time\n\nimport httpx\nimport numpy as np\n\nHEADERS = {\"Content-Type\": \"application/json\"}\n\n\nasync def user(client, url, body, deadline, latencies, errors):\n    while time.perf_counter() < deadline:\n        start = time.perf_counter()\n        try:\n            r = await client.post(url, content=body, headers=HEADERS)\n            if r.status_code == 200:\n                latencies.append(time.perf_counter() - start)\n            else:\n                key = \"status %d\" % r.status_code\n                errors[key] = errors.get(key, 0) + 1\n        except httpx.HTTPError as e:\n            key = type(e).__name__\n            errors[key] = errors.get(key, 0) + 1\n\n\nasync def run(url, body, connections, seconds):\n    latencies, errors = [], {}\n    limits = httpx.Limits(max_connections=connections)\n    async with httpx.AsyncClient(limits=limits, timeout=10.0) as client:\n        start = time.perf_counter()\n        deadline = start + seconds\n        await asyncio.gather(*[\n            user(client, url, body, deadline, latencies, errors)\n            for _ in range(connections)])\n        elapsed = time.perf_counter() - start\n    p99 = float(np.percentile(np.array(latencies) * 1000, 99))\n    return len(latencies) / elapsed, p99",
+  "lesson": "sy6"
+ },
+ {
+  "id": "p54",
+  "track": "linux",
+  "level": 3,
+  "week": 19,
+  "mins": 12,
+  "title": "A Deployment with probes from memory",
+  "prompt": "Write k8s/deployment.yaml for the tagger: a Deployment called jet-tagger with 3 replicas of the image jet-service:0.1, labelled app: jet-tagger. The container port 8000 is named http. A rolling update may add one pod and must never have fewer than three ready. The readiness probe asks /readyz every 2 seconds and the liveness probe /healthz every 10. Request a quarter of a core and 128Mi, with limits of one core and 256Mi. Before a container is stopped it waits 5 seconds.",
+  "hints": [
+   "Under spec: replicas, selector.matchLabels, strategy.rollingUpdate with maxUnavailable and maxSurge, and template. The labels of the template must match the selector.",
+   "Inside the container: ports, readinessProbe and livenessProbe with httpGet (path and port) and periodSeconds, resources with requests and limits, and lifecycle.preStop.exec.command."
+  ],
+  "solution": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: jet-tagger\n  labels:\n    app: jet-tagger\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: jet-tagger\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxUnavailable: 0\n      maxSurge: 1\n  template:\n    metadata:\n      labels:\n        app: jet-tagger\n    spec:\n      containers:\n      - name: tagger\n        image: jet-service:0.1\n        ports:\n        - name: http\n          containerPort: 8000\n        readinessProbe:\n          httpGet:\n            path: /readyz\n            port: http\n          periodSeconds: 2\n        livenessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 10\n        resources:\n          requests:\n            cpu: 250m\n            memory: 128Mi\n          limits:\n            cpu: \"1\"\n            memory: 256Mi\n        lifecycle:\n          preStop:\n            exec:\n              command: [\"sleep\", \"5\"]",
+  "lesson": "sy4"
+ },
+ {
+  "id": "p55",
+  "track": "linux",
+  "level": 1,
+  "week": 19,
+  "mins": 6,
+  "title": "kubectl from memory",
+  "prompt": "Write the kubectl command for each of these, one on a line: (1) create or update everything described in the folder k8s, (2) list the pods with their addresses, (3) show the details and events of the pod called NAME, (4) print what the pod NAME has written, (5) wait until the deployment jet-tagger has finished rolling out, (6) change the image of its container tagger to jet-service:0.2, (7) go back to the previous version, (8) run it with 5 replicas, (9) make port 9090 of the service prometheus reachable as port 9090 of your machine.",
+  "hints": [
+   "apply, get, describe, logs, and four commands that name deployment/jet-tagger: rollout status, set image, rollout undo and scale.",
+   "set image takes container=image. scale takes --replicas=5. port-forward takes service/NAME and local:remote."
+  ],
+  "solution": "kubectl apply -f k8s/\nkubectl get pods -o wide\nkubectl describe pod NAME\nkubectl logs NAME\nkubectl rollout status deployment/jet-tagger\nkubectl set image deployment/jet-tagger tagger=jet-service:0.2\nkubectl rollout undo deployment/jet-tagger\nkubectl scale deployment/jet-tagger --replicas=5\nkubectl port-forward service/prometheus 9090:9090",
+  "lesson": "sy4"
+ },
+ {
+  "id": "p56",
+  "track": "py",
+  "level": 2,
+  "week": 20,
+  "mins": 8,
+  "title": "A rate from counter samples",
+  "prompt": "Write rate(samples), a simplified version of what Prometheus computes for a counter. samples is a list of (time in seconds, value) tuples in the order they were scraped. Add up the rises between neighbouring samples. If a value is lower than the one before, the counter was reset to zero in between, and the whole new value counts as rise. Divide the total by the time between the first and the last sample. With fewer than two samples the answer is 0.0.",
+  "hints": [
+   "Walk through the list from the second sample on, and compare each value with the one before it.",
+   "A rise is now - before when now >= before, and just now after a reset. The time span is samples[-1][0] - samples[0][0]."
+  ],
+  "solution": "def rate(samples):\n    if len(samples) < 2:\n        return 0.0\n    total = 0.0\n    for i in range(1, len(samples)):\n        before = samples[i - 1][1]\n        now = samples[i][1]\n        if now >= before:\n            total += now - before\n        else:\n            total += now\n    return total / (samples[-1][0] - samples[0][0])",
+  "lesson": "sy5",
+  "tests": "print(\"%.1f\" % rate([(0, 100), (5, 160), (10, 220), (15, 250)]))\nprint(\"%.1f\" % rate([(0, 500), (5, 560), (10, 30), (15, 60)]))\nprint(\"%.1f %.1f\" % (rate([(100, 7)]), rate([(10, 0), (70, 300)])))",
+  "expect": [
+   "10.0",
+   "8.0",
+   "0.0 5.0"
+  ]
+ },
+ {
+  "id": "p57",
+  "track": "py",
+  "level": 3,
+  "week": 20,
+  "mins": 10,
+  "title": "A quantile from buckets",
+  "prompt": "Write the two halves of a Prometheus histogram. to_cumulative(edges, values) returns, for every upper edge in edges, how many of the observed values are less than or equal to it. bucket_quantile(q, edges, counts) estimates a quantile from such cumulative counts: the rank is q times the last count, the bucket is the first whose count reaches the rank, and the answer is found by drawing a straight line between the lower and the upper edge of that bucket. The lower edge of the first bucket is 0.",
+  "hints": [
+   "For to_cumulative, count for each edge the values that are <= edge.",
+   "Remember the edge and the count of the bucket before. The answer is lower_edge + (rank - lower_count) / (count - lower_count) * (edge - lower_edge)."
+  ],
+  "solution": "def to_cumulative(edges, values):\n    counts = []\n    for edge in edges:\n        counts.append(len([v for v in values if v <= edge]))\n    return counts\n\n\ndef bucket_quantile(q, edges, counts):\n    rank = q * counts[-1]\n    lower_edge = 0.0\n    lower_count = 0\n    for edge, count in zip(edges, counts):\n        if count >= rank:\n            fraction = (rank - lower_count) / (count - lower_count)\n            return lower_edge + fraction * (edge - lower_edge)\n        lower_edge = edge\n        lower_count = count\n    return edges[-1]",
+  "lesson": "sy5",
+  "tests": "edges = [1, 2, 5, 10, 100]\nvalues = [0.4, 0.8, 1.5, 1.7, 1.9, 2.5, 4.0, 8.0, 9.0, 50.0]\ncounts = to_cumulative(edges, values)\nprint(counts)\nprint(\"%.2f %.2f %.2f\" % (bucket_quantile(0.5, edges, counts), bucket_quantile(0.9, edges, counts), bucket_quantile(0.99, edges, counts)))\nprint(\"%.2f\" % bucket_quantile(0.25, edges, counts))",
+  "expect": [
+   "[2, 5, 7, 9, 10]",
+   "2.00 10.00 91.00",
+   "1.17"
+  ]
+ },
+ {
+  "id": "p58",
+  "track": "linux",
+  "level": 2,
+  "week": 20,
+  "mins": 8,
+  "title": "Five PromQL queries from memory",
+  "prompt": "Write the PromQL query for each of these, one on a line. The service has the counter tagger_requests_total with the label status (ok or rejected) and the histogram tagger_request_seconds, and its job is called jet-tagger. (1) Which targets of the job are up? (2) The total requests per second over the last minute. (3) The same for each pod separately. (4) The p99 of the handler over the last minute, across all pods. (5) The fraction of requests that were rejected over the last minute.",
+  "hints": [
+   "rate(counter[1m]) gives the rise per second, sum(...) adds series together and sum by (instance) (...) keeps one for each pod.",
+   "histogram_quantile(0.99, sum by (le) (rate(..._bucket[1m]))). The fraction is one sum of rates divided by another."
+  ],
+  "solution": "up{job=\"jet-tagger\"}\nsum(rate(tagger_requests_total[1m]))\nsum by (instance) (rate(tagger_requests_total[1m]))\nhistogram_quantile(0.99, sum by (le) (rate(tagger_request_seconds_bucket[1m])))\nsum(rate(tagger_requests_total{status=\"rejected\"}[1m])) / sum(rate(tagger_requests_total[1m]))",
+  "lesson": "sy5"
+ },
+ {
+  "id": "p61",
+  "track": "py",
+  "level": 2,
+  "week": 21,
+  "mins": 8,
+  "title": "Entry points from pyproject.toml",
+  "prompt": "Write entry_points(text). text is the content of a pyproject.toml file. Return a dictionary that maps every command under the heading [project.scripts] to a tuple of its module and its function. A line there looks like salt = \"salt.main:main\". The section ends at the next line that starts with a square bracket, or at the end of the text.",
+  "hints": [
+   "Go through text.splitlines() and keep a flag that says whether you are inside the section. A line that starts with [ switches the flag on or off.",
+   "Inside the section, split the line at the first = sign. Strip the spaces and the quotes from the right-hand part and split it at the colon."
+  ],
+  "solution": "def entry_points(text):\n    found = {}\n    inside = False\n    for line in text.splitlines():\n        line = line.strip()\n        if line.startswith(\"[\"):\n            inside = line == \"[project.scripts]\"\n        elif inside and \"=\" in line:\n            name, target = line.split(\"=\", 1)\n            module, function = target.strip().strip('\"').split(\":\")\n            found[name.strip()] = (module, function)\n    return found",
+  "lesson": "os1",
+  "tests": "text = \"\"\"[project]\nname = \"salt\"\n\n[project.scripts]\nsalt = \"salt.main:main\"\nto_onnx = \"salt.onnx.to_onnx:main\"\n\ndownload_S3 = \"salt.utils.file_utils:download_from_S3\"\n\n[tool.ruff]\nline-length = 100\n\"\"\"\ne = entry_points(text)\nprint(len(e))\nprint(e[\"salt\"])\nprint(e[\"to_onnx\"][0])\nprint(e[\"download_S3\"][1])\nprint(entry_points(\"[project]\"))",
+  "expect": [
+   "3",
+   "('salt.main', 'main')",
+   "salt.onnx.to_onnx",
+   "download_from_S3",
+   "{}"
+  ]
+ },
+ {
+  "id": "p62",
+  "track": "py",
+  "level": 2,
+  "week": 21,
+  "mins": 8,
+  "title": "A grep for definitions",
+  "prompt": "Write find_defs(source). source is the text of a Python file. Return a list with one tuple (line number, kind, name) for every line that defines a function or a class, in the order of the file. Line numbers start at 1, and kind is 'def' or 'class'. Indented definitions count too. The name ends at the first bracket or colon.",
+  "hints": [
+   "Count the lines yourself while you go through source.splitlines(). Strip each line and split it once at the first space.",
+   "The first word must be exactly def or class: a line such as definition = 1 is not a definition. Cut the rest at ( and at : to get the name."
+  ],
+  "solution": "def find_defs(source):\n    found = []\n    number = 0\n    for line in source.splitlines():\n        number += 1\n        words = line.strip().split(\" \", 1)\n        if len(words) == 2 and words[0] in (\"def\", \"class\"):\n            name = words[1].split(\"(\")[0].split(\":\")[0].strip()\n            found.append((number, words[0], name))\n    return found",
+  "lesson": "os1",
+  "tests": "src = \"\"\"import math\n\nclass Task:\n    def __init__(self, loss):\n        self.loss = loss\n\n    def forward(self, x):\n        return x\n\ndef main():\n    definition = 1\n    return definition\n\"\"\"\nfor d in find_defs(src):\n    print(d)\nprint(find_defs(\"x = 1\"))",
+  "expect": [
+   "(3, 'class', 'Task')",
+   "(4, 'def', '__init__')",
+   "(7, 'def', 'forward')",
+   "(10, 'def', 'main')",
+   "[]"
+  ]
+ },
+ {
+  "id": "p63",
+  "track": "py",
+  "level": 2,
+  "week": 21,
+  "mins": 8,
+  "title": "The files that change most",
+  "prompt": "Write hot_files(log, n). log is the output of git log --format= --name-only: one path on a line, with empty lines in between. Return a list of tuples (count, path) for the n paths that occur most often. The highest count comes first, and paths with the same count are in alphabetical order.",
+  "hints": [
+   "Count the non-empty lines in a dictionary: counts[path] = counts.get(path, 0) + 1.",
+   "sorted(counts.items(), key=lambda item: (-item[1], item[0])) sorts by falling count and then by name. Slice the first n."
+  ],
+  "solution": "def hot_files(log, n):\n    counts = {}\n    for line in log.splitlines():\n        path = line.strip()\n        if path:\n            counts[path] = counts.get(path, 0) + 1\n    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))\n    return [(count, path) for path, count in ranked[:n]]",
+  "lesson": "os1",
+  "tests": "log = \"\"\"salt/models/task.py\nsalt/utils/cli.py\n\nsalt/models/task.py\n\npyproject.toml\nsalt/utils/cli.py\nsalt/models/task.py\n\ndocs/training.md\n\"\"\"\nprint(hot_files(log, 2))\nprint(hot_files(log, 10)[2:])\nprint(hot_files(\"\", 3))",
+  "expect": [
+   "[(3, 'salt/models/task.py'), (2, 'salt/utils/cli.py')]",
+   "[(1, 'docs/training.md'), (1, 'pyproject.toml')]",
+   "[]"
+  ]
+ },
+ {
+  "id": "p64",
+  "track": "linux",
+  "level": 2,
+  "week": 21,
+  "mins": 8,
+  "title": "Git archaeology from memory",
+  "prompt": "Write the Git command for each of these, one on a line. (1) List all tracked Python files. (2) Search the tracked files for the text Loss is NaN and show file names and line numbers. (3) Show which commit last changed each of the lines 40 to 60 of src/core.py. (4) List the commits that added or removed the text old_name. (5) Show a summary of the files that commit abc1234 changed. (6) Show the history of src/core.py including the time before it was renamed.",
+  "hints": [
+   "ls-files, grep -n and blame -L work on the files as they are now.",
+   "log -S\"text\" searches the changes, show --stat summarises one commit, and log --follow continues through a rename."
+  ],
+  "solution": "git ls-files '*.py'\ngit grep -n \"Loss is NaN\"\ngit blame -L 40,60 src/core.py\ngit log --oneline -S\"old_name\"\ngit show --stat abc1234\ngit log --oneline --follow -- src/core.py",
+  "lesson": "os1"
+ },
+ {
+  "id": "p65",
+  "track": "py",
+  "level": 2,
+  "week": 21,
+  "mins": 8,
+  "title": "A checker for commit messages",
+  "prompt": "Write check_message(message), which returns the list of problems of a commit message, in this order and with exactly these texts. 'subject too long' if the first line has more than 72 characters. The aim is 50, and 72 is where this checker draws the line. 'subject ends with a full stop' if it does. 'subject starts with a small letter' if its first character is a lower-case letter. 'no blank line after the subject' if there is a second line and it is not empty. A message without problems gives an empty list.",
+  "hints": [
+   "message.splitlines() gives the lines. The subject is the first one.",
+   "subject[:1].islower() is safe even for an empty subject. The fourth check needs len(lines) > 1."
+  ],
+  "solution": "def check_message(message):\n    lines = message.splitlines()\n    subject = lines[0] if lines else \"\"\n    problems = []\n    if len(subject) > 72:\n        problems.append(\"subject too long\")\n    if subject.endswith(\".\"):\n        problems.append(\"subject ends with a full stop\")\n    if subject[:1].islower():\n        problems.append(\"subject starts with a small letter\")\n    if len(lines) > 1 and lines[1].strip() != \"\":\n        problems.append(\"no blank line after the subject\")\n    return problems",
+  "lesson": "os2",
+  "tests": "good = \"\"\"Wrap the phi difference in delta_r\n\ndelta_r used the raw difference of the two phi values.\n\nFixes #12\"\"\"\nprint(check_message(good))\nprint(check_message(\"fixed stuff.\"))\nbad = \"\"\"Use math.remainder so that every phi difference, however large, is wrapped\nFixes #12\"\"\"\nprint(check_message(bad))\nprint(check_message(\"Add a test\"))",
+  "expect": [
+   "[]",
+   "['subject ends with a full stop', 'subject starts with a small letter']",
+   "['subject too long', 'no blank line after the subject']",
+   "[]"
+  ]
+ },
+ {
+  "id": "p66",
+  "track": "linux",
+  "level": 2,
+  "week": 21,
+  "mins": 10,
+  "title": "The fork workflow from memory",
+  "prompt": "You have forked https://github.com/hep-tools/kinematics to your account your-name on GitHub. Write the commands, one on a line: clone your fork and enter its folder, add the project as the remote upstream, create a virtual environment and switch it on, install the project for development with its dev extras, run the tests, create the branch fix-delta-r-wrap, stage the folders src and tests, commit with a message, and publish the branch on your fork.",
+  "hints": [
+   "You clone your fork, never the project. The project becomes a second remote with the name upstream.",
+   "python3 -m venv, then source its activate script, then pip install -e with the extras in square brackets. The first push of a branch needs -u origin and the name of the branch."
+  ],
+  "solution": "git clone https://github.com/your-name/kinematics.git\ncd kinematics\ngit remote add upstream https://github.com/hep-tools/kinematics.git\npython3 -m venv .venv\nsource .venv/bin/activate\npip install -e \".[dev]\"\npython -m pytest -q\ngit switch -c fix-delta-r-wrap\ngit add src tests\ngit commit -m \"Wrap the phi difference in delta_r\"\ngit push -u origin fix-delta-r-wrap",
+  "lesson": "os2"
+ },
+ {
+  "id": "p67",
+  "track": "linux",
+  "level": 3,
+  "week": 21,
+  "mins": 10,
+  "title": "Update a pull request and clean up",
+  "prompt": "The branch fix-delta-r-wrap of your pull request is behind the project's main. Write the commands, one on a line. First part: get the news from upstream, rebase your branch onto its main, run the tests, and update the branch on your fork without overwriting commits that somebody else may have pushed to it. Second part, after the squash merge: switch to main, update it from upstream, update the main of your fork, and delete the branch on your computer and on your fork.",
+  "hints": [
+   "fetch, rebase, test, push. A rebased branch can't be pushed normally, and the safe form of forcing has the word lease in it.",
+   "After the merge: pull from upstream, push to origin, branch -d, and push origin --delete."
+  ],
+  "solution": "git fetch upstream\ngit rebase upstream/main\npython -m pytest -q\ngit push --force-with-lease\ngit switch main\ngit pull upstream main\ngit push origin main\ngit branch -d fix-delta-r-wrap\ngit push origin --delete fix-delta-r-wrap",
+  "lesson": "os2"
+ }
+]

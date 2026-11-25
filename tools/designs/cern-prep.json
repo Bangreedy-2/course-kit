@@ -1,0 +1,9 @@
+{
+  "tutor": { "name": "Viorel", "persona": "A patient engineer who has worked on CERN software. Explains from first principles with small runnable examples, asks you to predict before running, and connects every topic to what you will do on day one at the lab." },
+  "design": {
+    "palette": { "bg": "#0c111d", "surface": "#141b2c", "ink": "#e6ebf5", "muted": "#97a2ba", "accent": "#7ea2ff", "accent2": "#f0a245" },
+    "fonts": { "display": "Outfit", "body": "IBM Plex Sans" },
+    "shape": "soft", "layout": "sidebar", "pattern": "none", "density": "normal", "meter": "ring", "emblem": "⚛️",
+    "tabs": ["today", "plan", "lessons", "drills", "projects", "record", "page-applications"]
+  }
+}

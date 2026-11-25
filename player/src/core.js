@@ -162,7 +162,7 @@ function normalizeDesign(input, base) {
     if (v == null) return undefined;
     if (!Array.isArray(v)) { notes.push(what + " must be a list"); return undefined; }
     const out = [];
-    for (const x of v) { const k = String(x).toLowerCase().trim(); if (!allowed.includes(k)) notes.push(what + ": \"" + k + "\" is not one of " + allowed.join(", ")); else if (!out.includes(k)) out.push(k); }
+    for (const x of v) { const k = String(x).toLowerCase().trim(); if (what === "tabs" && /^page-[a-z0-9-]{1,30}$/.test(k)) { if (!out.includes(k)) out.push(k); } else if (!allowed.includes(k)) notes.push(what + ": \"" + k + "\" is not one of " + allowed.join(", ")); else if (!out.includes(k)) out.push(k); }
     return out;
   };
   const tabs = listOf(i.tabs, DASH_TABS, "tabs"); if (tabs !== undefined) d.tabs = tabs;
@@ -402,7 +402,7 @@ function normalizeSchedule(v) {
   if (v.start && /^\d{4}-\d{2}-\d{2}$/.test(str(v.start))) o.start = str(v.start);
   return o;
 }
-const CRIT = { L: "lesson", D: "drill", QZ: "quiz", X: "checkpoint", DAYS: "days", U: "link", T: "text", N: "number", C: "check" };
+const CRIT = { L: "lesson", D: "drill", QZ: "quiz", X: "checkpoint", DAYS: "days", U: "link", T: "text", N: "number", C: "check", M: "mastered", LN: "lessons" };
 const CRIT_TYPES = Object.values(CRIT);
 function normalizeCrit(c) {
   if (!c || typeof c !== "object") fail("each done-when criterion must be an object with \"t\".");
@@ -414,8 +414,11 @@ function normalizeCrit(c) {
     case "lesson": case "drill": case "checkpoint": o.id = slug(c.id, 40); if (!c.id) fail(t + " criterion needs \"id\"."); break;
     case "quiz": o.w = Math.round(num(c.w, 1, 200, 1)); o.max = Math.round(num(c.max, 0, 50, 1)); break;
     case "days": if (c.w != null) o.w = Math.round(num(c.w, 1, 200, 1)); o.n = Math.round(num(c.n, 1, 31, 3)); break;
+    case "mastered": o.n = Math.round(num(c.n, 1, 500, 5)); break;
+    case "lessons": o.w = Math.round(num(c.w, 1, 200, 1)); break;
     case "link": o.hosts = normStrList(c.hosts, 10, 80).map(x => x.toLowerCase()); if (!o.label) o.label = "Link to your work"; break;
-    case "text": if (c.min) o.min = Math.round(num(c.min, 0, 5000, 0)); if (c.lines) o.lines = Math.round(num(c.lines, 0, 500, 0)); const ex = normStrList(c.expect, 20, 200); if (ex.length) o.expect = ex; if (c.mono) o.mono = true; if (!o.label) o.label = "Your answer"; break;
+    case "text": if (c.min) o.min = Math.round(num(c.min, 0, 5000, 0)); if (c.lines) o.lines = Math.round(num(c.lines, 0, 500, 0)); const ex = normStrList(c.expect, 20, 200); if (ex.length) o.expect = ex; if (c.mono) o.mono = true; if (!o.label) o.label = "Your answer";
+      if (c.doc) o.doc = slug(c.doc, 40); { const tp = str(c.tpl, 8000); if (tp.trim()) o.tpl = tp; } break;
     case "number": o.min = Number(c.min); o.max = Number(c.max); if (isNaN(o.min) || isNaN(o.max) || o.min > o.max) fail("number criterion needs min <= max."); const u = str(c.unit, 40).trim(); if (u) o.unit = u; if (!o.label) o.label = "Your result"; break;
     case "check": if (!o.label) fail("check criterion needs a \"label\" saying what to do."); break;
   }
@@ -433,6 +436,8 @@ function normalizeTask(t, taken) {
   if (t.due && /^\d{4}-\d{2}-\d{2}$/.test(str(t.due))) o.due = str(t.due);
   if (t.project != null && str(t.project).trim()) o.project = str(t.project, 20).trim();
   if (t.notebook) o.notebook = slug(t.notebook, 40);
+  if (t.page) o.page = slug(t.page, 30);
+  { const gr = str(t.group, 60).trim(); if (gr) o.group = gr; }
   o.crit = (Array.isArray(t.crit) ? t.crit : []).slice(0, 12).map((c, i) => { try { return normalizeCrit(c); } catch (e) { fail("task \"" + o.title + "\" criterion " + (i + 1) + ": " + e.message); } });
   if (!o.crit.length) fail("task \"" + o.title + "\" needs at least one done-when criterion.");
   return o;
@@ -462,7 +467,31 @@ function normalizePlan(p) {
     o.weeks = (Array.isArray(ph && ph.weeks) ? ph.weeks : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= weeks.length);
     return o;
   }).filter(ph => ph.weeks.length);
-  return { phases, weeks };
+  const pt = new Set();
+  const projects = (Array.isArray(p.projects) ? p.projects : []).slice(0, 60).map(x => {
+    const o = { id: uniqueId(slug(x && (x.id || x.title), 20), pt), title: str(x && x.title, 140).trim() || "Project" };
+    const w = str(x && x.what, 600).trim(); if (w) o.what = w; return o;
+  });
+  const out = { phases, weeks }; if (projects.length) out.projects = projects;
+  return out;
+}
+/* Pages: extra tabs a course declares for things that are not lessons, such as an
+   applications tracker, a reading list or exam logistics. A page shows its facts and
+   notes, then every plan task that names it in "page", grouped and ordered by due date. */
+function normalizePages(v) {
+  const taken = new Set();
+  return (Array.isArray(v) ? v : []).slice(0, 6).map(x => {
+    if (!x || typeof x !== "object") fail("each page must be an object.");
+    const o = { id: uniqueId(slug(x.id || x.title, 30), taken), title: str(x.title, 40).trim() };
+    if (!o.title) fail("a page needs a title.");
+    const intro = str(x.intro, 3000).trim(); if (intro) o.intro = intro;
+    const note = str(x.note, 2000).trim(); if (note) o.note = note;
+    o.facts = (Array.isArray(x.facts) ? x.facts : []).slice(0, 8).map(f => ({ eyebrow: str(f && f.eyebrow, 60).trim(), title: str(f && f.title, 120).trim(),
+      rows: (Array.isArray(f && f.rows) ? f.rows : []).slice(0, 12).map(r => [str(r && r[0], 60).trim(), str(r && r[1], 400).trim()]).filter(r => r[0] && r[1]) })).filter(f => f.title);
+    const groups = {}; if (x.groups && typeof x.groups === "object") for (const [k, t] of Object.entries(x.groups).slice(0, 12)) { const kk = str(k, 60).trim(), tt = str(t, 120).trim(); if (kk && tt) groups[kk] = tt; }
+    if (Object.keys(groups).length) o.groups = groups;
+    return o;
+  });
 }
 function normalizeDrill(d, taken) {
   if (!d || typeof d !== "object") fail("each drill must be an object.");
@@ -484,14 +513,18 @@ function normalizeDrill(d, taken) {
   return o;
 }
 function normalizeDrills(v) { const taken = new Set(); const a = (Array.isArray(v) ? v : []).slice(0, 400).map(d => normalizeDrill(d, taken)); return a; }
-function normalizeCheckpoints(v) {
+function normalizeCheckpoints(v, ctx) {
   const taken = new Set();
   return (Array.isArray(v) ? v : []).slice(0, 40).map(x => {
     const o = { id: uniqueId(slug(x && (x.id || x.title), 40), taken), title: str(x && x.title, 120).trim() || "Checkpoint" };
     if (x.week) o.week = clamp(Math.round(Number(x.week) || 1), 1, 200);
     o.minutes = clamp(Math.round(Number(x.minutes) || 30), 3, 600); o.pass = clamp(Math.round(Number(x.pass) || 70), 1, 100);
     o.lessons = (Array.isArray(x.lessons) ? x.lessons : []).map(i => slug(i, 40)).slice(0, 200);
+    const intro = str(x.intro, 4000).trim(); if (intro) o.intro = intro;
+    // A checkpoint may bring its own questions ("blocks"), used with items "own:<block id>".
+    if (Array.isArray(x.blocks) && x.blocks.length) o.blocks = x.blocks.slice(0, 60).map((b, i) => { try { const n = normalizeBlock(b, { keepId: true, runtimes: (ctx && ctx.runtimes) || {}, widgets: {} }); if (!PRACTICE.includes(n.t)) fail("only practice blocks belong in a checkpoint."); return n; } catch (e) { fail("checkpoint \"" + o.title + "\" block " + (i + 1) + ": " + e.message); } });
     o.items = (Array.isArray(x.items) ? x.items : []).map(i => str(i, 100).trim()).filter(i => /^(drill:[a-z0-9-]+|[a-z0-9-]+:b[a-z0-9]{6,16})$/.test(i)).slice(0, 100);
+    if (o.blocks) { const have = new Set(o.items); for (const b of o.blocks) if (!have.has("own:" + b.id)) o.items.push("own:" + b.id); }
     if (!o.items.length) fail("checkpoint \"" + o.title + "\" needs items: \"<lesson id>:<block id>\" for practice blocks or \"drill:<id>\".");
     return o;
   });
@@ -539,7 +572,7 @@ function checkModuleRefs(mods, lessonsById) {
   for (const d of mods.drills || []) if (d.lesson && !L[d.lesson]) out.push("drill " + d.id + " unlocks after lesson " + d.lesson + ", which does not exist");
   for (const x of mods.checkpoints || []) for (const it of x.items) {
     if (it.startsWith("drill:")) { if (!drills.has(it.slice(6))) out.push("checkpoint " + x.id + " uses drill " + it.slice(6) + ", which does not exist"); continue; }
-    const [lid, bid] = it.split(":"); const l = L[lid];
+    const [lid, bid] = it.split(":"); const l = lid === "own" ? { blocks: x.blocks || [] } : L[lid];
     const b = l && (l.blocks || []).find(z => z.id === bid);
     if (!b) out.push("checkpoint " + x.id + " uses " + it + ", which does not exist");
     else if (!PRACTICE.includes(b.t)) out.push("checkpoint " + x.id + " uses " + it + ", which is not a practice block");
@@ -553,11 +586,12 @@ const MODULES_DOC =
 - labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
 - tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
 - schedule: {"unitDays":7,"start":"YYYY-MM-DD"} enables pace: each plan week lasts unitDays from the learner's start date.
-- plan: {"phases":[{"id","title","goal","weeks":[1,2]}], "weeks":[{"title","goal","light":false,"tasks":[task],"quiz":[{"q","o":["a","b"],"a":0,"why"}],"quizMax":1}]}
-  task: {"id","title","desc":"markdown","track","core":true,"h":1.5,"lessons":["lesson id"],"res":[["label","https://..."]],"project":"3","notebook":"notebook id","crit":[criterion]}
-  criterion (done when): {"t":"lesson","id"} | {"t":"drill","id"} | {"t":"quiz","w":2,"max":1} | {"t":"checkpoint","id"} | {"t":"days","w":2,"n":4} | {"t":"link","label","hosts":["github.com"]} | {"t":"text","label","min":words,"lines":n,"expect":["must contain"],"mono":true} | {"t":"number","label","min","max","unit"} | {"t":"check","label"}
+- plan: {"phases":[{"id","title","goal","weeks":[1,2]}], "projects":[{"id":"1","title","what"}], "weeks":[{"title","goal","light":false,"tasks":[task],"quiz":[{"q","o":["a","b"],"a":0,"why"}],"quizMax":1}]}
+  task: {"id","title","desc":"markdown","track","core":true,"h":1.5,"lessons":["lesson id"],"res":[["label","https://..."]],"project":"<project id>","notebook":"notebook id","due":"YYYY-MM-DD","page":"<page id>","group":"<group key on that page>","crit":[criterion]}
+  criterion (done when): {"t":"lesson","id"} | {"t":"drill","id"} | {"t":"quiz","w":2,"max":1} | {"t":"checkpoint","id"} | {"t":"days","w":2,"n":4} | {"t":"link","label","hosts":["github.com"]} | {"t":"text","label","min":words,"lines":n,"expect":["must contain"],"mono":true} | {"t":"number","label","min","max","unit"} | {"t":"check","label"} | {"t":"mastered","n":10} (n drills at mastered level) | {"t":"lessons","w":4} (every lesson up to week w learned). A text criterion may carry "doc":"<id>" (one shared document, e.g. a CV, edited from several tasks) and "tpl":"starting template".
 - drills: [{"id","title","prompt":"markdown","lesson":"unlocks the day after this lesson is learned","week","track","level":1-5,"mins":10,"hints":["..."],"starter","solution","lang":"python","tests":"code printing results","expect":["lines"]}] from-memory practice on a Leitner schedule; with tests they are checked by running, without them the learner compares and grades themselves.
-- checkpoints: [{"id","title","week","minutes":60,"pass":70,"lessons":["lesson ids that must be learned first"],"items":["<lesson id>:<block id>","drill:<id>"]}] timed tests made of existing practice blocks and drills.
+- checkpoints: [{"id","title","week","minutes":60,"pass":70,"lessons":["lesson ids that must be learned first"],"intro":"markdown","items":["<lesson id>:<block id>","drill:<id>"],"blocks":[practice blocks of its own]}] timed tests made of existing practice blocks and drills, and/or its own questions in "blocks".
+- pages: [{"id","title","intro":"markdown","facts":[{"eyebrow","title","rows":[["Deadline","21 Jan"]]}],"note":"markdown warning or reminder","groups":{"key":"Heading"}}] extra tabs for what is not lessons: an applications tracker, exam logistics, a reading list. A page lists the plan tasks whose "page" is its id, under the group headings, ordered by due date. Put it in design.tabs as "page-<id>" to place it.
 - notebooks: {"id":{"title","lang":"python","datasets":["file names"],"cells":[{"t":"md"|"code","src","tag":"answer|app"}],"checks":[{"label","test":"python expression true when done" | {"figs":1} | {"md":"tag","words":40} | {"app":true}}],"fill":{"<criterion index>":"python expression" | {"md":"tag"}},"prelude":"python run before checks"}} graded notebooks; a task with "notebook" counts its link criterion done when all checks pass.`;
 
 /* ---------- course ---------- */
@@ -629,7 +663,8 @@ function importCourse(file, opts) {
   const pick = k => src[k] != null ? src[k] : c[k];
   const mods = {};
   const tryMod = (k, fn) => { const v = pick(k); if (v == null) return; try { const r = fn(v); if (r != null) mods[k] = r; } catch (e) { if (!(e instanceof RuleError) || !opts.lenient) throw e; errors.push(k + ": " + e.message); } };
-  tryMod("plan", normalizePlan); tryMod("drills", normalizeDrills); tryMod("checkpoints", normalizeCheckpoints); tryMod("notebooks", normalizeNotebooks);
+  tryMod("plan", normalizePlan); tryMod("drills", normalizeDrills); tryMod("checkpoints", v => normalizeCheckpoints(v, { runtimes: meta.runtimes || {} })); tryMod("notebooks", normalizeNotebooks); tryMod("pages", normalizePages);
+  if (mods.pages && !mods.pages.length) delete mods.pages;
   if (mods.drills && !mods.drills.length) delete mods.drills;
   if (mods.checkpoints && !mods.checkpoints.length) delete mods.checkpoints;
   if (mods.notebooks && !Object.keys(mods.notebooks).length) delete mods.notebooks;
@@ -782,7 +817,7 @@ function fromV1Progress(old, lessonsById, cid) {
   return { progress, state };
 }
 
-const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
+const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks", "pages"];
 const api = {
   FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, DASH_TABS, DASH_PARTS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
@@ -790,7 +825,7 @@ const api = {
   hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
-  ENGINES, MODULE_KEYS, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
+  ENGINES, MODULE_KEYS, normalizePages, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
   normalizeCrit, normalizePlan, normalizeDrills, normalizeCheckpoints, normalizeNotebook, normalizeNotebooks, checkModuleRefs,
   normLine, normOut, lineMatch, outputMatches, lines, fromV1Progress,
 };
