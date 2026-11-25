@@ -387,6 +387,7 @@ img.fig{display:block;max-width:100%;background:#fff;border-radius:var(--radius)
 .m-steps{gap:4px}.m-steps i{width:14px;height:22px;border-radius:3px;background:var(--line)}.m-steps i.on{background:var(--accent)}.m-steps small{margin-left:6px;color:var(--muted)}
 @media (max-width:720px){.m-sigmoid{width:100%}}
 .home-widgets{display:grid;gap:14px;margin:0 0 18px}.home-widgets .widget{margin:0}
+.widget.home{border:0;background:none;padding:0}.widget.home iframe{background:none;border:0}
 
 </style>
 <header id="top"></header>
@@ -1150,6 +1151,7 @@ home: up to 3 widgets from the course's widget library shown on the course home,
    weeks:[{n, title, goal, progress (0-1), current, done, start, end, tasks:[{id, title, core, progress}]}],
    units:[{id, title, lessons:[{id, title, learned}]}], checkpoints:[{id, title, pass, best, ready}], drills:{total, due}}
   (weeks is [] when the course has no plan). Draw from this data; never hard-code progress. ck.open(target) moves the page: "plan", "today", "lessons", "drills", "projects", "record", "week:<n>" or "lesson:<id>". ck.height(px) sets its height.
+  Home widgets must be compact and belong to the page: under about 340px tall on desktop, no background of their own (the frame already uses the page colours; --ck-bg, --ck-surface, --ck-ink, --ck-muted, --ck-accent, --ck-accent2 are defined), and a drawing must cap its height (svg{width:100%;max-height:220px}) or it grows with the page and looks zoomed in. The frame fits its content by itself; do not set heights from script.
 layout changes only how units and lessons are listed (the Lessons tab, and the list beside a lesson). It does not change the dashboard header or the Today tab.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
@@ -1185,7 +1187,7 @@ const api = {
   FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, DASH_TABS, DASH_PARTS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
   RuleError, slug, uniqueId, newBlockId, clone, words, str, clamp,
-  hexToRgb, contrast, ensureContrast, onColor, isDark,
+  hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
   ENGINES, MODULE_KEYS, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
@@ -2491,7 +2493,7 @@ const frames = new Map(); // window -> {b, l, record, iframe}
 addEventListener("message", e => {
   const f = frames.get(e.source); const m = e.data;
   if (!f || !m || m.ck !== 1) return;
-  if (m.type === "height") { const hgt = Math.max(80, Math.min(1400, Number(m.h) || 0)); if (hgt) f.iframe.style.height = hgt + "px"; }
+  if (m.type === "height") { const hgt = Math.max(24, Math.min(1400, Number(m.h) || 0)); if (hgt) f.iframe.style.height = hgt + "px"; }
   else if (m.type === "done") { f.record(!!m.ok, m.ok ? "widget: success" : "widget: not yet"); }
   else if (m.type === "save") { try { const s = JSON.stringify(m.state); if (s.length < 16000) { if (!f.l) { const g = G(); g.w = g.w || {}; g.w[f.b.widget] = JSON.parse(s); saveG(); } else { const p = prog(f.l.id); p.w[f.b.id] = JSON.parse(s); saveProg(f.l.id); } } } catch (err) {} }
   else if (m.type === "open" && f.home) { const c = S.courses[S.cid]; const t = String(m.to || ""); if (!c) return;
@@ -2499,21 +2501,75 @@ addEventListener("message", e => {
     else if (/^week:\d+$/.test(t)) { S.openWeeks = S.openWeeks || new Set(); S.openWeeks.add(+t.slice(5)); go(route(c, "t/plan")); }
     else if (CK.DASH_TABS.includes(t)) go(route(c, "t/" + t)); }
 });
-function renderWidget(c, l, b, record) {
-  const w = b.widget ? c.widgets && c.widgets[b.widget] : b;
-  if (!w) return h("p", { class: "note" }, "This widget is missing from the course.");
-  const p = l && S.progress[l.id]; const state = l ? (p && p.w && p.w[b.id] || null) : ((S.g && S.g.w || {})[b.widget] || null);
-  const data = l ? "" : "course:" + JSON.stringify(homeData(c)).replace(/</g, "\\u003c") + ",open:function(t){parent.postMessage({ck:1,type:'open',to:String(t)},'*')},";
-  const vars = designVars(c.design);
-  const css = ":root{" + Object.entries(vars).filter(([k]) => k.startsWith("--")).map(([k, v]) => k.replace("--", "--ck-") + ":" + v).join(";") + ";--ck-font:" + vars["--font-b"] + "}" +
-    "html,body{margin:0;background:var(--ck-surface);color:var(--ck-ink);font-family:var(--ck-font);font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}";
+/* The full document for a widget: the course's colours and fonts, the ck helper, and
+   automatic sizing, wrapped around the HTML the course stores. */
+function widgetDoc(c, w, o) {
+  const vars = designVars(c.design); const dark = CK.isDark(c.design.palette.bg);
+  const css = ":root{color-scheme:" + (dark ? "dark" : "light") + ";" + Object.entries(vars).filter(([k]) => k.startsWith("--")).map(([k, v]) => k.replace("--", "--ck-") + ":" + v).join(";") + ";--ck-font:" + vars["--font-b"] + "}" +
+    "html,body{margin:0;background:var(--ck-" + (o.home ? "bg" : "surface") + ");color:var(--ck-ink);font-family:var(--ck-font);font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}svg{max-width:100%" + (o.home ? ";max-height:260px" : "") + "}";
+  const data = o.home ? "course:" + JSON.stringify(homeData(c)).replace(/</g, "\\u003c") + ",open:function(t){parent.postMessage({ck:1,type:'open',to:String(t)},'*')}," : "";
   const prelude = '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + CK.FONTS[c.design.fonts.body][1] + '&display=swap"><style>' + css + "</style>" +
-    "<script>window.ck={" + data + "state:" + JSON.stringify(state).replace(/</g, "\\u003c") + ",done:function(ok){parent.postMessage({ck:1,type:'done',ok:!!ok},'*')},save:function(s){this.state=s;parent.postMessage({ck:1,type:'save',state:s},'*')},height:function(px){parent.postMessage({ck:1,type:'height',h:px},'*')}};<\/script>";
+    "<script>window.__ckErr=[];window.addEventListener('error',function(e){window.__ckErr.push(String(e.message||e).slice(0,200))});" +
+    "window.ck={" + data + "state:" + JSON.stringify(o.state == null ? null : o.state).replace(/</g, "\\u003c") + ",done:function(ok){parent.postMessage({ck:1,type:'done',ok:!!ok},'*')},save:function(s){this.state=s;parent.postMessage({ck:1,type:'save',state:s},'*')},height:function(px){parent.postMessage({ck:1,type:'height',h:px},'*')}};" +
+    // The frame always fits its content: no cropped drawings, no empty space below.
+    "(function(){var last=0;function fit(){var b=document.body;if(!b)return;var st=getComputedStyle(b);var hh=Math.ceil(b.getBoundingClientRect().height+parseFloat(st.marginTop||0)+parseFloat(st.marginBottom||0));if(hh&&Math.abs(hh-last)>1){last=hh;parent.postMessage({ck:1,type:'height',h:hh,auto:1},'*')}}" +
+    "window.addEventListener('load',function(){fit();try{new ResizeObserver(fit).observe(document.body)}catch(e){setInterval(fit,700)}});document.addEventListener('DOMContentLoaded',fit)})();" +
+    (o.probe ? "window.addEventListener('load',function(){setTimeout(function(){try{var d=document,b=d.body,W=innerWidth,cs=function(e){return getComputedStyle(e)};var out=0,clip=0,tiny=0,els=b.querySelectorAll('*');for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();if(r.width&&r.height){if(r.right>W+2||r.left<-2)out++;}var f=parseFloat(cs(els[i]).fontSize);if(els[i].childNodes.length&&els[i].firstChild.nodeType===3&&els[i].textContent.trim()&&!els[i].ownerSVGElement&&f<11)tiny++}" +
+      "var svgs=[].map.call(d.querySelectorAll('svg'),function(s){var r=s.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)});var cv=[].map.call(d.querySelectorAll('canvas'),function(s){var r=s.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)});" +
+      "var st=cs(b);parent.postMessage({ck:1,type:'probe',id:" + JSON.stringify(o.probe) + ",w:W,h:Math.ceil(b.getBoundingClientRect().height+parseFloat(st.marginTop||0)+parseFloat(st.marginBottom||0)),sw:d.documentElement.scrollWidth,bodyBg:st.backgroundColor,htmlBg:cs(d.documentElement).backgroundColor,ink:st.color,out:out,tiny:tiny,svgs:svgs,canvases:cv,text:(b.innerText||'').replace(/\\s+/g,' ').trim().slice(0,300),n:els.length,errors:window.__ckErr},'*')}catch(e){parent.postMessage({ck:1,type:'probe',id:" + JSON.stringify(o.probe) + ",errors:[String(e)]},'*')}},350)});" : "") +
+    "<\/script>";
   let html = String(w.html);
   if (/<head[^>]*>/i.test(html)) html = html.replace(/<head[^>]*>/i, m => m + prelude);
   else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + "<head>" + prelude + "</head>");
   else html = "<!doctype html><html><head>" + prelude + "</head><body>" + html + "</body></html>";
+  return html;
+}
+/* Renders a widget off screen at real widths and measures it, so whoever wrote it
+   learns what it looks like without seeing the screen. */
+const probes = new Map();
+function probeOnce(c, w, home, width) {
+  return new Promise(res => {
+    const id = "p" + Math.random().toString(36).slice(2);
+    const fr = h("iframe", { sandbox: "allow-scripts", "aria-hidden": "true", tabindex: "-1", style: "position:fixed;left:-99999px;top:0;border:0;visibility:hidden;width:" + width + "px;height:" + (w.height || 360) + "px" });
+    const done = r => { if (!probes.has(id)) return; probes.delete(id); clearTimeout(t); fr.remove(); res(r); };
+    const t = setTimeout(() => done(null), 4000);
+    probes.set(id, done);
+    fr.srcdoc = widgetDoc(c, w, { home, state: null, probe: id });
+    document.body.appendChild(fr);
+  });
+}
+async function probeWidget(c, w, home) {
+  const main = $("#main"); const wide = Math.max(480, Math.min(1400, (main && main.clientWidth) || 1000));
+  const [a, b] = await Promise.all([probeOnce(c, w, home, wide), probeOnce(c, w, home, 360)]);
+  if (!a && !b) return "Render check: the widget did not finish loading in 4 s (a script may be stuck or waiting on a blocked resource).";
+  const hex = v => { const m = /rgba?\(([^)]+)\)/.exec(v || ""); if (!m) return null; const p = m[1].split(",").map(x => parseFloat(x)); if (p.length > 3 && p[3] === 0) return "transparent"; return CK.rgbToHex ? CK.rgbToHex(p.slice(0, 3)) : v; };
+  const pal = c.design.palette; const want = home ? pal.bg : pal.surface; const out = []; const fix = [];
+  const r = a || b;
+  out.push("Render check (measured in the learner's browser, the frame now always fits its content):");
+  if (a) out.push("- Desktop, " + a.w + "px wide: " + a.h + "px tall" + (a.svgs && a.svgs.length ? "; svg drawn at " + a.svgs.join(", ") : "") + (a.canvases && a.canvases.length ? "; canvas " + a.canvases.join(", ") : "") + ".");
+  if (b) out.push("- Phone, " + b.w + "px wide: " + b.h + "px tall" + (b.svgs && b.svgs.length ? "; svg drawn at " + b.svgs.join(", ") : "") + ".");
+  const limit = home ? 340 : 700;
+  if (a && a.h > limit) fix.push("TOO TALL on desktop (" + a.h + "px; " + (home ? "a course-home widget must stay under about " + limit + "px so the tabs remain visible" : "keep it under " + limit + "px") + "). A drawing with width:100% grows with the page and looks zoomed in: cap it, e.g. svg{width:100%;max-height:220px} with preserveAspectRatio, or max-width on its container.");
+  if (a && a.h < 24) fix.push("NEARLY EMPTY on desktop (" + a.h + "px tall): nothing visible is being drawn.");
+  for (const x of [a, b]) if (x && x.sw > x.w + 4) fix.push("OVERFLOWS sideways at " + x.w + "px (content is " + x.sw + "px wide): part of it is cut off. Use relative widths and let rows wrap.");
+  const bg = hex(r.bodyBg) === "transparent" ? hex(r.htmlBg) : hex(r.bodyBg);
+  if (bg && bg !== "transparent" && bg.toLowerCase() !== want.toLowerCase() && bg.toLowerCase() !== pal.surface.toLowerCase() && bg.toLowerCase() !== pal.bg.toLowerCase()) fix.push("BACKGROUND " + bg + " does not match the page (page " + pal.bg + ", cards " + pal.surface + "). Use var(--ck-bg) or var(--ck-surface), or leave the background unset.");
+  else out.push("- Background: " + (bg || "page default") + " (page " + pal.bg + ", cards " + pal.surface + "): matches.");
+  const ink = hex(r.ink); if (ink && bg && bg !== "transparent" && /^#/.test(ink) && /^#/.test(bg) && CK.contrast(ink, bg) < 4.5) fix.push("TEXT " + ink + " on " + bg + " is too faint. Use var(--ck-ink).");
+  if (r.tiny) fix.push(r.tiny + " text element(s) are smaller than 11px.");
+  const errs = [...new Set([].concat(a && a.errors || [], b && b.errors || []))]; if (errs.length) fix.push("SCRIPT ERRORS: " + errs.slice(0, 3).join(" | "));
+  if (r.text != null) out.push("- Visible text starts: \"" + r.text.slice(0, 160) + "\"" + (r.n != null ? " (" + r.n + " elements)" : ""));
+  if (fix.length) out.push("PROBLEMS TO FIX NOW, before you reply (edit the widget with set_widget edits, do not rewrite it):", ...fix.map(x => "- " + x));
+  else out.push("No problems found. You may tell the learner the measured size; do not say you have not seen it.");
+  return out.join("\n");
+}
+addEventListener("message", e => { const m = e.data; if (m && m.ck === 1 && m.type === "probe" && probes.has(m.id)) probes.get(m.id)(m); });
+function renderWidget(c, l, b, record) {
+  const w = b.widget ? c.widgets && c.widgets[b.widget] : b;
+  if (!w) return h("p", { class: "note" }, "This widget is missing from the course.");
+  const p = l && S.progress[l.id]; const state = l ? (p && p.w && p.w[b.id] || null) : ((S.g && S.g.w || {})[b.widget] || null);
+  const html = widgetDoc(c, w, { home: !l, state });
   const iframe = h("iframe", { sandbox: "allow-scripts", title: b.title || w.title || "Interactive widget", loading: "lazy", style: "height:" + (b.height || w.height || 360) + "px" });
   iframe.srcdoc = html;
   const fr = { b, l, record: record || (() => {}), iframe, home: !l };
@@ -2521,7 +2577,7 @@ function renderWidget(c, l, b, record) {
   // contentWindow exists as soon as the frame is in the document.
   queueMicrotask(() => { if (iframe.contentWindow) frames.set(iframe.contentWindow, fr); });
   if (!l) iframe.removeAttribute("loading");
-  return h("div", { class: "widget" }, h("p", { class: "co-title" }, b.title || w.title), iframe, b.graded ? h("p", { class: "muted small" }, "Finish the widget's challenge to complete this item.") : null);
+  return h("div", { class: "widget" + (l ? "" : " home") }, h("p", { class: "co-title" }, b.title || w.title), iframe, b.graded ? h("p", { class: "muted small" }, "Finish the widget's challenge to complete this item.") : null);
 }
 
 /* ================= review ================= */
@@ -2783,7 +2839,8 @@ function designStateText(c) {
     "\nThe course home shows: " + [!hide.includes("meter") && "header with title and " + d.meter + " meter"].concat(parts.filter(([k]) => k !== "meter" && !hide.includes(k)).map(x => x[1])).filter(Boolean).join("; ") +
     (home.length ? "; home widgets: " + home.join(", ") : "; no home widgets") + ". Tabs: " + tabs.join(", ") + "." +
     (hide.length ? "\nHidden now: " + parts.filter(([k]) => hide.includes(k)).map(x => x[1]).join("; ") + "." : "\nNothing is hidden.") +
-    "\nWidget library: " + (Object.entries(c.widgets || {}).map(([k, w]) => k + " (" + w.title + ")").join(", ") || "empty");
+    "\nWidget library: " + (Object.entries(c.widgets || {}).map(([k, w]) => k + " (" + w.title + ")").join(", ") || "empty") +
+    (d.home || []).filter(id => c.widgets && c.widgets[id]).map(id => "\nHome widget \"" + id + "\" html now:\n" + c.widgets[id].html.slice(0, 12000)).join("");
 }
 const CHANGE_RULES = `How to handle change requests:
 - Do what was asked, where it was asked. "On the dashboard" or "on the home page" means the course home: use design.hide, design.tabs and design.home. Never put a dashboard visualization inside a lesson.
@@ -2791,7 +2848,10 @@ const CHANGE_RULES = `How to handle change requests:
 - Undo means restore exactly what was there before; read CURRENT DESIGN and the earlier turns to know what that was.
 - Report only what the tools returned. Describe the result in the learner's words ("the week bars are back above the tabs"), not setting names. Never claim an earlier state you have not checked; never contradict CURRENT DESIGN.
 - If something truly cannot be done, say so in one sentence first, then offer the closest thing; do not do a substitute the learner did not ask for.
-- Do not say you cannot see the screen: CURRENT DESIGN tells you what is on it. Keep the reply to two or three sentences.`;
+- Do not say you cannot see the screen or that you have not seen it render: CURRENT DESIGN tells you what is on the page, and set_widget returns a render check measured in the learner's browser. Fix every problem the check lists (call set_widget again) before you reply. Keep the reply to two or three sentences.
+- Change only what the learner complained about. "I don't like the background" changes the background and nothing else; "too big" changes the size and nothing else. Use set_widget edits for that; never rebuild a widget from scratch unless asked.
+- A widget on the page must look like part of the page: page colours and fonts only, no panel or gradient of its own, compact.
+- When the learner reports a visual problem ("zoomed in", "white box", "cut off"), find the cause in the widget's html (shown below for home widgets) before changing anything, and say in one clause what the cause was.`;
 
 /* What the learner is looking at outside lessons, for the tutor. */
 function viewContext(c) {
@@ -2957,13 +3017,26 @@ function courseTools(c, tx, changes) {
       const at = i.after ? u.lessons.indexOf(String(i.after)) + 1 : 0; u.lessons.splice(Math.max(0, at), 0, l.id); l.unit = u.id;
       changes.push("moved " + l.title); return "Moved.";
     }),
-    T("set_widget", "Adds or replaces a reusable widget in the course's widget library. Place it in a lesson with a {\"t\":\"widget\",\"widget\":id} block, or on the course home by adding its id to design.home (update_course); home widgets get live progress as window.ck.course. Returns its id.", { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, height: { type: "number" } }, ["title", "html"], i => {
+    T("set_widget", "Adds a widget to the course's widget library, or changes one. New widget: give title and html. Change an existing one: give widget (its id) and edits [{old, new}] (each old is exact text found once in its html) so only what the learner asked about changes; send full html again only when asked to start over. Place it in a lesson with a {\"t\":\"widget\",\"widget\":id} block, or on the course home via design.home (update_course); home widgets get live progress as window.ck.course. Returns its id and a render check measured in the learner's browser: fix every problem it lists before replying.",
+      { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, edits: { type: "array", items: { type: "object", properties: { old: { type: "string" }, new: { type: "string" } } } }, height: { type: "number" } }, [], async i => {
       const m = meta(); m.widgets = m.widgets || {};
-      const id = i.widget ? CK.slug(i.widget, 40) : CK.uniqueId(CK.slug(i.title, 40), new Set(Object.keys(m.widgets)));
-      if (!m.widgets[id] && Object.keys(m.widgets).length >= CK.LIMITS.widgetsLib) throw new Error("The widget library is full.");
-      const html = CK.checkWidgetHtml(i.html);
-      tx.touchCourse(); m.widgets[id] = { title: String(i.title).slice(0, 120), html, height: CK.clamp(Math.round(Number(i.height) || 360), 120, 900) };
-      changes.push("widget " + i.title); return { widget: id };
+      const id = i.widget ? CK.slug(i.widget, 40) : CK.uniqueId(CK.slug(i.title || "widget", 40), new Set(Object.keys(m.widgets)));
+      const cur = m.widgets[id];
+      if (!cur && Object.keys(m.widgets).length >= CK.LIMITS.widgetsLib) throw new Error("The widget library is full.");
+      let src = i.html;
+      if (Array.isArray(i.edits) && i.edits.length) {
+        if (!cur) throw new Error("No widget \"" + id + "\" to edit. Library: " + (Object.keys(m.widgets).join(", ") || "empty"));
+        src = i.html || cur.html;
+        for (const e of i.edits) { const o = String(e.old || ""); const n = src.split(o).length - 1; if (!o || n !== 1) throw new Error("Edit not applied (nothing was saved): \"" + o.slice(0, 80) + "\" occurs " + n + " times in the widget; it must occur exactly once. The current html is:\n" + cur.html.slice(0, 6000)); src = src.replace(o, () => String(e.new == null ? "" : e.new)); }
+      }
+      if (!src) throw new Error("Give html for a new widget, or edits for an existing one.");
+      if (!cur && !i.title) throw new Error("A new widget needs a title.");
+      const html = CK.checkWidgetHtml(src);
+      tx.touchCourse(); const w = m.widgets[id] = { title: String(i.title || cur.title).slice(0, 120), html, height: CK.clamp(Math.round(Number(i.height) || (cur && cur.height) || 360), 120, 900) };
+      changes.push("widget " + w.title);
+      const inLesson = Object.values(S.lessons).some(l => (l.blocks || []).some(b => b.widget === id));
+      let report = ""; try { report = await probeWidget(m, w, !inLesson || (m.design.home || []).includes(id)); } catch (e) { report = "Render check failed: " + (e && e.message || e); }
+      return { widget: id, onHome: (m.design.home || []).includes(id), render: report };
     }),
     T("rewrite_lessons", "Queues lessons to be rewritten in the background with an instruction (for changes too big to make block by block: harder, shorter, another language, more examples). Progress on rewritten lessons restarts.", { lessons: { type: "array", items: { type: "string" } }, instruction: { type: "string" } }, ["lessons", "instruction"], i => {
       const ids = (Array.isArray(i.lessons) ? i.lessons : []).map(String); if (!ids.length) throw new Error("Give lesson ids.");

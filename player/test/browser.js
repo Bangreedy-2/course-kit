@@ -212,6 +212,19 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     ok((await fr.textContent("#o")) === "weeks:10 now:1", "the home widget reads live progress (" + await fr.textContent("#o") + ")");
     await fr.click("#b"); await page.waitForSelector("details.week[open]");
     ok(/t\/plan$/.test(await page.evaluate(() => location.hash)), "the home widget can open the plan"); }
+  // The tutor gets a measured render check, and can edit a widget in place
+  await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
+  await page.evaluate(() => window.__mockTools.push([
+    { name: "set_widget", input: { widget: "week-map", edits: [{ old: "<div id=o></div>", new: "<div id=o></div><div style='height:900px;background:#ffffff'>tall</div>" }] } },
+    { name: "set_widget", input: { widget: "week-map", edits: [{ old: "no such text", new: "x" }] } }]));
+  await page.fill("#ask-input", "make it bigger"); await page.click("#ask .btn.primary");
+  await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn, null, { timeout: 20000 });
+  const wres = await page.evaluate(() => window.__mockToolResults.slice(-2).map(x => typeof x === "string" ? x : JSON.stringify(x)));
+  ok(/TOO TALL/.test(wres[0]) && /Desktop, \d+px wide: 9\d\dpx tall/.test(wres[0]) && /Phone, 360px wide/.test(wres[0]), "set_widget returns a measured render check that flags a too-tall widget");
+  ok(/occurs 0 times/.test(wres[1]), "an edit that does not match is refused with the current html");
+  await page.click("#ask .icon[aria-label=Close]");
+  const fh = await page.waitForFunction(() => { const f = document.querySelector(".home-widgets iframe"); return f && parseInt(f.style.height) > 900 ? f.style.height : null; }, null, { timeout: 5000 }).then(x => x.jsonValue(), () => null);
+  ok(fh, "the frame grows to fit its content by itself (" + fh + ")");
   const lastCall = await page.evaluate(() => window.__mockCalls[window.__mockCalls.length - 1].input[0].content);
   ok(/CURRENT DESIGN/.test(lastCall) && /Hidden now: .*progress bars/.test(lastCall), "the tutor is told the saved design and what is hidden");
 
