@@ -4,7 +4,9 @@
   const docs = new Map(); const listeners = new Set();
   window.__mockDocs = docs; window.__mockLog = [];
   const tick = () => setTimeout(() => listeners.forEach(l => l()), 5);
-  const snapOf = (id, body) => ({ id, exists: !!body, data: () => body && JSON.parse(JSON.stringify(body)), metadata: { fromCache: false, hasPendingWrites: false } });
+  // The real db hands out frozen data; so does the mock.
+  const deepFreeze = o => { if (o && typeof o === "object") { Object.values(o).forEach(deepFreeze); Object.freeze(o); } return o; };
+  const snapOf = (id, body) => ({ id, exists: !!body, data: () => body && deepFreeze(JSON.parse(JSON.stringify(body))), metadata: { fromCache: false, hasPendingWrites: false } });
   function col(path, filters) {
     filters = filters || [];
     const matches = () => [...docs].filter(([k]) => k.startsWith(path + "/") && k.split("/").length === path.split("/").length + 1)

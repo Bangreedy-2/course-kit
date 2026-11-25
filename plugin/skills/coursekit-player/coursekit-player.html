@@ -1259,6 +1259,8 @@ function dbStore(db, uid) {
   }
   let onError = null;
   function report(key, e) { if (onError) onError(key, e); }
+  // Snapshot data comes back frozen; the player edits what it reads, so hand out its own copy.
+  const own = v => v == null ? v : JSON.parse(JSON.stringify(v));
   function write(key, body) {
     let q = queue.get(key);
     if (q) { q.next = body; return q.running; }
@@ -1270,11 +1272,11 @@ function dbStore(db, uid) {
     kind: "db",
     put: (key, body) => write(key, JSON.parse(JSON.stringify(body))),
     del: key => write(key, DEL),
-    async get(key) { const s = await col.doc(key).get(); return s.exists ? s.data() : null; },
-    async query(filter) { let q = col; for (const [k, v] of Object.entries(filter)) q = q.where(k, "==", v); const s = await q.get(); return s.docs.map(d => ({ key: d.id, body: d.data() })); },
+    async get(key) { const s = await col.doc(key).get(); return s.exists ? own(s.data()) : null; },
+    async query(filter) { let q = col; for (const [k, v] of Object.entries(filter)) q = q.where(k, "==", v); const s = await q.get(); return s.docs.map(d => ({ key: d.id, body: own(d.data()) })); },
     watch(filter, cb, err) {
       let q = col; for (const [k, v] of Object.entries(filter)) q = q.where(k, "==", v);
-      return q.onSnapshot(s => cb(s.docs.map(d => ({ key: d.id, body: d.data() })), s.metadata), err);
+      return q.onSnapshot(s => cb(s.docs.map(d => ({ key: d.id, body: own(d.data()) })), s.metadata), err);
     },
     pending: () => queue.size,
     set onError(f) { onError = f; },
