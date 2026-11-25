@@ -1,0 +1,1682 @@
+diff --git a/README.md b/README.md
+index 5719836..00a7f47 100644
+--- a/README.md
++++ b/README.md
+@@ -4,17 +4,37 @@ Coursekit is an application that helps you create an interactive course with the
+ 
+ No API keys are needed. The tutor is the AI subscription you already have.
+ 
+-## Try it
++## Start
+ 
+-You need any static web server. From the repository root:
++You need Python 3.9 or newer, and nothing else. From the repository root:
+ 
+ ```sh
+-python3 -m http.server 8000
++python3 helper/coursekit.py
+ ```
+ 
+-Then open <http://localhost:8000/app/>. Progress is saved in your browser.
++This starts the Coursekit helper and opens <http://127.0.0.1:8737/app/>. The helper:
+ 
+-Courses that use Python run real CPython (Pyodide) in the browser, with numpy, pandas, scikit-learn and matplotlib. The first run downloads about 45 MB, which the browser then caches.
++- serves the app and every course in `packs/`;
++- saves your progress and notebooks as files in `~/.coursekit`, so clearing the browser loses nothing;
++- runs course code on your own computer, with your own libraries and GPU.
++
++To run code in a specific environment (for example one with CUDA builds of PyTorch), install the course's libraries there and point the helper at its Python:
++
++```sh
++pip install -r packs/sigmoid-ml/requirements.txt       # inside that environment
++python3 helper/coursekit.py --python ~/envs/ml/bin/python
++```
++
++In the app, Record → Settings → Run Python switches between this computer and the browser.
++
++Without the helper, any static web server works (`python3 -m http.server 8000`, then open <http://localhost:8000/app/>). Progress is then kept in the browser, and Python runs in the browser through Pyodide with numpy, pandas, scikit-learn and matplotlib. The first run downloads about 45 MB, which the browser then caches.
++
++## Your AI tutor
++
++- **Ask button:** on every page and every exercise. It writes a message with where you are and your answer so far, copies it and opens Claude. Works with any AI chat.
++- **Coursekit tools (MCP):** connect `helper/mcp_server.py` to Claude Desktop or Claude Code and your AI can see the page you are on, read your progress, run your code on your GPU, and create or edit courses.
++
++Setup steps are in [docs/connect-ai.md](docs/connect-ai.md).
+ 
+ ## What is in a course
+ 
+@@ -23,31 +43,40 @@ Courses that use Python run real CPython (Pyodide) in the browser, with numpy, p
+ - **Lessons:** long-form lessons with practice items. A lesson counts as learned only when every item is correct. Code in lessons can be run in place.
+ - **Drills:** short from-memory exercises on a spaced-repetition schedule.
+ - **Checkpoints:** timed mock exams built from earlier items.
+-- **Projects:** larger tasks, optionally with an in-browser notebook that checks your work and exports to `.ipynb`.
+-- **Record:** progress by track, checkpoint scores, study-day heatmap and backups.
++- **Projects:** larger tasks, optionally with a notebook that runs your code, checks your work and exports to `.ipynb`, and Streamlit apps that run in the page.
++- **Record:** progress by track, checkpoint scores, study-day heatmap, settings and backups.
+ 
+-## Repository layout
++## Courses included
+ 
+-```
+-app/            the learning app (static HTML, CSS and JavaScript, no build step)
+-packs/          course packs, one folder per course
+-  index.json    the list of courses the app shows
+-  sigmoid-ml/   a 10-week machine learning programme with Python, notebooks and datasets
+-  music-theory/ a 3-week music theory starter course with no code at all
+-docs/           pack format and roadmap
+-tools/pack.js   validate packs and rebuild packs/index.json
+-```
++- **Sigmoid Prep** (`packs/sigmoid-ml`): a 10-week machine learning programme with Python, 18 notebooks and their datasets.
++- **Music Theory Basics** (`packs/music-theory`): a 3-week course with no code at all, to show the app works for any subject.
+ 
+ ## Make or change a course
+ 
+-A course is a folder of Markdown lessons plus a `course.json` manifest. See [docs/pack-format.md](docs/pack-format.md).
++Ask your AI ("build a course on X from these files") with the Coursekit tools connected, or write it yourself: a course is a folder of Markdown lessons plus a `course.json` manifest. See [docs/pack-format.md](docs/pack-format.md).
+ 
+ ```sh
+-node tools/pack.js validate   # check every pack for broken references
+-node tools/pack.js index      # rebuild packs/index.json after adding a pack
++python3 helper/packtool.py validate   # check every pack for broken references
++python3 helper/packtool.py index      # rebuild packs/index.json (the helper does this on the fly)
+ ```
+ 
+-Saved progress is keyed by ids, so once people use a pack, only add to it: never rename, delete or reorder ids, practice items, recall cards or criteria.
++`node tools/pack.js validate` and `node tools/pack.js index` do the same with Node.
++
++Saved progress is keyed by ids, so once people use a course, only add to it: never rename, delete or reorder ids, practice items, recall cards or criteria.
++
++## Repository layout
++
++```
++app/                the learning app (static HTML, CSS and JavaScript, no build step)
++packs/              course packs, one folder per course, and index.json
++helper/coursekit.py local helper: serves the app, stores progress, runs code
++helper/kernel.py    the persistent Python process the helper runs code in
++helper/mcp_server.py Coursekit tools for your AI app
++helper/packtool.py  lesson parser, validator and index builder
++tools/pack.js       the same validator for Node
++tests/              parser parity check (node tests/parity.js)
++docs/               pack format, AI setup and roadmap
++```
+ 
+ ## Roadmap
+ 
+diff --git a/app/app.css b/app/app.css
+index 165c68e..02d19b5 100644
+--- a/app/app.css
++++ b/app/app.css
+@@ -200,3 +200,8 @@ textarea.nbsrc{min-height:60px;overflow:hidden;resize:none}
+   details.week>summary .wk-side{grid-column:2}
+ }
+ @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
++.askbtn{position:fixed;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:16;border-radius:99px;box-shadow:0 2px 8px rgba(0,0,0,.12);font-weight:600}
++.askex{margin-left:auto;padding:2px 9px;font-size:12px}
++.ex .hd .pill.ok+.askex{margin-left:6px}
++.askdlg{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--fg);padding:18px;width:min(640px,calc(100vw - 32px))}
++.askdlg::backdrop{background:rgba(0,0,0,.35)}
+diff --git a/app/index.html b/app/index.html
+index c201cd0..11b567f 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -7,6 +7,7 @@
+ <!-- Where course packs live, relative to this page. The local helper serves them at the same path. -->
+ <meta name="coursekit-packs" content="../packs/">
+ <meta name="coursekit-pyodide" content="https://cdn.jsdelivr.net/pyodide/v314.0.8/full/">
++<meta name="coursekit-ask-url" content="https://claude.ai/new">
+ <meta name="coursekit-stlite" content="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.3/build/">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=Sora:wght@500;600;700&display=swap">
+@@ -28,6 +29,7 @@
+   </nav>
+   <main id="main"><p class="muted">Loading…</p></main>
+ </div>
++<button class="btn askbtn" id="askbtn" type="button" title="Ask your AI tutor about where you are">Ask</button>
+ <script src="js/text.js"></script>
+ <script src="js/app.js"></script>
+ </body>
+diff --git a/app/js/app.js b/app/js/app.js
+index 4fa60cd..7ec9188 100644
+--- a/app/js/app.js
++++ b/app/js/app.js
+@@ -20,6 +20,10 @@ const PACKS_URL=(document.querySelector('meta[name="coursekit-packs"]')||{}).con
+ const PYODIDE_URL=(document.querySelector('meta[name="coursekit-pyodide"]')||{}).content||"https://cdn.jsdelivr.net/pyodide/v314.0.8/full/";
+ const STLITE_URL=(document.querySelector('meta[name="coursekit-stlite"]')||{}).content||"https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.3/build/";
+ const DEFAULT_LABELS={lessons:"Lessons",drills:"Drills",projects:"Projects",project:"Project",checkpoint:"Checkpoint",unit:"Week"};
++let HELPER=null; // {token, gpu, python, ...} when the app is served by the local helper
++async function api(path,o){o=o||{};const h=Object.assign({"X-Coursekit-Token":HELPER?HELPER.token:""},o.headers||{});if(o.body&&typeof o.body==="string")h["Content-Type"]="application/json";
++  const r=await fetch(path,Object.assign({},o,{headers:h,cache:"no-store"}));if(r.status===404&&!o.method)return null;if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}
++async function detectHelper(){try{const r=await fetch("/api/status",{cache:"no-store"});if(!r.ok)return null;const j=await r.json();return j&&j.helper?j:null;}catch(e){return null;}}
+ function hasPython(){return !!(PACK&&(PACK.runtimes||[]).includes("python"));}
+ async function getJSON(u){const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw new Error(u+": HTTP "+r.status);return r.json();}
+ async function getText(u){const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw new Error(u+": HTTP "+r.status);return r.text();}
+@@ -38,6 +42,7 @@ async function loadPack(id){
+   TASKS={};PLAN.weeks.forEach(w=>w.tasks.forEach(t=>{t.week=w.n;if(t.hw!=null&&t.project==null)t.project=String(t.hw);if(t.crit)t.crit.forEach(k=>{if(k.t==="U"&&!k.hosts)k.hosts=c.linkHosts||[];});TASKS[t.id]=t;}));
+   LSKEY="coursekit:"+c.id+":progress";
+   S=blank();try{const raw=localStorage.getItem(LSKEY);if(raw)S=normalise(JSON.parse(raw));}catch(e){}
++  if(HELPER){try{const r=await api("/api/progress/"+encodeURIComponent(c.id));if(r&&(r.updated||0)>(S.updated||0)){S=normalise(r);try{localStorage.setItem(LSKEY,JSON.stringify(S));}catch(e){}}else if(S.updated)pushProgress();saveState="computer";}catch(e){saveState="helper-err";}}
+   try{localStorage.setItem("coursekit:last-pack",c.id);}catch(e){}
+ }
+ const BOX=[0,1,3,7,14,30];
+@@ -50,12 +55,15 @@ function normalise(s){const b=blank();if(!s||typeof s!=="object")return b;for(co
+ let S=null;
+ let saveState="local";
+ /* Progress lives in this browser (localStorage). The local helper adds file-based storage and sync. */
++let pushT=null;
+ function save(){
+   S.updated=Date.now();
+   try{localStorage.setItem(LSKEY,JSON.stringify(S));saveState="local";}catch(e){saveState="local-err";}
+-  paintSave();
++  if(HELPER){saveState="saving";clearTimeout(pushT);pushT=setTimeout(pushProgress,600);}
++  paintSave();postContext();
+ }
+-function paintSave(){const el=$("#savestate");if(!el)return;el.textContent={local:"Saved in this browser","local-err":"Could not save: browser storage is full or blocked"}[saveState]||"";}
++function pushProgress(){api("/api/progress/"+encodeURIComponent(PACK.id),{method:"PUT",body:JSON.stringify(S)}).then(()=>{saveState="computer";paintSave();},()=>{saveState="helper-err";paintSave();});}
++function paintSave(){const el=$("#savestate");if(!el)return;el.textContent={local:"Saved in this browser","local-err":"Could not save: browser storage is full or blocked",computer:"Saved on this computer",saving:"Saving…","helper-err":"Helper unreachable, kept in browser"}[saveState]||"";}
+ function logAct(n){const t=TODAY();S.log[t]=(S.log[t]||0)+(n||1);}
+ 
+ /* ---------- time & pace ---------- */
+@@ -115,7 +123,7 @@ function critLabel(c){
+ 
+ /* ---------- Skulpt runner ---------- */
+ /* ---------- Python runtime: Pyodide (CPython + numpy, pandas, scikit-learn, matplotlib) in a worker ---------- */
+-const PY=(function(){
++const BPY=(function(){
+   let w=null,seq=0,pend={},state="off",bootP=null;const listeners=new Set();
+   const workerUrl=new URL("js/python-worker.js",document.baseURI).href;
+   const setState=s=>{state=s;listeners.forEach(f=>{try{f(s);}catch(e){}});};
+@@ -144,6 +152,25 @@ const PY=(function(){
+     clearTimeout(timer);return Object.assign({out,imgs},r);}
+   return {run,boot,kill,ensureData,put:(path,data)=>call({op:"put",path,data}),reset:ns=>w?call({op:"reset",ns}):Promise.resolve({ok:true}),has:ns=>w&&state==="ready"?call({op:"has",ns}).then(r=>!!r.has):Promise.resolve(false),get state(){return state;},on:f=>{listeners.add(f);return ()=>listeners.delete(f);}};
+ })();
++/* Python on this computer, through the local helper (helper/coursekit.py): own libraries, own GPU, no size limits. */
++const LPY=(function(){
++  const listeners=new Set();
++  const post=(path,body)=>api(path,{method:"POST",body:JSON.stringify(Object.assign({pack:PACK.id},body))});
++  async function run(code,o){o=o||{};if(o.onStatus)o.onStatus("Running on your computer…");
++    try{const r=await post("/api/run",{code,ns:o.ns||null,timeout:Math.max(Math.round((o.limitMs||0)/1000),1800)});
++      if(r.out&&o.onOut)o.onOut(r.out);return {ok:!!r.ok,error:r.error||null,out:r.out||"",value:r.value,imgs:r.imgs||[]};}
++    catch(e){return {ok:false,error:"The Coursekit helper did not answer: "+(e.message||e)+". Is it still running?",out:"",imgs:[]};}}
++  return {run,boot:()=>Promise.resolve(true),kill:()=>{},ensureData:()=>Promise.resolve(),
++    put:(path,data)=>api("/api/files/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(path),{method:"PUT",body:data}).then(()=>({ok:true}),()=>({ok:false})),
++    reset:ns=>post("/api/reset",{ns}).catch(()=>({ok:false})),
++    interrupt:ns=>post("/api/interrupt",{ns}).catch(()=>({ok:false})),
++    has:ns=>api("/api/has?pack="+encodeURIComponent(PACK.id)+"&ns="+encodeURIComponent(ns)).then(r=>!!r.has,()=>false),
++    get state(){return "ready";},on:f=>{listeners.add(f);return ()=>listeners.delete(f);}};
++})();
++function runner(){if(!HELPER)return "browser";let m=null;try{m=localStorage.getItem("coursekit:runner");}catch(e){}return m==="browser"?"browser":"local";}
++const PY={run:(c,o)=>(runner()==="local"?LPY:BPY).run(c,o),boot:()=>(runner()==="local"?LPY:BPY).boot(),kill:()=>BPY.kill(),
++  put:(p,d)=>(runner()==="local"?LPY:BPY).put(p,d),reset:ns=>(runner()==="local"?LPY:BPY).reset(ns),has:ns=>(runner()==="local"?LPY:BPY).has(ns),
++  get state(){return (runner()==="local"?LPY:BPY).state;},on:f=>BPY.on(f)};
+ async function runPy(code,limitMs,o){
+   const r=await PY.run(code,{limitMs:Math.max(limitMs||0,30000),onStatus:o&&o.onStatus,ns:o&&o.ns});
+   return {out:r.out||"",err:r.ok?null:(r.error||"Error"),imgs:r.imgs||[],value:r.value,engine:"py"};
+@@ -209,13 +236,13 @@ function paintHeader(){
+ 
+ /* ---------- routing ---------- */
+ let TAB="today",VIEW=null; // VIEW = {kind:'lesson'|'drill'|'exam'|'cards', id}
+-function go(tab){TAB=tab;VIEW=null;try{history.replaceState(null,"","#"+tab);}catch(e){}render();window.scrollTo(0,0);}
+-function open(kind,id){VIEW={kind,id};try{history.replaceState(null,"","#"+(kind==="lesson"?"l-"+id:kind==="drill"?"d-"+id:kind==="nb"?"nb-"+id:TAB));}catch(e){}render();window.scrollTo(0,0);}
++function go(tab){TAB=tab;VIEW=null;ASKFOCUS=null;try{history.replaceState(null,"","#"+tab);}catch(e){}render();window.scrollTo(0,0);}
++function open(kind,id){VIEW={kind,id};ASKFOCUS=null;try{history.replaceState(null,"","#"+(kind==="lesson"?"l-"+id:kind==="drill"?"d-"+id:kind==="nb"?"nb-"+id:TAB));}catch(e){}render();window.scrollTo(0,0);}
+ $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)go(b.dataset.tab);});
+ function fromHash(){const h=(location.hash||"").slice(1);if(!h)return;if(h==="courses"){VIEW={kind:"packs"};return;}if(h.startsWith("l-")&&LBY[h.slice(2)]){VIEW={kind:"lesson",id:h.slice(2)};}else if(h.startsWith("d-")&&DBY[h.slice(2)]){VIEW={kind:"drill",id:h.slice(2)};}else if(h.startsWith("nb-")&&NOTEBOOKS[h.slice(3)]){VIEW={kind:"nb",id:h.slice(3)};}else if(["today","plan","library","projects","record"].includes(h)){TAB=h;}}
+ 
+ function render(){
+-  paintHeader();
++  paintHeader();setTimeout(postContext,0);
+   $$("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===TAB)));
+   const M=$("#main");
+   if(S.examRun&&Date.now()>S.examRun.ends){finishExam(true);}
+@@ -307,7 +334,7 @@ function renderEx(el,l,k,p,o){
+   const key=o.examKey;const st=key?(o.examState[key]||{}):(pstate(l.id,k)||{});
+   const set=v=>{if(key){o.examState[key]=Object.assign(o.examState[key]||{},v);}else setP(l.id,k,v);};
+   el.className="ex"+(st.ok&&!key?" passed":"");
+-  let h='<div class="hd"><span class="pill acc">'+(o.num||("Exercise "+(k+1)))+' · '+typeLabel(p.type)+'</span>'+(st.ok&&!key?'<span class="pill ok">Correct</span>':"")+'</div><div class="prose" style="font-size:15.5px">'+md(p.prompt)+'</div>';
++  let h='<div class="hd"><span class="pill acc">'+(o.num||("Exercise "+(k+1)))+' · '+typeLabel(p.type)+'</span>'+(st.ok&&!key?'<span class="pill ok">Correct</span>':"")+(key?"":'<button class="btn ghost sm askex" type="button" title="Ask your AI tutor about this exercise">Ask</button>')+'</div><div class="prose" style="font-size:15.5px">'+md(p.prompt)+'</div>';
+   if(p.type==="choice"){
+     if(!p._order){p._order=p.opts.map((x,i)=>i);}
+     p._order.forEach(i=>{const op=p.opts[i];let cls="opt";if(st.pick!=null&&(st.ok||key)){if(i===st.pick)cls+=op.ok?" right":" wrong";}else if(st.pick===i&&!st.ok)cls+=" wrong";h+='<button class="'+cls+'" data-i="'+i+'">'+inline(op.t)+'</button>';});
+@@ -324,6 +351,7 @@ function renderEx(el,l,k,p,o){
+   }
+   h+='<div class="fbz"></div>';
+   el.innerHTML=h;
++  const ab=$(".askex",el);if(ab)ab.onclick=()=>{ASKFOCUS={lid:l.id,k};ask();};
+   const fbz=$(".fbz",el);
+   const showFb=(ok,msg)=>{fbz.innerHTML='<div class="fb '+(ok?"ok":"bad")+'">'+msg+'</div>';};
+   const why=p.why?'<div style="margin-top:4px">'+inline(p.why)+'</div>':"";
+@@ -552,6 +580,7 @@ async function nbLoad(id){
+   if(NBS[id])return NBS[id];
+   let nb=null;
+   try{const raw=localStorage.getItem(nbLocalKey(id));if(raw)nb=JSON.parse(raw);}catch(e){}
++  if(HELPER){try{const r=await api("/api/nb/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(id));if(r&&Array.isArray(r.cells)&&(!nb||(r.updated||0)>(nb.updated||0)))nb=r;}catch(e){}}
+   if(!nb||!Array.isArray(nb.cells))nb=nbFromTemplate(id);
+   nb.files=(nb.files||[]).map(f=>({name:f.name}));
+   NBS[id]=nb;return nb;
+@@ -560,6 +589,7 @@ function nbSave(id){
+   const nb=NBS[id];if(!nb)return;nb.updated=Date.now();
+   const json=JSON.stringify(nb);
+   try{localStorage.setItem(nbLocalKey(id),json);}catch(e){}
++  if(HELPER){clearTimeout(NBSAVE[id]);NBSAVE[id]=setTimeout(()=>{api("/api/nb/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(id),{method:"PUT",body:json}).catch(()=>{});},900);}
+ }
+ function nbWords(src){return String(src||"").split("\n").filter(l=>!/^\s*#/.test(l)&&!/^\s*_[^_].*_\s*$/.test(l)).join(" ").trim().split(/\s+/).filter(Boolean).length;}
+ function nbAnswer(src){return String(src||"").split("\n").filter(l=>!/^\s*#/.test(l)&&!/^\s*_[^_].*_\s*$/.test(l)).join("\n").trim();}
+@@ -583,7 +613,7 @@ function nbPaint(M,id,nb){
+   const T=NOTEBOOKS[id];const ns="nb:"+id;const task=TASKS[id];
+   const st=(S.nb&&S.nb[id])||{};
+   let h='<article class="nbwrap"><div class="crumbs"><button class="btn ghost sm" id="back">← '+esc(LBL.projects)+'</button> '+(task?esc(LBL.unit)+" "+task.week:"")+'</div>';
+-  h+='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><h1 style="font-size:26px;margin-bottom:4px">'+esc(T.title)+'</h1><div class="row small muted">'+(st.passed?'<span class="pill ok">All checks pass</span>':'<span class="pill">Checks not passed yet</span>')+'<span id="nbsaved">Saved in this browser</span></div></div></div>';
++  h+='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><h1 style="font-size:26px;margin-bottom:4px">'+esc(T.title)+'</h1><div class="row small muted">'+(st.passed?'<span class="pill ok">All checks pass</span>':'<span class="pill">Checks not passed yet</span>')+'<span id="nbsaved">'+(HELPER?"Saved on this computer":"Saved in this browser")+(hasPython()?" · Python runs "+(runner()==="local"?"on this computer":"in this browser"):"")+'</span></div></div></div>';
+   h+='<div class="nbbar" role="toolbar" aria-label="Notebook"><button class="btn pri sm" data-nb="runall">▶ Run all</button><button class="btn sm" data-nb="check">✓ Check my work</button><button class="btn sm" data-nb="restart">Restart Python</button><button class="btn sm" data-nb="export">Export (.ipynb + data, .zip)</button><button class="btn ghost sm" data-nb="reset">Start over from the template</button></div>';
+   h+='<div class="nbfiles small"><span class="muted">Data files:</span> '+(T.datasets.length?T.datasets.map(f=>'<span class="pill">'+esc(f)+'</span>').join(" "):'<span class="muted">none needed</span>')+(nb.files.length?' · uploaded: '+nb.files.map(f=>'<span class="pill acc">'+esc(f.name)+'</span>').join(" "):"")+' <label class="btn ghost sm" style="cursor:pointer">Upload a CSV<input type="file" accept=".csv,text/csv" id="nbup" hidden></label></div>';
+   h+='<div id="nbchecks"></div><div id="nbcells"></div>';
+@@ -832,10 +862,11 @@ function renderRecord(M){
+   h+='<div class="stack"><div class="sec-h">Drill boxes</div><div class="card scroll-x"><table class="list"><tr><th>Drill</th><th>Box</th><th>Next</th></tr>';
+   DRILLS.forEach(d=>{const s=S.drills[d.id];h+='<tr><td><button class="btn ghost sm" style="padding:0;border:0;text-align:left" data-d="'+d.id+'">'+esc(d.title)+'</button></td><td><span class="boxes">'+boxes(s?s.box:0)+'</span></td><td class="small">'+(s&&s.due?fmtDay(s.due):(drillUnlocked(d)?"new":"locked"))+'</td></tr>';});
+   h+='</table></div><div class="sec-h">Settings</div><div class="card stack small"><label>Course start (a Monday) <input type="date" id="startdate" value="'+S.start+'" style="font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:4px 6px"></label>'+
+-    '<div class="row"><button class="btn sm" id="exp">Copy progress backup</button><button class="btn sm" id="dl">Save backup file</button><button class="btn sm" id="imp">Restore from backup</button></div><textarea id="impbox" class="prosebox" hidden placeholder="Paste a backup here, then press Restore again"></textarea><p class="muted" style="margin:0">Progress is saved in this browser. Save a backup file to move it to another browser or computer.</p></div></div></div>';
++    '<div class="row"><button class="btn sm" id="exp">Copy progress backup</button><button class="btn sm" id="dl">Save backup file</button><button class="btn sm" id="imp">Restore from backup</button></div><textarea id="impbox" class="prosebox" hidden placeholder="Paste a backup here, then press Restore again"></textarea><p class="muted" style="margin:0">'+(HELPER?"Progress is saved on this computer by the Coursekit helper ("+esc(HELPER.home)+") and in this browser.":"Progress is saved in this browser. Save a backup file to move it to another browser or computer, or run the Coursekit helper to keep it in files.")+'</p>'+(HELPER&&hasPython()?'<div><b>Run Python</b><div class="row" style="margin-top:6px"><label><input type="radio" name="runner" value="local"'+(runner()==="local"?" checked":"")+'> on this computer</label><label><input type="radio" name="runner" value="browser"'+(runner()==="browser"?" checked":"")+'> in this browser</label></div><div class="muted" style="margin-top:4px">This computer: Python '+esc(HELPER.pythonVersion||"")+' · GPU: '+esc(HELPER.gpu?HELPER.gpu.join(", "):"none found")+'. Libraries a course needs must be installed in that Python.</div></div>':"")+'</div></div></div>';
+   M.innerHTML=h;
+   $$("[data-exam]",M).forEach(b=>b.onclick=()=>startExam(b.dataset.exam));
+   $$("[data-d]",M).forEach(b=>b.onclick=()=>open("drill",b.dataset.d));
++  $$("input[name=runner]",M).forEach(r=>r.onchange=()=>{try{localStorage.setItem("coursekit:runner",r.value);}catch(e){}toast(r.value==="local"?"Python now runs on this computer.":"Python now runs in this browser.");});
+   $("#startdate",M).onchange=e=>{if(e.target.value){S.start=e.target.value;save();render();}};
+   $("#exp",M).onclick=()=>{const t=JSON.stringify(S);navigator.clipboard.writeText(t).then(()=>toast("Backup copied."),()=>{const b=$("#impbox",M);b.hidden=false;b.value=t;b.select();toast("Copy the selected text.");});};
+   $("#dl",M).onclick=()=>{saveFile(PACK.id+"-progress.json",new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));};
+@@ -844,11 +875,64 @@ function renderRecord(M){
+ 
+ /* ---------- Python status badge ---------- */
+ (function(){const el=document.createElement("div");el.className="pystat";el.setAttribute("role","status");el.hidden=true;document.body.appendChild(el);
+-  PY.on(s=>{el.hidden=s==="off";el.className="pystat "+s;el.textContent={loading:"Python: loading…",ready:"Python ready",broken:"Python could not load"}[s]||"";if(s==="ready")setTimeout(()=>{if(PY.state==="ready")el.hidden=true;},4000);});})();
++  if(HELPER){/* code runs through the helper; no browser download to report */}
++  BPY.on(s=>{if(runner()==="local")return;el.hidden=s==="off";el.className="pystat "+s;el.textContent={loading:"Python: loading…",ready:"Python ready",broken:"Python could not load"}[s]||"";if(s==="ready")setTimeout(()=>{if(PY.state==="ready")el.hidden=true;},4000);});})();
+ /* ---------- boot ---------- */
++/* ---------- Ask: hand where you are to your AI tutor ---------- */
++const ASK_URL=(document.querySelector('meta[name="coursekit-ask-url"]')||{}).content||"https://claude.ai/new";
++let ASKFOCUS=null,ctxT=null;
++function clip(s,n){s=String(s==null?"":s);return s.length>n?s.slice(0,n)+" …":s;}
++function contextNow(){
++  if(!PACK)return null;
++  const c={course:{id:PACK.id,title:PLAN.title},date:TODAY(),unit:LBL.unit,current:curWeek(),tab:TAB,view:VIEW?{kind:VIEW.kind,id:VIEW.id||null}:null,
++    progress:{lessonsLearned:LESSONS.filter(l=>lessonLearned(l.id)).length,lessons:LESSONS.length,coreDonePercent:Math.round(overall()*100),cardsDue:dueCards().length,drillsDue:dueDrills().length}};
++  const v=VIEW||{};
++  if(v.kind==="lesson"&&LBY[v.id]){const l=LBY[v.id];const prac=l.practice.map((p,k)=>{const s=pstate(l.id,k)||{};return {index:k,type:p.type,correct:!!s.ok,tries:s.tries||0};});
++    c.lesson={id:l.id,title:l.title,week:l.week,learned:lessonLearned(l.id),practice:prac};}
++  if(v.kind==="drill"&&DBY[v.id]){const d=DBY[v.id];c.drill={id:d.id,title:d.title,prompt:d.prompt,draft:clip(S.drafts["d:"+d.id]||"",4000)};}
++  if(v.kind==="nb"&&NBS[v.id]){const nb=NBS[v.id];c.notebook={id:v.id,title:(NOTEBOOKS[v.id]||{}).title,checks:(S.nb||{})[v.id]||null,
++    cells:nb.cells.map((x,i)=>({index:i,type:x.t,tag:x.tag||undefined,src:clip(x.src,3000),output:x.out?clip(x.out.text||"",1500):undefined,error:x.out&&x.out.err?clip(x.out.err,1500):undefined}))};}
++  if(v.kind==="exam")c.checkpoint={inProgress:true};
++  if(ASKFOCUS&&LBY[ASKFOCUS.lid]){const l=LBY[ASKFOCUS.lid];const p=l.practice[ASKFOCUS.k];const s=pstate(l.id,ASKFOCUS.k)||{};
++    c.exercise={lesson:l.id,lessonTitle:l.title,index:ASKFOCUS.k,type:p.type,prompt:p.prompt,options:p.type==="choice"?p.opts.map(o=>o.t):undefined,
++      myAnswer:clip(s.code!=null?s.code:s.ans!=null?s.ans:(s.pick!=null&&p.opts[s.pick]?p.opts[s.pick].t:""),4000),correct:!!s.ok,tries:s.tries||0};}
++  return c;
++}
++function postContext(){if(!HELPER||!PACK)return;clearTimeout(ctxT);ctxT=setTimeout(()=>{const c=contextNow();if(c)api("/api/context",{method:"POST",body:JSON.stringify(c)}).catch(()=>{});},400);}
++function askText(c){
++  const L=["I'm learning with Coursekit, in the course \""+c.course.title+"\" ("+c.unit.toLowerCase()+" "+c.current+").",""];
++  if(c.exercise){const e=c.exercise;L.push("I'm on exercise "+(e.index+1)+" of the lesson \""+e.lessonTitle+"\" ("+typeLabel(e.type)+"):","",e.prompt,"");
++    if(e.options)L.push("Options: "+e.options.join(" | "),"");
++    if(e.myAnswer)L.push("My answer so far"+(e.correct?" (marked correct)":e.tries?" (not accepted yet, "+e.tries+" tries)":"")+":","",e.myAnswer,"");}
++  else if(c.drill){L.push("I'm on the drill \""+c.drill.title+"\":","",c.drill.prompt,"");if(c.drill.draft)L.push("My attempt:","",c.drill.draft,"");}
++  else if(c.notebook){L.push("I'm working in the notebook \""+c.notebook.title+"\".");const err=c.notebook.cells.filter(x=>x.error).pop();if(err)L.push("","The last error was in this cell:","",err.src,"","Error:",err.error);L.push("");}
++  else if(c.lesson)L.push("I'm reading the lesson \""+c.lesson.title+"\".","");
++  L.push("Please help me understand it. Give hints before full answers unless I ask for the answer.");
++  if(HELPER)L.push("(If the Coursekit tools are connected, call get_current_context for the full lesson, my answers and my progress.)");
++  L.push("","My question: ");
++  return L.join("\n");
++}
++function ask(){
++  if(VIEW&&VIEW.kind==="exam"){toast("Ask is off during a checkpoint. Finish it first.");return;}
++  const c=contextNow();if(!c)return;
++  if(HELPER)api("/api/context",{method:"POST",body:JSON.stringify(c)}).catch(()=>{});
++  const txt=askText(c);
++  let dlg=$("#askdlg");
++  if(!dlg){dlg=document.createElement("dialog");dlg.id="askdlg";dlg.className="askdlg";document.body.appendChild(dlg);}
++  dlg.innerHTML='<form method="dialog"><h3 style="font-size:18px;margin-bottom:6px">Ask your AI tutor</h3><p class="small muted" style="margin:0 0 8px">This message tells your AI chat where you are. Add your question at the end, then paste it into Claude (or any assistant).'+(HELPER?" If the Coursekit tools are connected in Claude Desktop or Claude Code, you can also just ask there: it can see this page.":"")+'</p><textarea class="prosebox" id="asktxt" style="min-height:220px"></textarea><div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn ghost" value="cancel">Close</button><button class="btn" type="button" id="askcopy">Copy</button><button class="btn pri" type="button" id="askgo">Copy and open Claude</button></div></form>';
++  const ta=$("#asktxt",dlg);ta.value=txt;
++  const copy=()=>navigator.clipboard.writeText(ta.value).then(()=>{toast("Copied. Paste it into your chat.");return true;},()=>{ta.select();toast("Select all and copy the text.");return false;});
++  $("#askcopy",dlg).onclick=copy;
++  $("#askgo",dlg).onclick=()=>{copy();window.open(ASK_URL,"_blank","noopener");dlg.close();};
++  if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","");
++  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
++}
++$("#askbtn").onclick=()=>{ASKFOCUS=null;ask();};
++
+ /* ---------- boot ---------- */
+ async function boot(){
+   const M=$("#main");
++  HELPER=await detectHelper();
+   let index=[];try{index=(await getJSON(PACKS_URL+"index.json")).packs||[];}catch(e){}
+   window.__packIndex=index;
+   const q=new URLSearchParams(location.search).get("pack");
+diff --git a/docs/connect-ai.md b/docs/connect-ai.md
+new file mode 100644
+index 0000000..205255c
+--- /dev/null
++++ b/docs/connect-ai.md
+@@ -0,0 +1,74 @@
++# Connect your AI tutor
++
++Coursekit uses the AI subscription you already have. There are no API keys to create or pay for.
++
++There are two ways to bring your AI in. They work together.
++
++## 1. The Ask button (any AI chat)
++
++Every page has an **Ask** button, and every exercise has its own. It writes a message that tells the AI where you are: the course, the lesson or exercise, your answer so far, or the last error in your notebook. Add your question, press **Copy and open Claude**, and paste. This works in claude.ai, the Claude apps, or any other assistant, with or without the helper.
++
++The button opens `https://claude.ai/new` by default. To open a different chat, change the `coursekit-ask-url` line in `app/index.html`.
++
++## 2. The Coursekit tools (Claude Desktop, Claude Code)
++
++The Coursekit MCP server (`helper/mcp_server.py`) gives your AI direct access to your courses. It can:
++
++- see where you are in the app right now, including your answer and the expected one (it is told to give hints first);
++- read your progress and notice what took you several tries;
++- run Python on your computer, with your libraries and GPU, to check your code or show an idea;
++- create a new course, or edit and extend an existing one, and validate it.
++
++It runs on your computer and talks to your AI app over stdio. Seeing where you are and running code need the helper (`python3 helper/coursekit.py`) to be running; reading and editing courses work without it.
++
++### Claude Code
++
++```sh
++claude mcp add coursekit -- python3 /full/path/to/course-kit/helper/mcp_server.py
++```
++
++### Claude Desktop
++
++Open Settings → Developer → Edit Config and add:
++
++```json
++{
++  "mcpServers": {
++    "coursekit": {
++      "command": "python3",
++      "args": ["/full/path/to/course-kit/helper/mcp_server.py"]
++    }
++  }
++}
++```
++
++On Windows use `"command": "python"` and a path like `"C:\\Users\\you\\course-kit\\helper\\mcp_server.py"`. Restart Claude Desktop afterwards.
++
++### Other MCP clients
++
++Any client that can run a local stdio MCP server works the same way: the command is `python3 helper/mcp_server.py`. Set `COURSEKIT_HOME` if you started the helper with `--home`, and `COURSEKIT_PACKS` if your packs are outside this repository (the server also picks up the helper's `--packs` while the helper runs).
++
++### claude.ai in a browser
++
++The web version of claude.ai connects to remote MCP servers only, not to programs on your computer. Use the Ask button there.
++
++## What to say
++
++- "Help me with what I'm working on in Coursekit." (or use the `tutor` prompt)
++- "Why is my answer to this exercise wrong? Hints only."
++- "Run my notebook's last cell on my GPU and explain the error."
++- "Which lessons should I review this week, based on my progress?"
++- "Add three more practice items to the logistic regression lesson."
++- "Build a course on Spanish for beginners, 4 weeks, 3 hours a week." (or use the `build-course` prompt)
++
++## Tools
++
++| Tool | What it does |
++|---|---|
++| `get_current_context` | where you are in the app, with the lesson text and the expected answer for the AI |
++| `list_courses`, `get_course`, `get_lesson` | read courses |
++| `get_progress` | your saved progress in a course |
++| `get_format_guide` | the course pack format |
++| `read_course_file`, `write_course_file` | read and change files inside a course folder (Markdown, JSON, CSV, text only) |
++| `create_course`, `validate_course` | start a new course and check one for mistakes |
++| `run_python` | run code through the helper on your computer |
+diff --git a/helper/coursekit.py b/helper/coursekit.py
+new file mode 100644
+index 0000000..7ea12c8
+--- /dev/null
++++ b/helper/coursekit.py
+@@ -0,0 +1,414 @@
++#!/usr/bin/env python3
++"""Coursekit local helper.
++
++Serves the learning app and the course packs on http://127.0.0.1:8737, keeps
++progress in files on this computer, and runs Python for the app on this
++computer, with the libraries and GPU of whichever Python you point it at.
++
++    python3 helper/coursekit.py                      # use this Python for code
++    python3 helper/coursekit.py --python ~/venvs/ml/bin/python   # e.g. an env with CUDA torch
++
++Standard library only. Everything is stored under ~/.coursekit (or $COURSEKIT_HOME).
++"""
++import argparse
++import json
++import mimetypes
++import os
++import queue
++import re
++import secrets
++import shutil
++import signal
++import subprocess
++import sys
++import threading
++import time
++import webbrowser
++from http import HTTPStatus
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++from pathlib import Path
++from urllib.parse import parse_qs, unquote, urlparse
++
++VERSION = "0.1.0"
++ROOT = Path(__file__).resolve().parent.parent
++KERNEL = Path(__file__).resolve().parent / "kernel.py"
++MARK = "\x1eCK"
++SAFE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
++mimetypes.add_type("text/javascript", ".js")
++mimetypes.add_type("text/markdown", ".md")
++
++
++class Config:
++    def __init__(self, args):
++        self.home = Path(args.home or os.environ.get("COURSEKIT_HOME") or Path.home() / ".coursekit").expanduser()
++        self.packs = Path(args.packs).expanduser().resolve() if args.packs else ROOT / "packs"
++        self.app = ROOT / "app"
++        self.python = args.python or sys.executable
++        self.port = args.port
++        self.token = secrets.token_urlsafe(24)
++        for d in ("progress", "work", "nb"):
++            (self.home / d).mkdir(parents=True, exist_ok=True)
++
++    def workdir(self, pack):
++        """Per-course working directory for kernels: a copy of the pack's data plus uploaded files."""
++        w = self.home / "work" / pack
++        w.mkdir(parents=True, exist_ok=True)
++        src = self.packs / pack / "data"
++        if src.is_dir():
++            for f in src.iterdir():
++                dst = w / f.name
++                if f.is_file() and (not dst.exists() or dst.stat().st_mtime < f.stat().st_mtime):
++                    shutil.copy2(f, dst)
++        return w
++
++
++def gpu_info():
++    try:
++        out = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
++                             capture_output=True, text=True, timeout=5)
++        names = [l.strip() for l in out.stdout.splitlines() if l.strip()]
++        return names or None
++    except Exception:  # noqa: BLE001 - no NVIDIA tools, no GPU to report
++        return None
++
++
++def python_version(py):
++    try:
++        out = subprocess.run([py, "-c", "import sys;print(sys.version.split()[0])"], capture_output=True, text=True, timeout=20)
++        return out.stdout.strip() or None
++    except Exception:  # noqa: BLE001
++        return None
++
++
++class Kernel:
++    """One persistent Python process (see kernel.py) for one course and namespace."""
++
++    def __init__(self, cfg, pack, ns):
++        self.key = (pack, ns)
++        self.lock = threading.Lock()
++        self.used = time.time()
++        self.seq = 0
++        self.q = queue.Queue()
++        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", MPLBACKEND="Agg")
++        kw = {"start_new_session": True} if os.name == "posix" else {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
++        self.p = subprocess.Popen([cfg.python, "-u", str(KERNEL)], cwd=str(cfg.workdir(pack)), env=env,
++                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
++                                  text=True, encoding="utf-8", bufsize=1, **kw)
++        threading.Thread(target=self._read, daemon=True).start()
++
++    def _read(self):
++        for line in self.p.stdout:
++            if line.startswith(MARK):
++                try:
++                    self.q.put(json.loads(line[len(MARK):]))
++                except ValueError:
++                    pass
++            else:
++                self.q.put({"stray": line})
++        self.q.put(None)
++
++    def alive(self):
++        return self.p.poll() is None
++
++    def run(self, code, timeout):
++        with self.lock:
++            self.used = time.time()
++            self.seq += 1
++            sid = self.seq
++            try:
++                self.p.stdin.write(json.dumps({"code": code, "id": sid}) + "\n")
++                self.p.stdin.flush()
++            except (BrokenPipeError, OSError):
++                return {"ok": False, "error": "Python stopped. It restarts on the next run.", "out": "", "imgs": []}
++            stray = ""
++            deadline = time.time() + timeout
++            while True:
++                left = deadline - time.time()
++                if left <= 0:
++                    self.interrupt()
++                    try:
++                        msg = self.q.get(timeout=5)
++                    except queue.Empty:
++                        msg = None
++                    if not msg or "stray" in msg:
++                        self.kill()
++                    return {"ok": False, "error": "Stopped: the code ran longer than %d s. Python restarts on the next run." % timeout,
++                            "out": stray, "imgs": []}
++                try:
++                    msg = self.q.get(timeout=min(left, 1.0))
++                except queue.Empty:
++                    continue
++                if msg is None:
++                    return {"ok": False, "error": "Python exited (it may have run out of memory). It restarts on the next run.",
++                            "out": stray, "imgs": []}
++                if "stray" in msg:
++                    stray += msg["stray"]
++                    continue
++                if msg.get("id") != sid:
++                    continue
++                return {"ok": msg["ok"], "out": stray + (msg.get("out") or ""), "error": msg.get("err"),
++                        "value": msg.get("value"), "imgs": msg.get("imgs") or [], "ms": msg.get("ms")}
++
++    def interrupt(self):
++        if not self.alive():
++            return
++        try:
++            if os.name == "posix":
++                self.p.send_signal(signal.SIGINT)
++            else:
++                self.p.send_signal(signal.CTRL_BREAK_EVENT)
++        except OSError:
++            pass
++
++    def kill(self):
++        try:
++            self.p.kill()
++        except OSError:
++            pass
++
++
++class Kernels:
++    MAX = 8
++
++    def __init__(self, cfg):
++        self.cfg = cfg
++        self.lock = threading.Lock()
++        self.k = {}
++
++    def get(self, pack, ns, create=True):
++        with self.lock:
++            k = self.k.get((pack, ns))
++            if k and not k.alive():
++                del self.k[(pack, ns)]
++                k = None
++            if not k and create:
++                while len(self.k) >= self.MAX:
++                    old = min(self.k.values(), key=lambda x: x.used)
++                    old.kill()
++                    del self.k[old.key]
++                k = Kernel(self.cfg, pack, ns)
++                self.k[(pack, ns)] = k
++            return k
++
++    def reset(self, pack, ns):
++        with self.lock:
++            k = self.k.pop((pack, ns), None)
++        if k:
++            k.kill()
++
++    def shutdown(self):
++        for k in list(self.k.values()):
++            k.kill()
++
++
++def make_handler(cfg, kernels, info):
++    class H(BaseHTTPRequestHandler):
++        server_version = "Coursekit/" + VERSION
++
++        def log_message(self, fmt, *args):  # quiet by default
++            if os.environ.get("COURSEKIT_DEBUG"):
++                sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
++
++        # --- helpers
++        def send(self, code, body=b"", ctype="application/json", extra=None):
++            if isinstance(body, (dict, list)):
++                body = json.dumps(body).encode()
++            elif isinstance(body, str):
++                body = body.encode()
++            self.send_response(code)
++            self.send_header("Content-Type", ctype)
++            self.send_header("Content-Length", str(len(body)))
++            self.send_header("Cache-Control", "no-cache")
++            self.send_header("X-Content-Type-Options", "nosniff")
++            for k, v in (extra or {}).items():
++                self.send_header(k, v)
++            self.end_headers()
++            if self.command != "HEAD":
++                self.wfile.write(body)
++
++        def body(self, limit=50 * 1024 * 1024):
++            n = int(self.headers.get("Content-Length") or 0)
++            if n > limit:
++                raise ValueError("request too large")
++            return self.rfile.read(n) if n else b""
++
++        def json_body(self):
++            raw = self.body()
++            return json.loads(raw or b"{}")
++
++        def host_ok(self):
++            # Refuse requests that reach us under another host name (DNS rebinding).
++            host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip("[]")
++            return host in ("127.0.0.1", "localhost", "::1")
++
++        def authed(self):
++            return secrets.compare_digest(self.headers.get("X-Coursekit-Token") or "", cfg.token)
++
++        def static(self, base, rel):
++            p = (base / unquote(rel)).resolve()
++            if base.resolve() not in p.parents and p != base.resolve():
++                return self.send(404, {"error": "not found"})
++            if p.is_dir():
++                p = p / "index.html"
++            if not p.is_file():
++                return self.send(404, {"error": "not found"})
++            ctype = mimetypes.guess_type(p.name)[0] or "application/octet-stream"
++            if ctype.startswith("text/") or ctype in ("application/json", "text/javascript"):
++                ctype += "; charset=utf-8"
++            self.send(200, p.read_bytes(), ctype)
++
++        def pack_index(self):
++            packs = []
++            for d in sorted(cfg.packs.iterdir()):
++                f = d / "course.json"
++                if f.is_file():
++                    try:
++                        c = json.loads(f.read_text("utf-8"))
++                        packs.append({"id": c.get("id", d.name), "title": c.get("title", d.name),
++                                      "subtitle": c.get("subtitle", ""), "description": c.get("description", "")})
++                    except ValueError:
++                        pass
++            self.send(200, {"packs": packs})
++
++        def doc_path(self, kind, pack, name=None):
++            if not SAFE.match(pack) or (name is not None and not SAFE.match(name)):
++                return None
++            if kind == "progress":
++                return cfg.home / "progress" / (pack + ".json")
++            d = cfg.home / "nb" / pack
++            d.mkdir(parents=True, exist_ok=True)
++            return d / (name + ".json")
++
++        # --- verbs
++        def do_HEAD(self):
++            self.do_GET()
++
++        def do_GET(self):
++            if not self.host_ok():
++                return self.send(403, {"error": "bad host"})
++            u = urlparse(self.path)
++            path = u.path
++            if path == "/":
++                return self.send(302, b"", "text/plain", {"Location": "/app/"})
++            if path == "/api/status":
++                return self.send(200, dict(info, token=cfg.token, kernels=len(kernels.k)))
++            if path == "/packs/index.json":
++                return self.pack_index()
++            if path.startswith("/app/"):
++                return self.static(cfg.app, path[5:])
++            if path.startswith("/packs/"):
++                return self.static(cfg.packs, path[7:])
++            m = re.match(r"^/api/(progress|nb)/([^/]+)(?:/([^/]+))?$", path)
++            if m:
++                if not self.authed():
++                    return self.send(401, {"error": "token required"})
++                p = self.doc_path(m.group(1), m.group(2), m.group(3) if m.group(1) == "nb" else None)
++                if not p:
++                    return self.send(400, {"error": "bad name"})
++                if not p.is_file():
++                    return self.send(404, {"error": "none yet"})
++                return self.send(200, p.read_bytes())
++            if path == "/api/has":
++                q = parse_qs(u.query)
++                k = kernels.get(q.get("pack", [""])[0], q.get("ns", [""])[0], create=False)
++                return self.send(200, {"has": bool(k)})
++            if path == "/api/context":
++                f = cfg.home / "context.json"
++                return self.send(200, f.read_bytes() if f.is_file() else b"{}")
++            return self.send(404, {"error": "not found"})
++
++        def do_PUT(self):
++            if not self.host_ok() or not self.authed():
++                return self.send(403, {"error": "forbidden"})
++            path = urlparse(self.path).path
++            m = re.match(r"^/api/(progress|nb)/([^/]+)(?:/([^/]+))?$", path)
++            if m:
++                p = self.doc_path(m.group(1), m.group(2), m.group(3) if m.group(1) == "nb" else None)
++                if not p:
++                    return self.send(400, {"error": "bad name"})
++                raw = self.body()
++                json.loads(raw)  # must be JSON
++                tmp = p.with_suffix(".tmp")
++                tmp.write_bytes(raw)
++                os.replace(tmp, p)
++                return self.send(200, {"ok": True})
++            m = re.match(r"^/api/files/([^/]+)/([^/]+)$", path)
++            if m and SAFE.match(m.group(1)) and SAFE.match(unquote(m.group(2))):
++                (cfg.workdir(m.group(1)) / unquote(m.group(2))).write_bytes(self.body())
++                return self.send(200, {"ok": True})
++            return self.send(404, {"error": "not found"})
++
++        def do_POST(self):
++            if not self.host_ok() or not self.authed():
++                return self.send(403, {"error": "forbidden"})
++            path = urlparse(self.path).path
++            try:
++                req = self.json_body()
++            except ValueError:
++                return self.send(400, {"error": "bad json"})
++            pack, ns = str(req.get("pack", "")), str(req.get("ns") or "_")
++            if path in ("/api/run", "/api/reset", "/api/interrupt") and not SAFE.match(pack):
++                return self.send(400, {"error": "bad pack"})
++            if path == "/api/run":
++                k = kernels.get(pack, ns)
++                timeout = max(5, min(int(req.get("timeout") or 600), 24 * 3600))
++                res = k.run(str(req.get("code", "")), timeout)
++                if not req.get("ns"):
++                    kernels.reset(pack, ns)
++                return self.send(200, res)
++            if path == "/api/reset":
++                kernels.reset(pack, ns)
++                return self.send(200, {"ok": True})
++            if path == "/api/interrupt":
++                k = kernels.get(pack, ns, create=False)
++                if k:
++                    k.interrupt()
++                return self.send(200, {"ok": True})
++            if path == "/api/context":
++                req["at"] = int(time.time())
++                (cfg.home / "context.json").write_text(json.dumps(req, ensure_ascii=False), "utf-8")
++                return self.send(200, {"ok": True})
++            return self.send(404, {"error": "not found"})
++
++    return H
++
++
++def main():
++    ap = argparse.ArgumentParser(description="Coursekit local helper")
++    ap.add_argument("--port", type=int, default=int(os.environ.get("COURSEKIT_PORT", 8737)))
++    ap.add_argument("--python", help="Python interpreter that runs course code (default: this one)")
++    ap.add_argument("--packs", help="folder of course packs (default: packs/ in this repository)")
++    ap.add_argument("--home", help="where progress and work files are kept (default: ~/.coursekit)")
++    ap.add_argument("--no-browser", action="store_true", help="don't open the app in a browser")
++    args = ap.parse_args()
++    cfg = Config(args)
++    info = {"helper": True, "version": VERSION, "python": cfg.python, "pythonVersion": python_version(cfg.python),
++            "gpu": gpu_info(), "home": str(cfg.home), "packs": str(cfg.packs)}
++    if not info["pythonVersion"]:
++        sys.exit("Could not run %s. Pass --python with a working interpreter." % cfg.python)
++    kernels = Kernels(cfg)
++    httpd = ThreadingHTTPServer(("127.0.0.1", cfg.port), make_handler(cfg, kernels, info))
++    httpd.daemon_threads = True
++    (cfg.home / "helper.json").write_text(json.dumps({"url": "http://127.0.0.1:%d" % cfg.port, "token": cfg.token, "pid": os.getpid(), "packs": str(cfg.packs)}), "utf-8")
++    url = "http://127.0.0.1:%d/app/" % cfg.port
++    print("Coursekit is running at %s" % url)
++    print("  code runs with: %s (Python %s)" % (cfg.python, info["pythonVersion"]))
++    print("  GPU: %s" % (", ".join(info["gpu"]) if info["gpu"] else "none found (nvidia-smi not available)"))
++    print("  progress is saved in: %s" % cfg.home)
++    print("Press Ctrl+C to stop.")
++    if not args.no_browser:
++        threading.Timer(0.8, lambda: webbrowser.open(url)).start()
++    try:
++        httpd.serve_forever()
++    except KeyboardInterrupt:
++        pass
++    finally:
++        kernels.shutdown()
++        try:
++            (cfg.home / "helper.json").unlink()
++        except OSError:
++            pass
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/helper/kernel.py b/helper/kernel.py
+new file mode 100644
+index 0000000..89e119e
+--- /dev/null
++++ b/helper/kernel.py
+@@ -0,0 +1,109 @@
++"""Coursekit kernel: a persistent Python namespace driven over stdin/stdout.
++
++The helper starts one kernel per (course, namespace) with the Python the learner
++chose, so code runs with their own libraries and GPU. Protocol, one JSON object
++per line:
++
++  in:  {"code": "...", "id": 1}
++  out: \x1eCK{"id": 1, "ok": true, "out": "...", "err": null, "value": "...", "imgs": ["<base64 png>"], "ms": 12}
++
++Result lines start with the marker \x1eCK so stray output from C extensions
++writing straight to the process's stdout cannot be mistaken for a result.
++Standard library only.
++"""
++import ast
++import base64
++import contextlib
++import io
++import json
++import os
++import sys
++import time
++import traceback
++
++os.environ.setdefault("MPLBACKEND", "Agg")
++
++_proto = sys.stdout
++_in = sys.stdin
++sys.stdin = io.StringIO("")  # input() in learner code must not read the protocol
++MARK = "\x1eCK"
++NS = {"__name__": "__main__"}
++
++
++def _figs():
++    if "matplotlib.pyplot" not in sys.modules:
++        return []
++    import matplotlib.pyplot as plt
++
++    out = []
++    for n in plt.get_fignums():
++        b = io.BytesIO()
++        plt.figure(n).savefig(b, format="png", dpi=96, bbox_inches="tight")
++        out.append(base64.b64encode(b.getvalue()).decode())
++    plt.close("all")
++    return out
++
++
++def _repr(v):
++    if v is None:
++        return None
++    try:
++        import pandas as pd
++
++        if isinstance(v, (pd.DataFrame, pd.Series)):
++            with pd.option_context("display.max_rows", 60, "display.max_columns", 30, "display.width", 160):
++                return repr(v)
++    except Exception:
++        pass
++    r = repr(v)
++    return r if len(r) < 20000 else r[:20000] + " …"
++
++
++def run(code):
++    """Execute code like a notebook cell: the value of a final expression is returned."""
++    out, err = io.StringIO(), io.StringIO()
++    value, error = None, None
++    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
++        try:
++            tree = ast.parse(code, "<cell>", "exec")
++            last = None
++            if tree.body and isinstance(tree.body[-1], ast.Expr):
++                last = ast.Expression(tree.body.pop().value)
++            exec(compile(tree, "<cell>", "exec"), NS)
++            if last is not None:
++                value = _repr(eval(compile(last, "<cell>", "eval"), NS))
++        except KeyboardInterrupt:
++            error = "Interrupted."
++        except BaseException:  # noqa: BLE001 - report everything to the learner, including SystemExit
++            et, ev, tb = sys.exc_info()
++            frames = [f for f in traceback.extract_tb(tb) if f.filename == "<cell>"]
++            lines = ["Traceback (most recent call last):\n"]
++            lines += traceback.format_list(frames)
++            lines += traceback.format_exception_only(et, ev)
++            error = "".join(lines)
++    try:
++        imgs = _figs()
++    except Exception:  # noqa: BLE001
++        imgs = []
++    text = out.getvalue()
++    if err.getvalue():
++        text += err.getvalue()
++    return {"ok": error is None, "out": text[-200000:], "err": error, "value": value, "imgs": imgs}
++
++
++def main():
++    for line in _in:
++        line = line.strip()
++        if not line:
++            continue
++        msg = json.loads(line)
++        t0 = time.time()
++        res = run(msg.get("code", ""))
++        res["id"] = msg.get("id")
++        res["ms"] = int((time.time() - t0) * 1000)
++        _proto.write(MARK + json.dumps(res) + "\n")
++        _proto.flush()
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/helper/mcp_server.py b/helper/mcp_server.py
+new file mode 100644
+index 0000000..c2e3581
+--- /dev/null
++++ b/helper/mcp_server.py
+@@ -0,0 +1,358 @@
++#!/usr/bin/env python3
++"""Coursekit MCP server: lets your AI app see and shape your courses.
++
++Connect it to Claude Desktop, Claude Code or any MCP client that runs local
++servers. It talks over stdio and uses no API keys: the AI is the subscription
++you already use in that app.
++
++    claude mcp add coursekit -- python3 /path/to/course-kit/helper/mcp_server.py
++
++Claude Desktop (claude_desktop_config.json):
++
++    {"mcpServers": {"coursekit": {"command": "python3", "args": ["/path/to/course-kit/helper/mcp_server.py"]}}}
++
++Reading courses and progress works on its own. Seeing where you are in the app
++and running code need the helper (helper/coursekit.py) to be running.
++Standard library only.
++"""
++import json
++import os
++import re
++import sys
++import urllib.error
++import urllib.request
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++import packtool  # noqa: E402
++
++VERSION = "0.1.0"
++ROOT = Path(__file__).resolve().parent.parent
++HOME = Path(os.environ.get("COURSEKIT_HOME") or Path.home() / ".coursekit").expanduser()
++
++
++def _helper_packs():
++    try:
++        return json.loads((HOME / "helper.json").read_text("utf-8")).get("packs")
++    except (OSError, ValueError):
++        return None
++
++
++PACKS = Path(os.environ.get("COURSEKIT_PACKS") or _helper_packs() or ROOT / "packs").expanduser().resolve()
++SAFE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
++EDITABLE = (".md", ".json", ".csv", ".txt")
++
++INSTRUCTIONS = """Coursekit is the learner's course app. Use these tools to tutor them and to build or change courses.
++
++Tutoring: call get_current_context first to see the course, lesson, exercise, their answer and recent errors. Teach rather than tell: ask a guiding question or give a hint before a full solution, unless they ask for the answer. Exercise solutions in the context are for you; do not reveal them unprompted. Never help during a checkpoint (context.checkpoint.inProgress).
++
++Courses: read get_format_guide before creating or editing a pack. Packs are folders of Markdown lessons plus course.json. Once a pack is in use, ids are forever: never rename, delete or reorder lesson, drill, task or checkpoint ids, practice items, recall cards or criteria; only append. Run validate_course after every change and fix every error."""
++
++
++# ---------- helpers
++
++def pack_dir(course):
++    if not SAFE.match(course or ""):
++        raise ValueError("course ids are lower-case letters, digits and dashes")
++    return PACKS / course
++
++
++def existing_pack(course):
++    d = pack_dir(course)
++    if not (d / "course.json").is_file():
++        raise ValueError("no course '%s'. Known: %s" % (course, ", ".join(p.name for p in packtool.pack_dirs(PACKS))))
++    return d
++
++
++def safe_file(course, rel):
++    d = existing_pack(course)
++    p = (d / rel).resolve()
++    if d.resolve() not in p.parents:
++        raise ValueError("path must stay inside the course folder")
++    if p.suffix not in EDITABLE:
++        raise ValueError("only %s files can be edited" % ", ".join(EDITABLE))
++    return p
++
++
++def helper_call(path, body):
++    try:
++        h = json.loads((HOME / "helper.json").read_text("utf-8"))
++    except (OSError, ValueError):
++        raise RuntimeError("The Coursekit helper is not running. Start it with: python3 helper/coursekit.py")
++    req = urllib.request.Request(h["url"] + path, data=json.dumps(body).encode(), method="POST",
++                                 headers={"Content-Type": "application/json", "X-Coursekit-Token": h["token"]})
++    try:
++        with urllib.request.urlopen(req, timeout=body.get("timeout", 600) + 30) as r:
++            return json.loads(r.read())
++    except urllib.error.URLError as e:
++        raise RuntimeError("The Coursekit helper did not answer (%s). Is it still running?" % e)
++
++
++def progress(course):
++    f = HOME / "progress" / (course + ".json")
++    return json.loads(f.read_text("utf-8")) if f.is_file() else None
++
++
++def summarize_progress(course):
++    c, lessons, drills, _ = packtool.load_pack(existing_pack(course))
++    s = progress(course)
++    if not s:
++        return {"course": course, "note": "No saved progress on this computer yet (the helper saves it while the app is open)."}
++    learned = [l["id"] for l in lessons if (s.get("lessons") or {}).get(l["id"], {}).get("learned")]
++    weak = []
++    for l in lessons:
++        for k, st in ((s.get("prac") or {}).get(l["id"]) or {}).items():
++            if st.get("tries", 0) >= 2:
++                weak.append({"lesson": l["id"], "item": int(k), "tries": st["tries"], "correct": bool(st.get("ok"))})
++    out = {
++        "course": course, "title": c.get("title"), "start": s.get("start"),
++        "lessonsLearned": "%d of %d" % (len(learned), len(lessons)), "learned": learned,
++        "nextLesson": next((l["id"] + ": " + l["title"] for l in lessons if l["id"] not in learned), None),
++        "itemsThatTookSeveralTries": weak[:40],
++        "drills": {d["id"]: {k: v for k, v in ((s.get("drills") or {}).get(d["id"]) or {}).items() if k in ("box", "passes", "attempts", "due")}
++                   for d in drills if (s.get("drills") or {}).get(d["id"])},
++        "checkpoints": s.get("exams") or {}, "quizzes": s.get("quiz") or {},
++        "studyDays": sorted((s.get("log") or {}).keys())[-30:],
++    }
++    return out
++
++
++def lesson_text(course, lesson_id):
++    d = existing_pack(course)
++    c = json.loads((d / "course.json").read_text("utf-8"))
++    for f in c.get("lessons", []):
++        txt = (d / f).read_text("utf-8")
++        if any(l["id"] == lesson_id for l in packtool.parse_lessons(txt)):
++            return f, txt
++    raise ValueError("no lesson '%s' in %s" % (lesson_id, course))
++
++
++# ---------- tools
++
++def t_get_current_context(a):
++    f = HOME / "context.json"
++    if not f.is_file():
++        return "No context yet. Start the helper (python3 helper/coursekit.py) and open a course in the app."
++    ctx = json.loads(f.read_text("utf-8"))
++    course = (ctx.get("course") or {}).get("id")
++    extra = {}
++    try:
++        lid = (ctx.get("exercise") or {}).get("lesson") or (ctx.get("lesson") or {}).get("id")
++        if course and lid:
++            fname, txt = lesson_text(course, lid)
++            extra["lessonFile"] = fname
++            extra["lessonMarkdown"] = txt if len(txt) < 60000 else txt[:60000] + "\n…"
++            if ctx.get("exercise"):
++                l = next(l for l in packtool.parse_lessons(txt) if l["id"] == lid)
++                p = l["practice"][ctx["exercise"]["index"]]
++                extra["forTutorOnly"] = {k: p.get(k) for k in ("expect", "alts", "solution", "why", "test") if p.get(k)}
++        if course and ctx.get("drill"):
++            _, _, drills, _ = packtool.load_pack(existing_pack(course))
++            d = next((x for x in drills if x["id"] == ctx["drill"]["id"]), None)
++            if d:
++                extra["forTutorOnly"] = {"solution": d.get("solution"), "hints": d.get("hints")}
++    except Exception as e:  # noqa: BLE001 - context is best effort
++        extra["note"] = str(e)
++    ctx.update(extra)
++    return ctx
++
++
++def t_list_courses(a):
++    out = []
++    for d in packtool.pack_dirs(PACKS):
++        c = json.loads((d / "course.json").read_text("utf-8"))
++        out.append({"id": c.get("id"), "title": c.get("title"), "description": c.get("description", ""),
++                    "runtimes": c.get("runtimes", []), "weeks": len(c.get("weeks", [])), "lessons": len(c.get("lessons", []))})
++    return out
++
++
++def t_get_course(a):
++    d = existing_pack(a["course"])
++    c, lessons, drills, notebooks = packtool.load_pack(d)
++    return {"course.json": c,
++            "lessons": [{"id": l["id"], "title": l["title"], "week": l["week"], "track": l["track"], "file": l["file"],
++                         "practice": len(l["practice"]), "recall": len(l["recall"])} for l in lessons],
++            "drills": [{"id": x["id"], "title": x["title"], "lesson": x.get("lesson")} for x in drills],
++            "notebooks": list(notebooks), "files": sorted(str(p.relative_to(d)) for p in d.rglob("*") if p.is_file())[:400]}
++
++
++def t_get_lesson(a):
++    f, txt = lesson_text(a["course"], a["lesson"])
++    return "File: %s\n\n%s" % (f, txt)
++
++
++def t_get_progress(a):
++    return summarize_progress(a["course"])
++
++
++def t_get_format_guide(a):
++    return (ROOT / "docs" / "pack-format.md").read_text("utf-8")
++
++
++def t_read_course_file(a):
++    return safe_file(a["course"], a["path"]).read_text("utf-8")
++
++
++def t_write_course_file(a):
++    p = safe_file(a["course"], a["path"])
++    if p.suffix == ".json":
++        json.loads(a["content"])
++    p.parent.mkdir(parents=True, exist_ok=True)
++    p.write_text(a["content"], "utf-8")
++    r = packtool.validate(existing_pack(a["course"]))
++    return {"written": str(p.relative_to(PACKS)), "validation": r}
++
++
++def t_create_course(a):
++    d = pack_dir(a["id"])
++    if d.exists():
++        raise ValueError("course '%s' already exists" % a["id"])
++    (d / "lessons").mkdir(parents=True)
++    unit = a.get("unit") or "week"
++    course = {"format": 1, "id": a["id"], "title": a["title"], "subtitle": a.get("subtitle", ""),
++              "description": a.get("description", ""), "runtimes": a.get("runtimes") or [],
++              "schedule": {"start": a.get("start") or "", "unit": unit},
++              "labels": {"unit": unit.capitalize()}, "linkHosts": [], "tracks": {"core": "Core"},
++              "phases": [{"id": "p1", "title": "Phase 1", "weeks": [1], "goal": ""}],
++              "weeks": [{"n": 1, "title": "Getting started", "goal": "", "quizMax": 1,
++                         "tasks": [{"id": "w1-intro", "track": "core", "core": True, "h": 1, "title": "First lesson",
++                                    "desc": "", "lessons": ["intro"], "crit": [{"t": "L", "id": "intro"}]}], "quiz": []}],
++              "exams": [], "lessons": ["lessons/01-intro.md"]}
++    if not course["schedule"]["start"]:
++        import datetime
++        course["schedule"]["start"] = datetime.date.today().isoformat()
++    (d / "course.json").write_text(json.dumps(course, indent=1, ensure_ascii=False) + "\n", "utf-8")
++    (d / "lessons" / "01-intro.md").write_text(
++        "=== intro | core | 1 | Introduction |\n@@ About 10 min reading\n## Why this matters\n\nReplace this text.\n\n"
++        "--- practice\n@choice\nReplace this question.\n* right answer\n- wrong answer\n! Why the right answer is right.\n\n"
++        "--- recall\nQ: Replace this question.\nA: Replace this answer.\n", "utf-8")
++    packtool.write_index(PACKS)
++    return {"created": str(d), "next": "Read get_format_guide, then write lessons and course.json with write_course_file. Run validate_course when done.",
++            "validation": packtool.validate(d)}
++
++
++def t_validate_course(a):
++    r = packtool.validate(existing_pack(a["course"]))
++    packtool.write_index(PACKS)
++    return r
++
++
++def t_run_python(a):
++    course = a.get("course")
++    if not course and (HOME / "context.json").is_file():
++        course = (json.loads((HOME / "context.json").read_text("utf-8")).get("course") or {}).get("id")
++    if not course:
++        raise ValueError("say which course's data folder to run in")
++    r = helper_call("/api/run", {"pack": course, "ns": a.get("namespace") or "tutor", "code": a["code"],
++                                 "timeout": int(a.get("timeout") or 300)})
++    text = (r.get("out") or "")
++    if r.get("value") is not None:
++        text += ("\n" if text else "") + "Out: " + r["value"]
++    if r.get("error"):
++        text += ("\n" if text else "") + r["error"]
++    content = [{"type": "text", "text": text or "(no output)"}]
++    for png in (r.get("imgs") or [])[:6]:
++        content.append({"type": "image", "data": png, "mimeType": "image/png"})
++    return {"__content__": content, "__error__": not r.get("ok")}
++
++
++S = {"type": "string"}
++TOOLS = [
++    ("get_current_context", "Where the learner is right now in the Coursekit app: course, lesson (with its full Markdown), the exercise they asked about with their answer, notebook cells and errors, and progress. Includes a forTutorOnly block with the expected answer; use it to guide, not to hand over. Call this first when the learner asks for help.", {}, [], t_get_current_context),
++    ("list_courses", "List the course packs installed in Coursekit.", {}, [], t_list_courses),
++    ("get_course", "Overview of one course: its course.json, lessons, drills, notebooks and files.", {"course": S}, ["course"], t_get_course),
++    ("get_lesson", "Full Markdown source of one lesson, including practice items, solutions and recall cards.", {"course": S, "lesson": S}, ["course", "lesson"], t_get_lesson),
++    ("get_progress", "The learner's saved progress in a course: lessons learned, items that took several tries, drill boxes, checkpoint and quiz scores, study days.", {"course": S}, ["course"], t_get_progress),
++    ("get_format_guide", "The course pack format: course.json fields, the lesson Markdown format, practice item types, drills, checkpoints and the ids-are-forever rule. Read it before creating or editing a course.", {}, [], t_get_format_guide),
++    ("read_course_file", "Read a file of a course pack (path relative to the pack folder, e.g. course.json or lessons/01-intro.md).", {"course": S, "path": S}, ["course", "path"], t_read_course_file),
++    ("write_course_file", "Create or replace a .md, .json, .csv or .txt file in a course pack, then validate the pack. Keep existing ids, practice items and recall cards in place; only append.", {"course": S, "path": S, "content": S}, ["course", "path", "content"], t_write_course_file),
++    ("create_course", "Create a new empty course pack with a starter lesson. id: lower-case letters, digits and dashes. runtimes: [] for no code, [\"python\"] for runnable Python. unit: week, session, day…", {"id": S, "title": S, "subtitle": S, "description": S, "runtimes": {"type": "array", "items": S}, "unit": S, "start": S}, ["id", "title"], t_create_course),
++    ("validate_course", "Check a course pack for broken references and malformed items, and refresh the app's course list.", {"course": S}, ["course"], t_validate_course),
++    ("run_python", "Run Python on the learner's computer through the Coursekit helper (their libraries and GPU), in the course's data folder. Variables persist per namespace (default 'tutor'). Use it to check their code or demonstrate an idea.", {"code": S, "course": S, "namespace": S, "timeout": {"type": "integer"}}, ["code"], t_run_python),
++]
++
++
++PROMPTS = {
++    "build-course": ("Build a new Coursekit course from a topic and, optionally, the learner's own materials.",
++                     [{"name": "topic", "description": "What the course should teach", "required": True},
++                      {"name": "details", "description": "Level, time per week, length, materials to use, goal", "required": False}],
++                     "Build a Coursekit course on: {topic}\n\nDetails: {details}\n\n"
++                     "1. Ask me anything you need first (my level, hours per week, how many weeks, my goal, which materials to use).\n"
++                     "2. Call get_format_guide and read it fully.\n"
++                     "3. Propose a plan: phases, weeks, lessons, drills, projects and checkpoints. Wait for my OK.\n"
++                     "4. create_course, then write each lesson with write_course_file: deep explanations with worked examples, "
++                     "5 to 7 practice items of mixed types, and 3 to 5 recall cards. Then drills.json and course.json with tasks, quizzes and checkpoints.\n"
++                     "5. validate_course and fix every error. Tell me to open the app and pick the course."),
++    "tutor": ("Help with whatever the learner is working on in Coursekit right now.", [],
++              "Call get_current_context to see what I'm working on in Coursekit, then help me with it. "
++              "Hints first; only give the full answer if I ask."),
++}
++
++
++# ---------- MCP over stdio (JSON-RPC 2.0, one message per line)
++
++def reply(mid, result=None, error=None):
++    msg = {"jsonrpc": "2.0", "id": mid}
++    if error:
++        msg["error"] = error
++    else:
++        msg["result"] = result
++    sys.stdout.write(json.dumps(msg, ensure_ascii=False) + "\n")
++    sys.stdout.flush()
++
++
++def handle(msg):
++    m, mid = msg.get("method"), msg.get("id")
++    if mid is None:
++        return  # notification
++    if m == "initialize":
++        pv = (msg.get("params") or {}).get("protocolVersion") or "2025-06-18"
++        return reply(mid, {"protocolVersion": pv, "capabilities": {"tools": {}, "prompts": {}},
++                           "serverInfo": {"name": "coursekit", "version": VERSION}, "instructions": INSTRUCTIONS})
++    if m == "ping":
++        return reply(mid, {})
++    if m == "prompts/list":
++        return reply(mid, {"prompts": [{"name": n, "description": d, "arguments": a} for n, (d, a, _) in PROMPTS.items()]})
++    if m == "prompts/get":
++        params = msg.get("params") or {}
++        p = PROMPTS.get(params.get("name"))
++        if not p:
++            return reply(mid, error={"code": -32602, "message": "unknown prompt"})
++        args = dict({"topic": "", "details": "(none given)"}, **(params.get("arguments") or {}))
++        return reply(mid, {"description": p[0], "messages": [{"role": "user", "content": {"type": "text", "text": p[2].format(**args)}}]})
++    if m == "tools/list":
++        return reply(mid, {"tools": [{"name": n, "description": d,
++                                      "inputSchema": {"type": "object", "properties": p, "required": r}}
++                                     for n, d, p, r, _ in TOOLS]})
++    if m == "tools/call":
++        params = msg.get("params") or {}
++        fn = next((t[4] for t in TOOLS if t[0] == params.get("name")), None)
++        if not fn:
++            return reply(mid, error={"code": -32602, "message": "unknown tool %s" % params.get("name")})
++        try:
++            res = fn(params.get("arguments") or {})
++            if isinstance(res, dict) and "__content__" in res:
++                return reply(mid, {"content": res["__content__"], "isError": res["__error__"]})
++            text = res if isinstance(res, str) else json.dumps(res, indent=1, ensure_ascii=False)
++            return reply(mid, {"content": [{"type": "text", "text": text}], "isError": False})
++        except Exception as e:  # noqa: BLE001 - tool errors go back to the model as text
++            return reply(mid, {"content": [{"type": "text", "text": "Error: %s" % e}], "isError": True})
++    return reply(mid, error={"code": -32601, "message": "method not found: %s" % m})
++
++
++def main():
++    for line in sys.stdin:
++        line = line.strip()
++        if not line:
++            continue
++        try:
++            msg = json.loads(line)
++        except ValueError:
++            reply(None, error={"code": -32700, "message": "parse error"})
++            continue
++        for one in (msg if isinstance(msg, list) else [msg]):
++            handle(one)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/helper/packtool.py b/helper/packtool.py
+new file mode 100644
+index 0000000..b4c3c87
+--- /dev/null
++++ b/helper/packtool.py
+@@ -0,0 +1,281 @@
++#!/usr/bin/env python3
++"""Coursekit pack tool (Python twin of tools/pack.js, used by the helper and the MCP server).
++
++    python3 helper/packtool.py validate [packs/<id> ...]
++    python3 helper/packtool.py index
++
++The lesson parser mirrors app/js/text.js; tests/check.sh compares the two.
++Standard library only.
++"""
++import json
++import re
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++PACKS = ROOT / "packs"
++TYPES = ("predict", "answer", "choice", "run", "local", "write")
++
++
++def parse_lessons(txt):
++    out, cur, mode, item = [], None, "body", None
++    lines = txt.replace("\r", "").split("\n")
++    i = 0
++
++    def push():
++        nonlocal item
++        if item is not None and cur is not None:
++            cur["practice"].append(item)
++        item = None
++
++    while i < len(lines):
++        ln = lines[i]
++        if ln.startswith("=== "):
++            push()
++            p = [s.strip() for s in ln[4:].split("|")]
++            while len(p) < 5:
++                p.append("")
++            try:
++                week = int(p[2])
++            except ValueError:
++                week = 0
++            cur = {"id": p[0], "track": p[1], "week": week, "title": p[3],
++                   "drills": [s.strip() for s in p[4].split(",") if s.strip()],
++                   "sub": "", "body": [], "practice": [], "recall": []}
++            out.append(cur)
++            mode = "body"
++            i += 1
++            continue
++        if cur is None:
++            i += 1
++            continue
++        if ln.startswith("@@ ") and mode == "body" and not cur["body"]:
++            cur["sub"] = ln[3:]
++            i += 1
++            continue
++        if ln.strip() == "--- practice":
++            mode = "practice"
++            i += 1
++            continue
++        if ln.strip() == "--- recall":
++            push()
++            mode = "recall"
++            i += 1
++            continue
++        if mode == "body":
++            cur["body"].append(ln)
++            i += 1
++            continue
++        if mode == "recall":
++            if ln.startswith("Q: "):
++                cur["recall"].append({"q": ln[3:], "a": ""})
++            elif ln.startswith("A: ") and cur["recall"]:
++                cur["recall"][-1]["a"] = ln[3:]
++            elif ln.strip() and cur["recall"]:
++                cur["recall"][-1]["a"] += "\n" + ln
++            i += 1
++            continue
++        m = re.match(r"^@(predict|answer|choice|run|local|write)\s*$", ln)
++        if m:
++            push()
++            item = {"type": m.group(1), "prompt": [], "expect": [], "alts": [], "opts": [], "why": "", "min": 0}
++            i += 1
++            continue
++        if item is None:
++            i += 1
++            continue
++        f = re.match(r"^```(\w*)\s*$", ln)
++        if f:
++            kind, buf = f.group(1), []
++            i += 1
++            while i < len(lines) and not re.match(r"^```\s*$", lines[i]):
++                buf.append(lines[i])
++                i += 1
++            i += 1
++            code = "\n".join(buf)
++            if kind in ("starter", "test", "solution"):
++                item[kind] = code
++            else:
++                item["prompt"].append("```" + kind + "\n" + code + "\n```")
++            continue
++        if ln.startswith("=| "):
++            item["alts"].append(ln[3:])
++        elif ln.startswith("= ") or ln == "=":
++            item["expect"].append(ln[2:])
++        elif ln.startswith("! "):
++            item["why"] += (" " if item["why"] else "") + ln[2:]
++        elif re.match(r"^min: ?\d+", ln):
++            item["min"] = int(re.sub(r"\D", "", ln))
++        elif item["type"] == "choice" and re.match(r"^[-*] ", ln):
++            item["opts"].append({"t": ln[2:], "ok": ln[0] == "*"})
++        else:
++            item["prompt"].append(ln)
++        i += 1
++    push()
++    for l in out:
++        l["body"] = "\n".join(l["body"])
++        for p in l["practice"]:
++            p["prompt"] = "\n".join(p["prompt"]).strip()
++    return out
++
++
++def load_pack(d):
++    d = Path(d)
++    c = json.loads((d / "course.json").read_text("utf-8"))
++    lessons = []
++    for f in c.get("lessons", []):
++        for l in parse_lessons((d / f).read_text("utf-8")):
++            l["file"] = f
++            lessons.append(l)
++    drills = json.loads((d / c["drills"]).read_text("utf-8")) if c.get("drills") else []
++    notebooks = json.loads((d / c["notebooks"]).read_text("utf-8")) if c.get("notebooks") else {}
++    return c, lessons, drills, notebooks
++
++
++def validate(d):
++    d = Path(d)
++    errs, warn = [], []
++    try:
++        c, lessons, drills, notebooks = load_pack(d)
++    except Exception as e:  # noqa: BLE001 - report any load failure as a validation error
++        return {"errors": ["cannot load: %s" % e], "warnings": [], "stats": None}
++    for k in ("id", "title", "lessons"):
++        if not c.get(k):
++            errs.append("course.json: missing " + k)
++    if c.get("id") and c["id"] != d.name:
++        errs.append("course.json id '%s' must match the folder name '%s'" % (c["id"], d.name))
++    rt = c.get("runtimes") or []
++    LB, DB = {}, {}
++    for l in lessons:
++        if l["id"] in LB:
++            errs.append("duplicate lesson id " + l["id"])
++        LB[l["id"]] = l
++    for dr in drills:
++        if dr["id"] in DB:
++            errs.append("duplicate drill id " + dr["id"])
++        DB[dr["id"]] = dr
++    tracks = c.get("tracks") or {}
++    for l in lessons:
++        w = "%s (%s)" % (l["file"], l["id"])
++        if not l["title"]:
++            errs.append(w + ": no title")
++        if tracks and l["track"] not in tracks:
++            warn.append(w + ": track '%s' is not in course.tracks" % l["track"])
++        if not l["practice"]:
++            warn.append(w + ": no practice items")
++        for x in l["drills"]:
++            if x not in DB:
++                errs.append(w + ": drill %s not found" % x)
++        for k, p in enumerate(l["practice"]):
++            ww = "%s practice #%d (@%s)" % (w, k, p["type"])
++            if p["type"] in ("run", "local") and "python" not in rt:
++                errs.append(ww + ": needs the python runtime")
++            if p["type"] == "choice" and sum(1 for o in p["opts"] if o["ok"]) != 1:
++                errs.append(ww + ": needs exactly one option marked *")
++            if p["type"] in ("predict", "answer") and not p["expect"]:
++                errs.append(ww + ": no expected answer (= line)")
++            if p["type"] == "run" and (not p.get("test") or not p["expect"]):
++                errs.append(ww + ": needs a test block and expected output")
++            if p["type"] == "write" and not p["min"]:
++                warn.append(ww + ": no min word count")
++        if not l["recall"]:
++            warn.append(w + ": no recall cards")
++    for dr in drills:
++        if dr.get("lesson") not in LB:
++            errs.append("drill %s: lesson %s not found" % (dr["id"], dr.get("lesson")))
++        if dr.get("tests") and "python" not in rt:
++            errs.append("drill %s: tests need the python runtime" % dr["id"])
++        if not dr.get("solution"):
++            errs.append("drill %s: no solution" % dr["id"])
++    exams = c.get("exams") or []
++    tids = set()
++    for i, w in enumerate(c.get("weeks") or []):
++        if w.get("n") != i + 1:
++            errs.append("weeks[%d].n should be %d" % (i, i + 1))
++        for t in w.get("tasks") or []:
++            if t["id"] in tids:
++                errs.append("duplicate task id " + t["id"])
++            tids.add(t["id"])
++            for x in t.get("lessons") or []:
++                if x not in LB:
++                    errs.append("task %s: lesson %s not found" % (t["id"], x))
++            for j, k in enumerate(t.get("crit") or []):
++                ww = "task %s crit #%d" % (t["id"], j)
++                if k.get("t") not in ("L", "D", "QZ", "X", "DAYS", "U", "T", "N", "C"):
++                    errs.append(ww + ": unknown type %s" % k.get("t"))
++                if k.get("t") == "L" and k.get("id") not in LB:
++                    errs.append(ww + ": lesson %s not found" % k.get("id"))
++                if k.get("t") == "D" and k.get("id") not in DB:
++                    errs.append(ww + ": drill %s not found" % k.get("id"))
++                if k.get("t") == "X" and not any(e["id"] == k.get("id") for e in exams):
++                    errs.append(ww + ": checkpoint %s not found" % k.get("id"))
++        for j, q in enumerate(w.get("quiz") or []):
++            if not (0 <= q.get("a", -1) < len(q.get("o", []))):
++                errs.append("week %s quiz #%d: answer index out of range" % (w.get("n"), j))
++    for p in c.get("phases") or []:
++        for n in p.get("weeks", []):
++            if not (1 <= n <= len(c.get("weeks") or [])):
++                errs.append("phase %s: week %s not found" % (p.get("id"), n))
++    for e in exams:
++        for x in e.get("lessons", []):
++            if x not in LB:
++                errs.append("checkpoint %s: lesson %s not found" % (e["id"], x))
++        for ref in e.get("items", []):
++            if ref.startswith("D:"):
++                if ref[2:] not in DB:
++                    errs.append("checkpoint %s: drill %s not found" % (e["id"], ref))
++                continue
++            lid, _, k = ref.partition("#")
++            l = LB.get(lid)
++            if not l or not k.isdigit() or int(k) >= len(l["practice"]):
++                errs.append("checkpoint %s: item %s not found" % (e["id"], ref))
++    for nid in notebooks:
++        if nid not in tids:
++            warn.append("notebook %s has no task with the same id" % nid)
++    for f in c.get("data") or []:
++        if not (d / "data" / f).exists():
++            errs.append("data file %s missing from data/" % f)
++    stats = {"lessons": len(lessons), "practice": sum(len(l["practice"]) for l in lessons),
++             "recall": sum(len(l["recall"]) for l in lessons), "drills": len(drills),
++             "weeks": len(c.get("weeks") or []), "checkpoints": len(exams), "notebooks": len(notebooks)}
++    return {"errors": errs, "warnings": warn, "stats": stats}
++
++
++def pack_dirs(root=PACKS):
++    return sorted(p for p in Path(root).iterdir() if (p / "course.json").is_file())
++
++
++def write_index(root=PACKS):
++    packs = []
++    for d in pack_dirs(root):
++        c = json.loads((d / "course.json").read_text("utf-8"))
++        packs.append({"id": c.get("id", d.name), "title": c.get("title", d.name),
++                      "subtitle": c.get("subtitle", ""), "description": c.get("description", "")})
++    (Path(root) / "index.json").write_text(json.dumps({"packs": packs}, indent=1, ensure_ascii=False) + "\n", "utf-8")
++    return packs
++
++
++def main(argv):
++    if argv[:1] == ["validate"]:
++        bad = 0
++        for d in [Path(a).resolve() for a in argv[1:]] or pack_dirs():
++            r = validate(d)
++            print(("FAIL " if r["errors"] else "ok   ") + d.name + ("  " + json.dumps(r["stats"]) if r["stats"] else ""))
++            for e in r["errors"]:
++                print("  error: " + e)
++            if r["warnings"]:
++                print("  %d warnings" % len(r["warnings"]))
++            bad += bool(r["errors"])
++        return 1 if bad else 0
++    if argv[:1] == ["index"]:
++        print("packs/index.json: " + ", ".join(p["id"] for p in write_index()))
++        return 0
++    if argv[:1] == ["parse"] and len(argv) == 2:  # used by tests: dump parsed lessons as JSON
++        print(json.dumps(load_pack(Path(argv[1]).resolve())[1], ensure_ascii=False, sort_keys=True))
++        return 0
++    print(__doc__)
++    return 2
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv[1:]))
+diff --git a/packs/sigmoid-ml/requirements.txt b/packs/sigmoid-ml/requirements.txt
+new file mode 100644
+index 0000000..4500deb
+--- /dev/null
++++ b/packs/sigmoid-ml/requirements.txt
+@@ -0,0 +1,15 @@
++numpy
++pandas
++scikit-learn
++matplotlib
++seaborn
++scipy
++statsmodels
++imbalanced-learn
++dask[dataframe]
++lime
++streamlit
++reparo
++kydavra
++imperio
++crucio
+diff --git a/tests/parity.js b/tests/parity.js
+new file mode 100644
+index 0000000..465fe7c
+--- /dev/null
++++ b/tests/parity.js
+@@ -0,0 +1,15 @@
++// Checks that the Python lesson parser (helper/packtool.py) matches the app's parser (app/js/text.js) on every pack.
++"use strict";
++const { execFileSync } = require("child_process");
++const path = require("path");
++const fs = require("fs");
++const { loadPack } = require("../tools/pack.js");
++const sort = (v) => Array.isArray(v) ? v.map(sort) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sort(v[k])])) : v;
++const root = path.join(__dirname, "..", "packs");
++let bad = 0;
++for (const d of fs.readdirSync(root).filter((d) => fs.existsSync(path.join(root, d, "course.json")))) {
++  const js = JSON.stringify(sort(loadPack(path.join(root, d)).lessons));
++  const py = JSON.stringify(sort(JSON.parse(execFileSync("python3", [path.join(__dirname, "..", "helper", "packtool.py"), "parse", path.join(root, d)], { maxBuffer: 1 << 28 }).toString())));
++  if (js !== py) { bad++; console.log("MISMATCH " + d); } else console.log("parsers agree on " + d);
++}
++process.exit(bad ? 1 : 0);
+diff --git a/tools/pack.js b/tools/pack.js
+index a5cb694..5a7ff1c 100644
+--- a/tools/pack.js
++++ b/tools/pack.js
+@@ -82,8 +82,11 @@ function validate(dir) {
+ 
+ function packDirs() { return fs.readdirSync(ROOT).map((d) => path.join(ROOT, d)).filter((d) => fs.existsSync(path.join(d, "course.json"))).sort(); }
+ 
+-const [cmd, ...args] = process.argv.slice(2);
+-if (cmd === "validate") {
++module.exports = { validate, loadPack };
++const [cmd, ...args] = require.main === module ? process.argv.slice(2) : ["--lib"];
++if (cmd === "--lib") {
++  // required as a library: nothing to run
++} else if (cmd === "validate") {
+   let bad = 0;
+   for (const dir of args.length ? args : packDirs()) {
+     const r = validate(path.resolve(dir));
+@@ -101,4 +104,3 @@ if (cmd === "validate") {
+   console.log("usage: node tools/pack.js validate [packs/<id> ...] | index");
+   process.exit(2);
+ }
+-if (typeof module !== "undefined") module.exports = { validate, loadPack };

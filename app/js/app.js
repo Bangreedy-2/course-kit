@@ -20,6 +20,10 @@ const PACKS_URL=(document.querySelector('meta[name="coursekit-packs"]')||{}).con
 const PYODIDE_URL=(document.querySelector('meta[name="coursekit-pyodide"]')||{}).content||"https://cdn.jsdelivr.net/pyodide/v314.0.8/full/";
 const STLITE_URL=(document.querySelector('meta[name="coursekit-stlite"]')||{}).content||"https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.3/build/";
 const DEFAULT_LABELS={lessons:"Lessons",drills:"Drills",projects:"Projects",project:"Project",checkpoint:"Checkpoint",unit:"Week"};
+let HELPER=null; // {token, gpu, python, ...} when the app is served by the local helper
+async function api(path,o){o=o||{};const h=Object.assign({"X-Coursekit-Token":HELPER?HELPER.token:""},o.headers||{});if(o.body&&typeof o.body==="string")h["Content-Type"]="application/json";
+  const r=await fetch(path,Object.assign({},o,{headers:h,cache:"no-store"}));if(r.status===404&&!o.method)return null;if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}
+async function detectHelper(){try{const r=await fetch("/api/status",{cache:"no-store"});if(!r.ok)return null;const j=await r.json();return j&&j.helper?j:null;}catch(e){return null;}}
 function hasPython(){return !!(PACK&&(PACK.runtimes||[]).includes("python"));}
 async function getJSON(u){const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw new Error(u+": HTTP "+r.status);return r.json();}
 async function getText(u){const r=await fetch(u,{cache:"no-cache"});if(!r.ok)throw new Error(u+": HTTP "+r.status);return r.text();}
@@ -38,6 +42,7 @@ async function loadPack(id){
   TASKS={};PLAN.weeks.forEach(w=>w.tasks.forEach(t=>{t.week=w.n;if(t.hw!=null&&t.project==null)t.project=String(t.hw);if(t.crit)t.crit.forEach(k=>{if(k.t==="U"&&!k.hosts)k.hosts=c.linkHosts||[];});TASKS[t.id]=t;}));
   LSKEY="coursekit:"+c.id+":progress";
   S=blank();try{const raw=localStorage.getItem(LSKEY);if(raw)S=normalise(JSON.parse(raw));}catch(e){}
+  if(HELPER){try{const r=await api("/api/progress/"+encodeURIComponent(c.id));if(r&&(r.updated||0)>(S.updated||0)){S=normalise(r);try{localStorage.setItem(LSKEY,JSON.stringify(S));}catch(e){}}else if(S.updated)pushProgress();saveState="computer";}catch(e){saveState="helper-err";}}
   try{localStorage.setItem("coursekit:last-pack",c.id);}catch(e){}
 }
 const BOX=[0,1,3,7,14,30];
@@ -50,12 +55,15 @@ function normalise(s){const b=blank();if(!s||typeof s!=="object")return b;for(co
 let S=null;
 let saveState="local";
 /* Progress lives in this browser (localStorage). The local helper adds file-based storage and sync. */
+let pushT=null;
 function save(){
   S.updated=Date.now();
   try{localStorage.setItem(LSKEY,JSON.stringify(S));saveState="local";}catch(e){saveState="local-err";}
-  paintSave();
+  if(HELPER){saveState="saving";clearTimeout(pushT);pushT=setTimeout(pushProgress,600);}
+  paintSave();postContext();
 }
-function paintSave(){const el=$("#savestate");if(!el)return;el.textContent={local:"Saved in this browser","local-err":"Could not save: browser storage is full or blocked"}[saveState]||"";}
+function pushProgress(){api("/api/progress/"+encodeURIComponent(PACK.id),{method:"PUT",body:JSON.stringify(S)}).then(()=>{saveState="computer";paintSave();},()=>{saveState="helper-err";paintSave();});}
+function paintSave(){const el=$("#savestate");if(!el)return;el.textContent={local:"Saved in this browser","local-err":"Could not save: browser storage is full or blocked",computer:"Saved on this computer",saving:"Saving…","helper-err":"Helper unreachable, kept in browser"}[saveState]||"";}
 function logAct(n){const t=TODAY();S.log[t]=(S.log[t]||0)+(n||1);}
 
 /* ---------- time & pace ---------- */
@@ -115,7 +123,7 @@ function critLabel(c){
 
 /* ---------- Skulpt runner ---------- */
 /* ---------- Python runtime: Pyodide (CPython + numpy, pandas, scikit-learn, matplotlib) in a worker ---------- */
-const PY=(function(){
+const BPY=(function(){
   let w=null,seq=0,pend={},state="off",bootP=null;const listeners=new Set();
   const workerUrl=new URL("js/python-worker.js",document.baseURI).href;
   const setState=s=>{state=s;listeners.forEach(f=>{try{f(s);}catch(e){}});};
@@ -144,6 +152,25 @@ const PY=(function(){
     clearTimeout(timer);return Object.assign({out,imgs},r);}
   return {run,boot,kill,ensureData,put:(path,data)=>call({op:"put",path,data}),reset:ns=>w?call({op:"reset",ns}):Promise.resolve({ok:true}),has:ns=>w&&state==="ready"?call({op:"has",ns}).then(r=>!!r.has):Promise.resolve(false),get state(){return state;},on:f=>{listeners.add(f);return ()=>listeners.delete(f);}};
 })();
+/* Python on this computer, through the local helper (helper/coursekit.py): own libraries, own GPU, no size limits. */
+const LPY=(function(){
+  const listeners=new Set();
+  const post=(path,body)=>api(path,{method:"POST",body:JSON.stringify(Object.assign({pack:PACK.id},body))});
+  async function run(code,o){o=o||{};if(o.onStatus)o.onStatus("Running on your computer…");
+    try{const r=await post("/api/run",{code,ns:o.ns||null,timeout:Math.max(Math.round((o.limitMs||0)/1000),1800)});
+      if(r.out&&o.onOut)o.onOut(r.out);return {ok:!!r.ok,error:r.error||null,out:r.out||"",value:r.value,imgs:r.imgs||[]};}
+    catch(e){return {ok:false,error:"The Coursekit helper did not answer: "+(e.message||e)+". Is it still running?",out:"",imgs:[]};}}
+  return {run,boot:()=>Promise.resolve(true),kill:()=>{},ensureData:()=>Promise.resolve(),
+    put:(path,data)=>api("/api/files/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(path),{method:"PUT",body:data}).then(()=>({ok:true}),()=>({ok:false})),
+    reset:ns=>post("/api/reset",{ns}).catch(()=>({ok:false})),
+    interrupt:ns=>post("/api/interrupt",{ns}).catch(()=>({ok:false})),
+    has:ns=>api("/api/has?pack="+encodeURIComponent(PACK.id)+"&ns="+encodeURIComponent(ns)).then(r=>!!r.has,()=>false),
+    get state(){return "ready";},on:f=>{listeners.add(f);return ()=>listeners.delete(f);}};
+})();
+function runner(){if(!HELPER)return "browser";let m=null;try{m=localStorage.getItem("coursekit:runner");}catch(e){}return m==="browser"?"browser":"local";}
+const PY={run:(c,o)=>(runner()==="local"?LPY:BPY).run(c,o),boot:()=>(runner()==="local"?LPY:BPY).boot(),kill:()=>BPY.kill(),
+  put:(p,d)=>(runner()==="local"?LPY:BPY).put(p,d),reset:ns=>(runner()==="local"?LPY:BPY).reset(ns),has:ns=>(runner()==="local"?LPY:BPY).has(ns),
+  get state(){return (runner()==="local"?LPY:BPY).state;},on:f=>BPY.on(f)};
 async function runPy(code,limitMs,o){
   const r=await PY.run(code,{limitMs:Math.max(limitMs||0,30000),onStatus:o&&o.onStatus,ns:o&&o.ns});
   return {out:r.out||"",err:r.ok?null:(r.error||"Error"),imgs:r.imgs||[],value:r.value,engine:"py"};
@@ -209,13 +236,13 @@ function paintHeader(){
 
 /* ---------- routing ---------- */
 let TAB="today",VIEW=null; // VIEW = {kind:'lesson'|'drill'|'exam'|'cards', id}
-function go(tab){TAB=tab;VIEW=null;try{history.replaceState(null,"","#"+tab);}catch(e){}render();window.scrollTo(0,0);}
-function open(kind,id){VIEW={kind,id};try{history.replaceState(null,"","#"+(kind==="lesson"?"l-"+id:kind==="drill"?"d-"+id:kind==="nb"?"nb-"+id:TAB));}catch(e){}render();window.scrollTo(0,0);}
+function go(tab){TAB=tab;VIEW=null;ASKFOCUS=null;try{history.replaceState(null,"","#"+tab);}catch(e){}render();window.scrollTo(0,0);}
+function open(kind,id){VIEW={kind,id};ASKFOCUS=null;try{history.replaceState(null,"","#"+(kind==="lesson"?"l-"+id:kind==="drill"?"d-"+id:kind==="nb"?"nb-"+id:TAB));}catch(e){}render();window.scrollTo(0,0);}
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)go(b.dataset.tab);});
 function fromHash(){const h=(location.hash||"").slice(1);if(!h)return;if(h==="courses"){VIEW={kind:"packs"};return;}if(h.startsWith("l-")&&LBY[h.slice(2)]){VIEW={kind:"lesson",id:h.slice(2)};}else if(h.startsWith("d-")&&DBY[h.slice(2)]){VIEW={kind:"drill",id:h.slice(2)};}else if(h.startsWith("nb-")&&NOTEBOOKS[h.slice(3)]){VIEW={kind:"nb",id:h.slice(3)};}else if(["today","plan","library","projects","record"].includes(h)){TAB=h;}}
 
 function render(){
-  paintHeader();
+  paintHeader();setTimeout(postContext,0);
   $$("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===TAB)));
   const M=$("#main");
   if(S.examRun&&Date.now()>S.examRun.ends){finishExam(true);}
@@ -307,7 +334,7 @@ function renderEx(el,l,k,p,o){
   const key=o.examKey;const st=key?(o.examState[key]||{}):(pstate(l.id,k)||{});
   const set=v=>{if(key){o.examState[key]=Object.assign(o.examState[key]||{},v);}else setP(l.id,k,v);};
   el.className="ex"+(st.ok&&!key?" passed":"");
-  let h='<div class="hd"><span class="pill acc">'+(o.num||("Exercise "+(k+1)))+' · '+typeLabel(p.type)+'</span>'+(st.ok&&!key?'<span class="pill ok">Correct</span>':"")+'</div><div class="prose" style="font-size:15.5px">'+md(p.prompt)+'</div>';
+  let h='<div class="hd"><span class="pill acc">'+(o.num||("Exercise "+(k+1)))+' · '+typeLabel(p.type)+'</span>'+(st.ok&&!key?'<span class="pill ok">Correct</span>':"")+(key?"":'<button class="btn ghost sm askex" type="button" title="Ask your AI tutor about this exercise">Ask</button>')+'</div><div class="prose" style="font-size:15.5px">'+md(p.prompt)+'</div>';
   if(p.type==="choice"){
     if(!p._order){p._order=p.opts.map((x,i)=>i);}
     p._order.forEach(i=>{const op=p.opts[i];let cls="opt";if(st.pick!=null&&(st.ok||key)){if(i===st.pick)cls+=op.ok?" right":" wrong";}else if(st.pick===i&&!st.ok)cls+=" wrong";h+='<button class="'+cls+'" data-i="'+i+'">'+inline(op.t)+'</button>';});
@@ -324,6 +351,7 @@ function renderEx(el,l,k,p,o){
   }
   h+='<div class="fbz"></div>';
   el.innerHTML=h;
+  const ab=$(".askex",el);if(ab)ab.onclick=()=>{ASKFOCUS={lid:l.id,k};ask();};
   const fbz=$(".fbz",el);
   const showFb=(ok,msg)=>{fbz.innerHTML='<div class="fb '+(ok?"ok":"bad")+'">'+msg+'</div>';};
   const why=p.why?'<div style="margin-top:4px">'+inline(p.why)+'</div>':"";
@@ -552,6 +580,7 @@ async function nbLoad(id){
   if(NBS[id])return NBS[id];
   let nb=null;
   try{const raw=localStorage.getItem(nbLocalKey(id));if(raw)nb=JSON.parse(raw);}catch(e){}
+  if(HELPER){try{const r=await api("/api/nb/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(id));if(r&&Array.isArray(r.cells)&&(!nb||(r.updated||0)>(nb.updated||0)))nb=r;}catch(e){}}
   if(!nb||!Array.isArray(nb.cells))nb=nbFromTemplate(id);
   nb.files=(nb.files||[]).map(f=>({name:f.name}));
   NBS[id]=nb;return nb;
@@ -560,6 +589,7 @@ function nbSave(id){
   const nb=NBS[id];if(!nb)return;nb.updated=Date.now();
   const json=JSON.stringify(nb);
   try{localStorage.setItem(nbLocalKey(id),json);}catch(e){}
+  if(HELPER){clearTimeout(NBSAVE[id]);NBSAVE[id]=setTimeout(()=>{api("/api/nb/"+encodeURIComponent(PACK.id)+"/"+encodeURIComponent(id),{method:"PUT",body:json}).catch(()=>{});},900);}
 }
 function nbWords(src){return String(src||"").split("\n").filter(l=>!/^\s*#/.test(l)&&!/^\s*_[^_].*_\s*$/.test(l)).join(" ").trim().split(/\s+/).filter(Boolean).length;}
 function nbAnswer(src){return String(src||"").split("\n").filter(l=>!/^\s*#/.test(l)&&!/^\s*_[^_].*_\s*$/.test(l)).join("\n").trim();}
@@ -583,7 +613,7 @@ function nbPaint(M,id,nb){
   const T=NOTEBOOKS[id];const ns="nb:"+id;const task=TASKS[id];
   const st=(S.nb&&S.nb[id])||{};
   let h='<article class="nbwrap"><div class="crumbs"><button class="btn ghost sm" id="back">← '+esc(LBL.projects)+'</button> '+(task?esc(LBL.unit)+" "+task.week:"")+'</div>';
-  h+='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><h1 style="font-size:26px;margin-bottom:4px">'+esc(T.title)+'</h1><div class="row small muted">'+(st.passed?'<span class="pill ok">All checks pass</span>':'<span class="pill">Checks not passed yet</span>')+'<span id="nbsaved">Saved in this browser</span></div></div></div>';
+  h+='<div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0"><h1 style="font-size:26px;margin-bottom:4px">'+esc(T.title)+'</h1><div class="row small muted">'+(st.passed?'<span class="pill ok">All checks pass</span>':'<span class="pill">Checks not passed yet</span>')+'<span id="nbsaved">'+(HELPER?"Saved on this computer":"Saved in this browser")+(hasPython()?" · Python runs "+(runner()==="local"?"on this computer":"in this browser"):"")+'</span></div></div></div>';
   h+='<div class="nbbar" role="toolbar" aria-label="Notebook"><button class="btn pri sm" data-nb="runall">▶ Run all</button><button class="btn sm" data-nb="check">✓ Check my work</button><button class="btn sm" data-nb="restart">Restart Python</button><button class="btn sm" data-nb="export">Export (.ipynb + data, .zip)</button><button class="btn ghost sm" data-nb="reset">Start over from the template</button></div>';
   h+='<div class="nbfiles small"><span class="muted">Data files:</span> '+(T.datasets.length?T.datasets.map(f=>'<span class="pill">'+esc(f)+'</span>').join(" "):'<span class="muted">none needed</span>')+(nb.files.length?' · uploaded: '+nb.files.map(f=>'<span class="pill acc">'+esc(f.name)+'</span>').join(" "):"")+' <label class="btn ghost sm" style="cursor:pointer">Upload a CSV<input type="file" accept=".csv,text/csv" id="nbup" hidden></label></div>';
   h+='<div id="nbchecks"></div><div id="nbcells"></div>';
@@ -832,10 +862,11 @@ function renderRecord(M){
   h+='<div class="stack"><div class="sec-h">Drill boxes</div><div class="card scroll-x"><table class="list"><tr><th>Drill</th><th>Box</th><th>Next</th></tr>';
   DRILLS.forEach(d=>{const s=S.drills[d.id];h+='<tr><td><button class="btn ghost sm" style="padding:0;border:0;text-align:left" data-d="'+d.id+'">'+esc(d.title)+'</button></td><td><span class="boxes">'+boxes(s?s.box:0)+'</span></td><td class="small">'+(s&&s.due?fmtDay(s.due):(drillUnlocked(d)?"new":"locked"))+'</td></tr>';});
   h+='</table></div><div class="sec-h">Settings</div><div class="card stack small"><label>Course start (a Monday) <input type="date" id="startdate" value="'+S.start+'" style="font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:4px 6px"></label>'+
-    '<div class="row"><button class="btn sm" id="exp">Copy progress backup</button><button class="btn sm" id="dl">Save backup file</button><button class="btn sm" id="imp">Restore from backup</button></div><textarea id="impbox" class="prosebox" hidden placeholder="Paste a backup here, then press Restore again"></textarea><p class="muted" style="margin:0">Progress is saved in this browser. Save a backup file to move it to another browser or computer.</p></div></div></div>';
+    '<div class="row"><button class="btn sm" id="exp">Copy progress backup</button><button class="btn sm" id="dl">Save backup file</button><button class="btn sm" id="imp">Restore from backup</button></div><textarea id="impbox" class="prosebox" hidden placeholder="Paste a backup here, then press Restore again"></textarea><p class="muted" style="margin:0">'+(HELPER?"Progress is saved on this computer by the Coursekit helper ("+esc(HELPER.home)+") and in this browser.":"Progress is saved in this browser. Save a backup file to move it to another browser or computer, or run the Coursekit helper to keep it in files.")+'</p>'+(HELPER&&hasPython()?'<div><b>Run Python</b><div class="row" style="margin-top:6px"><label><input type="radio" name="runner" value="local"'+(runner()==="local"?" checked":"")+'> on this computer</label><label><input type="radio" name="runner" value="browser"'+(runner()==="browser"?" checked":"")+'> in this browser</label></div><div class="muted" style="margin-top:4px">This computer: Python '+esc(HELPER.pythonVersion||"")+' · GPU: '+esc(HELPER.gpu?HELPER.gpu.join(", "):"none found")+'. Libraries a course needs must be installed in that Python.</div></div>':"")+'</div></div></div>';
   M.innerHTML=h;
   $$("[data-exam]",M).forEach(b=>b.onclick=()=>startExam(b.dataset.exam));
   $$("[data-d]",M).forEach(b=>b.onclick=()=>open("drill",b.dataset.d));
+  $$("input[name=runner]",M).forEach(r=>r.onchange=()=>{try{localStorage.setItem("coursekit:runner",r.value);}catch(e){}toast(r.value==="local"?"Python now runs on this computer.":"Python now runs in this browser.");});
   $("#startdate",M).onchange=e=>{if(e.target.value){S.start=e.target.value;save();render();}};
   $("#exp",M).onclick=()=>{const t=JSON.stringify(S);navigator.clipboard.writeText(t).then(()=>toast("Backup copied."),()=>{const b=$("#impbox",M);b.hidden=false;b.value=t;b.select();toast("Copy the selected text.");});};
   $("#dl",M).onclick=()=>{saveFile(PACK.id+"-progress.json",new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));};
@@ -844,11 +875,64 @@ function renderRecord(M){
 
 /* ---------- Python status badge ---------- */
 (function(){const el=document.createElement("div");el.className="pystat";el.setAttribute("role","status");el.hidden=true;document.body.appendChild(el);
-  PY.on(s=>{el.hidden=s==="off";el.className="pystat "+s;el.textContent={loading:"Python: loading…",ready:"Python ready",broken:"Python could not load"}[s]||"";if(s==="ready")setTimeout(()=>{if(PY.state==="ready")el.hidden=true;},4000);});})();
+  if(HELPER){/* code runs through the helper; no browser download to report */}
+  BPY.on(s=>{if(runner()==="local")return;el.hidden=s==="off";el.className="pystat "+s;el.textContent={loading:"Python: loading…",ready:"Python ready",broken:"Python could not load"}[s]||"";if(s==="ready")setTimeout(()=>{if(PY.state==="ready")el.hidden=true;},4000);});})();
 /* ---------- boot ---------- */
+/* ---------- Ask: hand where you are to your AI tutor ---------- */
+const ASK_URL=(document.querySelector('meta[name="coursekit-ask-url"]')||{}).content||"https://claude.ai/new";
+let ASKFOCUS=null,ctxT=null;
+function clip(s,n){s=String(s==null?"":s);return s.length>n?s.slice(0,n)+" …":s;}
+function contextNow(){
+  if(!PACK)return null;
+  const c={course:{id:PACK.id,title:PLAN.title},date:TODAY(),unit:LBL.unit,current:curWeek(),tab:TAB,view:VIEW?{kind:VIEW.kind,id:VIEW.id||null}:null,
+    progress:{lessonsLearned:LESSONS.filter(l=>lessonLearned(l.id)).length,lessons:LESSONS.length,coreDonePercent:Math.round(overall()*100),cardsDue:dueCards().length,drillsDue:dueDrills().length}};
+  const v=VIEW||{};
+  if(v.kind==="lesson"&&LBY[v.id]){const l=LBY[v.id];const prac=l.practice.map((p,k)=>{const s=pstate(l.id,k)||{};return {index:k,type:p.type,correct:!!s.ok,tries:s.tries||0};});
+    c.lesson={id:l.id,title:l.title,week:l.week,learned:lessonLearned(l.id),practice:prac};}
+  if(v.kind==="drill"&&DBY[v.id]){const d=DBY[v.id];c.drill={id:d.id,title:d.title,prompt:d.prompt,draft:clip(S.drafts["d:"+d.id]||"",4000)};}
+  if(v.kind==="nb"&&NBS[v.id]){const nb=NBS[v.id];c.notebook={id:v.id,title:(NOTEBOOKS[v.id]||{}).title,checks:(S.nb||{})[v.id]||null,
+    cells:nb.cells.map((x,i)=>({index:i,type:x.t,tag:x.tag||undefined,src:clip(x.src,3000),output:x.out?clip(x.out.text||"",1500):undefined,error:x.out&&x.out.err?clip(x.out.err,1500):undefined}))};}
+  if(v.kind==="exam")c.checkpoint={inProgress:true};
+  if(ASKFOCUS&&LBY[ASKFOCUS.lid]){const l=LBY[ASKFOCUS.lid];const p=l.practice[ASKFOCUS.k];const s=pstate(l.id,ASKFOCUS.k)||{};
+    c.exercise={lesson:l.id,lessonTitle:l.title,index:ASKFOCUS.k,type:p.type,prompt:p.prompt,options:p.type==="choice"?p.opts.map(o=>o.t):undefined,
+      myAnswer:clip(s.code!=null?s.code:s.ans!=null?s.ans:(s.pick!=null&&p.opts[s.pick]?p.opts[s.pick].t:""),4000),correct:!!s.ok,tries:s.tries||0};}
+  return c;
+}
+function postContext(){if(!HELPER||!PACK)return;clearTimeout(ctxT);ctxT=setTimeout(()=>{const c=contextNow();if(c)api("/api/context",{method:"POST",body:JSON.stringify(c)}).catch(()=>{});},400);}
+function askText(c){
+  const L=["I'm learning with Coursekit, in the course \""+c.course.title+"\" ("+c.unit.toLowerCase()+" "+c.current+").",""];
+  if(c.exercise){const e=c.exercise;L.push("I'm on exercise "+(e.index+1)+" of the lesson \""+e.lessonTitle+"\" ("+typeLabel(e.type)+"):","",e.prompt,"");
+    if(e.options)L.push("Options: "+e.options.join(" | "),"");
+    if(e.myAnswer)L.push("My answer so far"+(e.correct?" (marked correct)":e.tries?" (not accepted yet, "+e.tries+" tries)":"")+":","",e.myAnswer,"");}
+  else if(c.drill){L.push("I'm on the drill \""+c.drill.title+"\":","",c.drill.prompt,"");if(c.drill.draft)L.push("My attempt:","",c.drill.draft,"");}
+  else if(c.notebook){L.push("I'm working in the notebook \""+c.notebook.title+"\".");const err=c.notebook.cells.filter(x=>x.error).pop();if(err)L.push("","The last error was in this cell:","",err.src,"","Error:",err.error);L.push("");}
+  else if(c.lesson)L.push("I'm reading the lesson \""+c.lesson.title+"\".","");
+  L.push("Please help me understand it. Give hints before full answers unless I ask for the answer.");
+  if(HELPER)L.push("(If the Coursekit tools are connected, call get_current_context for the full lesson, my answers and my progress.)");
+  L.push("","My question: ");
+  return L.join("\n");
+}
+function ask(){
+  if(VIEW&&VIEW.kind==="exam"){toast("Ask is off during a checkpoint. Finish it first.");return;}
+  const c=contextNow();if(!c)return;
+  if(HELPER)api("/api/context",{method:"POST",body:JSON.stringify(c)}).catch(()=>{});
+  const txt=askText(c);
+  let dlg=$("#askdlg");
+  if(!dlg){dlg=document.createElement("dialog");dlg.id="askdlg";dlg.className="askdlg";document.body.appendChild(dlg);}
+  dlg.innerHTML='<form method="dialog"><h3 style="font-size:18px;margin-bottom:6px">Ask your AI tutor</h3><p class="small muted" style="margin:0 0 8px">This message tells your AI chat where you are. Add your question at the end, then paste it into Claude (or any assistant).'+(HELPER?" If the Coursekit tools are connected in Claude Desktop or Claude Code, you can also just ask there: it can see this page.":"")+'</p><textarea class="prosebox" id="asktxt" style="min-height:220px"></textarea><div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn ghost" value="cancel">Close</button><button class="btn" type="button" id="askcopy">Copy</button><button class="btn pri" type="button" id="askgo">Copy and open Claude</button></div></form>';
+  const ta=$("#asktxt",dlg);ta.value=txt;
+  const copy=()=>navigator.clipboard.writeText(ta.value).then(()=>{toast("Copied. Paste it into your chat.");return true;},()=>{ta.select();toast("Select all and copy the text.");return false;});
+  $("#askcopy",dlg).onclick=copy;
+  $("#askgo",dlg).onclick=()=>{copy();window.open(ASK_URL,"_blank","noopener");dlg.close();};
+  if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","");
+  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+$("#askbtn").onclick=()=>{ASKFOCUS=null;ask();};
+
 /* ---------- boot ---------- */
 async function boot(){
   const M=$("#main");
+  HELPER=await detectHelper();
   let index=[];try{index=(await getJSON(PACKS_URL+"index.json")).packs||[];}catch(e){}
   window.__packIndex=index;
   const q=new URLSearchParams(location.search).get("pack");

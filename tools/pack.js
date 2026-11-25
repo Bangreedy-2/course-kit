@@ -82,8 +82,11 @@ function validate(dir) {
 
 function packDirs() { return fs.readdirSync(ROOT).map((d) => path.join(ROOT, d)).filter((d) => fs.existsSync(path.join(d, "course.json"))).sort(); }
 
-const [cmd, ...args] = process.argv.slice(2);
-if (cmd === "validate") {
+module.exports = { validate, loadPack };
+const [cmd, ...args] = require.main === module ? process.argv.slice(2) : ["--lib"];
+if (cmd === "--lib") {
+  // required as a library: nothing to run
+} else if (cmd === "validate") {
   let bad = 0;
   for (const dir of args.length ? args : packDirs()) {
     const r = validate(path.resolve(dir));
@@ -101,4 +104,3 @@ if (cmd === "validate") {
   console.log("usage: node tools/pack.js validate [packs/<id> ...] | index");
   process.exit(2);
 }
-if (typeof module !== "undefined") module.exports = { validate, loadPack };
