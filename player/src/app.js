@@ -387,6 +387,7 @@ function viewNew() {
     level,
     h("div", { class: "row" }, h("label", { class: "small muted", for: "nc-hours" }, "Hours per week:"), hours, h("label", { class: "small muted", for: "nc-deadline" }, "Deadline or exam date:"), deadline),
     h("p", { class: "muted small" }, "Time and deadline size the plan. Leave them empty and Claude decides from the subject."),
+    localRow(),
     h("div", { class: "row" }, h("label", { class: "btn" }, "Add your notes or a PDF", pick), h("span", { class: "muted small" }, "Claude teaches from them, in their order.")),
     fileList, h("div", { class: "row" }, btn), out);
 }
@@ -423,6 +424,20 @@ const OUTLINE_SHAPE = `{"title": string, "subtitle": string, "description": "1-2
    (only when the goal has logistics beside learning: applications, exam registration, documents; else [])}`;
 
 const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+/* The New course form says whether courses can run code on this computer, and offers to connect. */
+function localRow() {
+  const L = CKRun.local; const row = h("p", { class: "muted small", id: "nc-local" });
+  const paint = () => {
+    if (L.state === "ready") { rc(row, "This computer is connected: a course can run " + (Object.values(L.langs).map(x => x.label).join(", ") || "no installed languages yet") + " here."); return; }
+    rc(row, "Python and JavaScript run in the page. For other languages (Elixir, C, Rust, Go…) or your own GPU, ",
+      h("button", { type: "button", class: "btn small", onclick: async e => { const b = e.currentTarget; b.disabled = true; b.textContent = "Connecting…";
+        const offer = await L.offer();
+        if (offer === "install") { const r = await L.install().catch(() => "failed"); toast(r === "installed" ? "Installing Coursekit as an app. Open it from there and connect again." : "The app was not installed."); }
+        else if (!(await L.connect(true))) toast(L.note || "This page could not reach your computer. Open it in the Claude desktop app with the Coursekit runner on." + (L.lastError ? " (" + L.lastError + ")" : ""));
+        paint(); } }, "connect this computer"), ".");
+  };
+  paint(); return row;
+}
 async function createCourse({ topic, about, intake, files, log }) {
   intake = intake || {};
   let source = "", names = [];
