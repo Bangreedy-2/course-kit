@@ -1590,6 +1590,7 @@ const sampleError = e => {
     : c === "rate_limited" ? (e.reason === "usage_limit" ? "You have reached your Claude usage limit for now." : "Claude is busy. Try again in a minute.")
     : c === "prompt_too_large" ? "That was too much text for one request. Try a smaller file or a shorter question."
     : c === "cancelled" ? "Stopped."
+    : c === "no_sample" ? e.message
     : c === "invalid_json" ? "Claude's answer could not be read. Try again."
     : c === "tools_unavailable" ? "This view of Claude cannot change the course. Open the page in claude.ai."
     : "Claude could not answer (" + (c || "error") + (e && e.message ? ": " + String(e.message).slice(0, 200) : "") + "). Try again.";
@@ -1675,7 +1676,7 @@ function openCourse(cid) {
     for (const [k, v] of Object.entries(S.progress)) if (v._dirty) n[k] = v;
     S.progress = n; S.progLoaded = true; S.courseLoaded = S.lessonsLoaded; refreshProgress();
   }));
-  S.store.get(K.chat(cid)).then(b => { if (b && Array.isArray(b.turns)) { S.chat[cid] = b.turns; if (S.ask.open) renderAsk(); } }).catch(() => {});
+  S.store.get(K.chat(cid)).then(b => { if (b && Array.isArray(b.turns)) { const mine = S.chat[cid] || []; const seen = new Set(b.turns.map(t => t.role + t.at)); S.chat[cid] = b.turns.concat(mine.filter(t => !seen.has(t.role + t.at))); if (S.ask.open && !S.ask.busy) safeRenderAsk(); } }).catch(() => {});
 }
 
 /* ================= routing ================= */
@@ -2629,10 +2630,11 @@ function renderAsk() {
   const log = h("div", { class: "ask-log", id: "ask-log", "aria-live": "polite" });
   if (!turns.length) ap(log, h("div", { class: "msg hint" }, h("p", null, c ? "Ask anything about this course: explain this differently, give me a harder example, why is my answer wrong. You can also ask for changes: add a lesson on…, make this lesson shorter, add a practice widget, give the course a calmer design." : "Ask for a course (“make me a course on Byzantine history for a museum trip”) or for help choosing what to study next.")));
   for (const t of turns) ap(log, msgEl(t));
-  const inp = h("textarea", { id: "ask-input", rows: 3, placeholder: S.sample ? "Type a question or a change…" : "Claude is not available in this view.", disabled: !S.sample, value: S.ask.draft || "" });
+  if (S.ask.busy && S.ask.sending === key) { const b = msgEl({ role: "assistant", content: S.ask.stream || "" }); b.id = "ask-stream"; b.classList.add("streaming"); if (!S.ask.stream) (b.querySelector(".md") || b).textContent = "Thinking…"; ap(log, b); }
+  const inp = h("textarea", { id: "ask-input", rows: 3, placeholder: S.sample ? "Type a question or a change…" : "Claude is not available in this view yet.", value: S.ask.draft || "" });
   inp.addEventListener("input", () => { S.ask.draft = inp.value; });
   inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
-  const send = () => { const t = inp.value.trim(); if (!t || S.ask.busy) return; inp.value = ""; S.ask.draft = ""; sendAsk(t); };
+  const send = () => { const t = inp.value.trim(); if (!t) return; if (S.ask.busy) { toast("Wait for the answer, or press Stop."); return; } inp.value = ""; S.ask.draft = ""; sendAsk(t).catch(e => { noteError("ask-outer", e); toast("Ask failed: " + (e && e.message || e), "bad"); S.ask.busy = false; safeRenderAsk(); }); };
   const att = h("label", { class: "btn small ghost", title: "Attach notes or a PDF" }, "Attach", h("input", { type: "file", hidden: true, accept: ".pdf,.txt,.md,.markdown,.csv,.json,text/plain,application/pdf", onchange: async e => {
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
     try { toast("Reading " + f.name + "…"); const text = await fileText(f); S.ask.attach = { name: f.name, text: text.slice(0, 180000) }; renderAsk(); } catch (err) { toast("Could not read the file.", "bad"); }
@@ -2644,7 +2646,7 @@ function renderAsk() {
     h("div", { class: "ask-foot" },
       S.ask.attach ? h("p", { class: "chip" }, "📎 " + S.ask.attach.name + " ", h("button", { class: "link small", onclick: () => { S.ask.attach = null; renderAsk(); } }, "remove")) : null,
       inp,
-      h("div", { class: "row" }, att, S.ask.busy ? h("button", { class: "btn", onclick: () => S.ask.ctl && S.ask.ctl.abort() }, "Stop") : h("button", { class: "btn primary", onclick: send, disabled: !S.sample }, "Send"))));
+      h("div", { class: "row" }, att, S.ask.busy ? h("button", { class: "btn", onclick: () => S.ask.ctl && S.ask.ctl.abort() }, "Stop") : h("button", { class: "btn primary", onclick: send }, "Send"))));
   renderAskHead();
   log.scrollTop = log.scrollHeight;
 }
@@ -2653,6 +2655,7 @@ function msgEl(t) {
   if (t.role === "user") ap(el, h("p", null, (t.from === "project" ? "From your project: " : "") + t.content), t.attach ? h("p", { class: "muted small" }, "📎 " + t.attach) : null);
   else ap(el, mdEl(t.content || ""));
   if (t.changes && t.changes.length) ap(el, h("p", { class: "changes" }, "Changed: " + t.changes.join(", ")));
+  if (t.perm) ap(el, h("button", { class: "btn small", onclick: async () => { try { const p = await claude.use("permissions"); await p.manage(); } catch (e) { toast("Open the artifact's Permissions menu and allow Claude."); } } }, "Open permissions"));
   return el;
 }
 async function saveChat(key) { const turns = (S.chat[key] || []).slice(-40); S.chat[key] = turns; await put(K.chat(key), { kind: "chat", course: key, turns, updated: new Date().toISOString() }); }
@@ -2670,7 +2673,6 @@ function lessonProgressText(l) {
 
 async function sendAsk(text, opts) {
   opts = opts || {};
-  if (!S.sample) return;
   const key = chatKey(); const c = S.courses[key];
   const turns = S.chat[key] = S.chat[key] || [];
   const userTurn = { role: "user", content: text.slice(0, 20000), at: new Date().toISOString() };
@@ -2678,31 +2680,58 @@ async function sendAsk(text, opts) {
   const attach = S.ask.attach; S.ask.attach = null; if (attach) userTurn.attach = attach.name;
   turns.push(userTurn);
   const reply = { role: "assistant", content: "", at: new Date().toISOString() };
-  S.ask.busy = true; S.ask.ctl = new AbortController(); renderAsk();
-  const log = $("#ask-log"); const bubble = msgEl({ role: "assistant", content: "" }); bubble.classList.add("streaming"); bubble.querySelector(".md").textContent = "Thinking…"; ap(log, bubble); log.scrollTop = log.scrollHeight;
   const changes = [];
-  const showText = t => { const m = bubble.querySelector(".md"); m.innerHTML = md(t, { math: mathHtml }); log.scrollTop = log.scrollHeight; };
-  const input = buildAskInput(c, turns.slice(0, -1), userTurn, attach);
-  const run = async tx => {
-    const tools = S.tools ? (c ? courseTools(c, tx, changes) : libraryTools(changes)) : undefined;
-    const res = await S.sample(input, { cache: false, signal: S.ask.ctl.signal, tools, onText: ({ text }) => showText(text) });
-    reply.content = res.text + (res.truncated ? "\n\n*(The answer was cut short.)*" : "");
-  };
+  S.ask.busy = true; S.ask.ctl = new AbortController(); S.ask.sending = key;
+  // Keep the question even if the page closes before Claude answers.
+  saveChat(key).catch(e => noteError("ask-save", e));
   try {
+    safeRenderAsk();
+    if (!S.sample) throw { code: "no_sample", message: "Claude is not available in this view. Open the page's Permissions and allow Claude, then reload." };
+    S.ask.stream = "";
+    const showText = t => { S.ask.stream = t; try { const b = $("#ask-stream"); if (!b) return; const m = b.querySelector(".md") || b; m.innerHTML = md(t, { math: mathHtml }); const log = $("#ask-log"); if (log) log.scrollTop = log.scrollHeight; } catch (e) {} };
+    const input = buildAskInput(c, turns.slice(0, -1), userTurn, attach);
+    const run = async tx => {
+      const tools = S.tools ? (c ? courseTools(c, tx, changes) : libraryTools(changes)) : undefined;
+      const res = await S.sample(input, { cache: false, signal: S.ask.ctl.signal, tools, onText: ({ text }) => showText(text) });
+      reply.content = (res && res.text || "") + (res && res.truncated ? "\n\n*(The answer was cut short.)*" : "");
+      if (!reply.content.trim()) reply.content = "*Claude sent an empty answer. Try again.*";
+    };
     if (c) await withTxn(c.id, "Asked: " + text.slice(0, 120), opts.from === "project" ? "project" : "tutor", run);
     else await run(null);
   } catch (e) {
-    console.error("Ask failed", e);
+    console.error("Ask failed", e); noteError("ask", e);
     reply.content = (e && e.text ? e.text + "\n\n" : "") + "*" + sampleError(e) + "*";
+    if (e && (e.code === "not_granted" || e.code === "no_sample")) reply.perm = true;
   }
   reply.changes = changes.slice(0, 20);
-  turns.push(reply);
-  S.ask.busy = false; S.ask.ctl = null;
-  logEvent("ask", { c: c ? c.id : null, l: S.route.lid || null, changed: changes.length });
-  await saveChat(key);
-  if (S.ask.open && chatKey() === key) renderAsk();
-  if (c && pendingLessons(c.id).length && changes.length) startWriter(c.id);
+  if (S.chat[key] !== turns) { S.chat[key] = S.chat[key] || []; for (const t of [userTurn]) if (!S.chat[key].includes(t)) S.chat[key].push(t); S.chat[key].push(reply); }
+  else turns.push(reply);
+  S.ask.busy = false; S.ask.ctl = null; S.ask.sending = null; S.ask.stream = "";
+  try { logEvent("ask", { c: c ? c.id : null, l: (S.route && S.route.lid) || null, changed: changes.length }); } catch (e) {}
+  try { await saveChat(key); } catch (e) { noteError("ask-save", e); }
+  if (S.ask.open && chatKey() === key) safeRenderAsk();
+  if (c && changes.length && pendingLessons(c.id).length) startWriter(c.id);
 }
+function safeRenderAsk() {
+  try { renderAsk(); }
+  catch (e) {
+    console.error("Ask panel failed", e); noteError("ask-render", e);
+    rc($("#ask"), h("div", { class: "ask-log" }, h("div", { class: "msg assistant" }, h("p", null, "The Ask panel hit a problem: " + String(e && e.message || e)), h("button", { class: "btn small", onclick: closeAsk }, "Close"))));
+  }
+}
+/* Errors are kept in a small record so they can be looked at later. */
+let errBuf = null;
+function noteError(where, e) {
+  try {
+    if (!S.store) return;
+    const entry = { at: new Date().toISOString(), where, code: (e && e.code) || null, msg: String((e && (e.message || e.reason)) || e).slice(0, 500), stack: String(e && e.stack || "").slice(0, 800), route: location.hash.slice(0, 120) };
+    errBuf = errBuf || [];
+    errBuf.push(entry); if (errBuf.length > 30) errBuf.splice(0, errBuf.length - 30);
+    put("err~log", { kind: "errors", entries: errBuf, updated: entry.at });
+  } catch (x) {}
+}
+addEventListener("error", ev => noteError("page", ev.error || ev.message));
+addEventListener("unhandledrejection", ev => noteError("promise", ev.reason));
 
 /* What the learner is looking at outside lessons, for the tutor. */
 function viewContext(c) {
