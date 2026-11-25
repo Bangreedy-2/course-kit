@@ -262,6 +262,7 @@ figure{margin:0}figcaption{color:var(--muted);font-size:14px;margin-top:6px}
 .dtabs a.on{background:var(--accent);color:var(--on-accent)}
 .dpanel{display:flex;flex-direction:column;gap:14px}
 .grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.grid2.one{grid-template-columns:minmax(0,1fr)}
 .stack{display:flex;flex-direction:column;gap:10px;min-width:0}
 .card{padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column;gap:8px;min-width:0}
 .card.flush{padding:0;gap:0}
@@ -496,6 +497,9 @@ const SHAPES = ["round", "soft", "square"];
 const PATTERNS = ["none", "dots", "grid", "lines", "waves", "paper"];
 const DENSITIES = ["airy", "normal", "compact"];
 const METERS = ["bar", "ring", "sigmoid", "steps"];
+/* Course home sections: tabs (in order) and parts that can be hidden. Hiding never deletes data. */
+const DASH_TABS = ["today", "plan", "lessons", "drills", "projects", "record"];
+const DASH_PARTS = ["meter", "stats", "timeline", "queue", "week", "howto"];
 
 const DEFAULT_DESIGN = {
   palette: { bg: "#f6f4ef", surface: "#ffffff", ink: "#1d232b", muted: "#5b6470", accent: "#2f5bd3", accent2: "#c2410c" },
@@ -552,6 +556,17 @@ function normalizeDesign(input, base) {
   d.pattern = pickFrom(i.pattern, PATTERNS, d.pattern, "pattern");
   d.density = pickFrom(i.density, DENSITIES, d.density, "density");
   d.meter = pickFrom(i.meter, METERS, d.meter || "bar", "meter");
+  const listOf = (v, allowed, what) => {
+    if (v == null) return undefined;
+    if (!Array.isArray(v)) { notes.push(what + " must be a list"); return undefined; }
+    const out = [];
+    for (const x of v) { const k = String(x).toLowerCase().trim(); if (!allowed.includes(k)) notes.push(what + ": \"" + k + "\" is not one of " + allowed.join(", ")); else if (!out.includes(k)) out.push(k); }
+    return out;
+  };
+  const tabs = listOf(i.tabs, DASH_TABS, "tabs"); if (tabs !== undefined) d.tabs = tabs;
+  const hide = listOf(i.hide, DASH_PARTS, "hide"); if (hide !== undefined) d.hide = hide;
+  if (!Array.isArray(d.tabs)) d.tabs = [];
+  if (!Array.isArray(d.hide)) d.hide = [];
   d.emblem = emblemOf(i.emblem, d.emblem);
   return { design: d, notes };
 }
@@ -1118,9 +1133,12 @@ const DESIGN_DOC =
 `Design object (all fields optional when editing):
 {"palette":{"bg":"#rrggbb","surface":"#rrggbb","ink":"#rrggbb","muted":"#rrggbb","accent":"#rrggbb","accent2":"#rrggbb"},
  "fonts":{"display":"<font>","body":"<font>"},
- "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "meter":"${METERS.join("|")}", "emblem":"one emoji"}
+ "shape":"${SHAPES.join("|")}", "layout":"${LAYOUTS.join("|")}", "pattern":"${PATTERNS.join("|")}", "density":"${DENSITIES.join("|")}", "meter":"${METERS.join("|")}", "emblem":"one emoji",
+ "tabs":["${DASH_TABS.join("\",\"")}"], "hide":["${DASH_PARTS.join("\",\"")}"]}
 bg = page background, surface = cards, ink = text, muted = secondary text, accent = buttons and links, accent2 = highlights.
 meter: how overall progress is drawn on the course home. bar = a plain bar; ring = a circle; sigmoid = a dot climbing an S-curve (machine learning, growth, adoption); steps = one tick per unit (short skill courses). Pick the one that fits the subject.
+tabs: the course home's sections, in the order to show them. Tabs the course has no content for are skipped; tabs left out of the list are hidden (their data stays); [] = the default order with all tabs. "projects" is the homework/projects tab.
+hide: parts of the course home to hide (their data stays, nothing is deleted): meter = the overall progress meter; stats = the row of numbers (unit, pace, streak…); timeline = the row of per-unit progress bars in the header; queue = Today's queue; week = the "This week" card on Today; howto = the "How a study day works" card. [] shows everything. Use this when the learner wants something off the dashboard; never delete plan weeks, tasks or lessons for that.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
 
@@ -1152,7 +1170,7 @@ function fromV1Progress(old, lessonsById, cid) {
 
 const MODULE_KEYS = ["plan", "drills", "checkpoints", "notebooks"];
 const api = {
-  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
+  FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, DASH_TABS, DASH_PARTS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
   RuleError, slug, uniqueId, newBlockId, clone, words, str, clamp,
   hexToRgb, contrast, ensureContrast, onColor, isDark,
@@ -2815,7 +2833,7 @@ function courseTools(c, tx, changes) {
       for (const l of Object.values(S.lessons)) for (const b of l.blocks || []) { const t = JSON.stringify(b).toLowerCase(); if (q.every(w => t.includes(w))) hits.push({ lesson: l.id, block: b.id, t: b.t, text: (b.q || b.md || b.title || "").slice(0, 160) }); if (hits.length > 30) break; }
       return hits;
     }),
-    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
+    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part, including which course-home tabs show and in what order (design.tabs) and which home parts are hidden (design.hide)), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
       tx.touchCourse(); const m = meta();
       const design = i.design ? Object.assign({}, i.design, { palette: Object.assign({}, m.design.palette, i.design.palette || {}), fonts: Object.assign({}, m.design.fonts, i.design.fonts || {}) }) : undefined;
       const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
@@ -3110,7 +3128,10 @@ function courseTabs(c) {
   if (drillsOf().length) tabs.push(["drills", L.drills]);
   if (tasks.some(t => t.project != null || t.notebook)) tabs.push(["projects", L.projects]);
   if (p || drillsOf().length || cpsOf().length) tabs.push(["record", L.record]);
-  return tabs;
+  const want = (c.design && c.design.tabs) || [];
+  if (!want.length) return tabs;
+  const picked = want.map(k => tabs.find(t => t[0] === k)).filter(Boolean);
+  return picked.length ? picked : tabs;
 }
 function viewCourse(c, tab) {
   if (!S.modsLoaded || !S.gLoaded) { const w = classicHome(c); return w; }
@@ -3127,6 +3148,7 @@ function viewCourse(c, tab) {
   return wrap;
 }
 function dashHero(c) {
+  const hidden = k => ((c.design && c.design.hide) || []).includes(k);
   const p = planOf(); const L = LBL(c); const ls = orderedLessons(c);
   const got = ls.filter(l => learned(l.id)).length;
   const stats = [];
@@ -3138,14 +3160,14 @@ function dashHero(c) {
   } else stats.push([L.lessons, got + "/" + ls.length, "learned"]);
   stats.push(["Streak", String(streak()), streak() === 1 ? "day" : "days"]);
   const due = dueCards(c).length + dueDrills().length; stats.push(["Due today", String(due), "reviews"]);
-  const timeline = p ? h("div", { class: "timeline", role: "img", "aria-label": L.unit + " " + curWeek(c) + " of " + p.weeks.length },
+  const timeline = p && !hidden("timeline") ? h("div", { class: "timeline", role: "img", "aria-label": L.unit + " " + curWeek(c) + " of " + p.weeks.length },
     p.weeks.map(w => { const core = w.tasks.filter(t => t.core); const hrs = core.reduce((s, t) => s + t.h, 0); const pr = hrs ? core.reduce((s, t) => s + taskProg(t) * t.h, 0) / hrs : 0;
       return h("a", { href: route(c, "t/plan"), class: "tl" + (w.n === curWeek(c) ? " cur" : "") + (pr >= 1 ? " done" : ""), title: L.unit + " " + w.n + ": " + w.title + " · " + Math.round(pr * 100) + "%" }, h("i", { style: "height:" + Math.max(8, pr * 100) + "%" })); })) : null;
   return h("section", { class: "hero dhero" },
     h("div", { class: "emblem big", "aria-hidden": "true" }, c.design.emblem),
     h("div", { class: "hero-text" },
-      h("div", { class: "dh-top" }, h("div", null, c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null, h("h1", null, c.title)), meter(c)),
-      h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
+      h("div", { class: "dh-top" }, h("div", null, c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null, h("h1", null, c.title)), hidden("meter") ? null : meter(c)),
+      hidden("stats") ? null : h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
       timeline,
       h("div", { class: "row" },
         h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
@@ -3154,6 +3176,7 @@ function dashHero(c) {
 
 /* ---------- Today ---------- */
 function tabToday(c, M) {
+  const hidden = k => ((c.design && c.design.hide) || []).includes(k);
   const g = G(); const L = LBL(c); const q = [];
   if (g.examRun) { const ex = cpsOf().find(e => e.id === g.examRun.id); if (ex) q.push({ ic: "CP", t: "Continue " + ex.title, d: "Timed " + L.checkpoint.toLowerCase() + " in progress · " + Math.max(0, Math.ceil((g.examRun.ends - Date.now()) / 60000)) + " min left", href: route(c, "x/" + ex.id) }); }
   const dc = dueCards(c); if (dc.length) q.push({ ic: "RC", t: "Recall cards: " + dc.length + " due", d: "Answer from memory, then reveal and judge yourself honestly", href: route(c, "review") });
@@ -3170,7 +3193,7 @@ function tabToday(c, M) {
   if (q.length && nl && lt.length && S.extraLesson !== c.id) ap(left, h("button", { class: "btn ghost small", onclick: () => { S.extraLesson = c.id; go(route(c, "l/" + nl.id)); } }, "Start another new lesson today"));
   const right = h("div", { class: "stack" });
   const p = planOf();
-  if (p) {
+  if (p && !hidden("week")) {
     const w = p.weeks[curWeek(c) - 1];
     ap(right, h("p", { class: "sec-h" }, "This " + L.unit.toLowerCase()), h("div", { class: "card" },
       h("div", { class: "row between" }, h("h3", null, L.unit + " " + w.n + ": " + w.title), w.light ? pill("lighter " + L.unit.toLowerCase(), "due") : null),
@@ -3178,14 +3201,15 @@ function tabToday(c, M) {
       w.tasks.map(t => h("div", { class: "mini-task" }, ring(taskProg(Object.assign({ week: w.n }, t))), h("div", null, h("div", null, t.title), h("small", { class: "muted" }, (t.core ? "core" : "stretch") + " · " + t.h + " h")))),
       h("a", { class: "btn small", href: route(c, "t/plan") }, "Open the plan")));
   }
-  ap(right, h("p", { class: "sec-h" }, "How a study day works"), h("div", { class: "card small" }, h("ol", null,
+  if (!hidden("howto")) ap(right, h("p", { class: "sec-h" }, "How a study day works"), h("div", { class: "card small" }, h("ol", null,
     h("li", null, "Recall cards: say the answer before revealing it."),
     drillsOf().length ? h("li", null, "Drill reviews: write the answer from memory with the timer running.") : null,
     h("li", null, "One new lesson: read it, then answer every exercise. It counts as learned only when all are right."),
     drillsOf().length ? h("li", null, "New drills unlock the day after their lesson.") : null,
     allTasks().some(t => t.project != null) ? h("li", null, L.projects + ": do the work, then fill in the task card to tick it.") : null,
     h("li", null, "Stuck? Press Ask: " + (c.tutor.name || "your tutor") + " sees where you are."))));
-  rc(M, h("div", { class: "grid2" }, left, right));
+  if (hidden("queue")) left.hidden = true;
+  rc(M, h("div", { class: "grid2" + (hidden("queue") || !right.childElementCount ? " one" : "") }, hidden("queue") ? null : left, right.childElementCount ? right : null));
 }
 
 /* ---------- Plan and task cards ---------- */

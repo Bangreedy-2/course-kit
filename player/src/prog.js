@@ -167,7 +167,10 @@ function courseTabs(c) {
   if (drillsOf().length) tabs.push(["drills", L.drills]);
   if (tasks.some(t => t.project != null || t.notebook)) tabs.push(["projects", L.projects]);
   if (p || drillsOf().length || cpsOf().length) tabs.push(["record", L.record]);
-  return tabs;
+  const want = (c.design && c.design.tabs) || [];
+  if (!want.length) return tabs;
+  const picked = want.map(k => tabs.find(t => t[0] === k)).filter(Boolean);
+  return picked.length ? picked : tabs;
 }
 function viewCourse(c, tab) {
   if (!S.modsLoaded || !S.gLoaded) { const w = classicHome(c); return w; }
@@ -184,6 +187,7 @@ function viewCourse(c, tab) {
   return wrap;
 }
 function dashHero(c) {
+  const hidden = k => ((c.design && c.design.hide) || []).includes(k);
   const p = planOf(); const L = LBL(c); const ls = orderedLessons(c);
   const got = ls.filter(l => learned(l.id)).length;
   const stats = [];
@@ -195,14 +199,14 @@ function dashHero(c) {
   } else stats.push([L.lessons, got + "/" + ls.length, "learned"]);
   stats.push(["Streak", String(streak()), streak() === 1 ? "day" : "days"]);
   const due = dueCards(c).length + dueDrills().length; stats.push(["Due today", String(due), "reviews"]);
-  const timeline = p ? h("div", { class: "timeline", role: "img", "aria-label": L.unit + " " + curWeek(c) + " of " + p.weeks.length },
+  const timeline = p && !hidden("timeline") ? h("div", { class: "timeline", role: "img", "aria-label": L.unit + " " + curWeek(c) + " of " + p.weeks.length },
     p.weeks.map(w => { const core = w.tasks.filter(t => t.core); const hrs = core.reduce((s, t) => s + t.h, 0); const pr = hrs ? core.reduce((s, t) => s + taskProg(t) * t.h, 0) / hrs : 0;
       return h("a", { href: route(c, "t/plan"), class: "tl" + (w.n === curWeek(c) ? " cur" : "") + (pr >= 1 ? " done" : ""), title: L.unit + " " + w.n + ": " + w.title + " · " + Math.round(pr * 100) + "%" }, h("i", { style: "height:" + Math.max(8, pr * 100) + "%" })); })) : null;
   return h("section", { class: "hero dhero" },
     h("div", { class: "emblem big", "aria-hidden": "true" }, c.design.emblem),
     h("div", { class: "hero-text" },
-      h("div", { class: "dh-top" }, h("div", null, c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null, h("h1", null, c.title)), meter(c)),
-      h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
+      h("div", { class: "dh-top" }, h("div", null, c.subtitle ? h("p", { class: "eyebrow" }, c.subtitle) : null, h("h1", null, c.title)), hidden("meter") ? null : meter(c)),
+      hidden("stats") ? null : h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
       timeline,
       h("div", { class: "row" },
         h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
@@ -211,6 +215,7 @@ function dashHero(c) {
 
 /* ---------- Today ---------- */
 function tabToday(c, M) {
+  const hidden = k => ((c.design && c.design.hide) || []).includes(k);
   const g = G(); const L = LBL(c); const q = [];
   if (g.examRun) { const ex = cpsOf().find(e => e.id === g.examRun.id); if (ex) q.push({ ic: "CP", t: "Continue " + ex.title, d: "Timed " + L.checkpoint.toLowerCase() + " in progress · " + Math.max(0, Math.ceil((g.examRun.ends - Date.now()) / 60000)) + " min left", href: route(c, "x/" + ex.id) }); }
   const dc = dueCards(c); if (dc.length) q.push({ ic: "RC", t: "Recall cards: " + dc.length + " due", d: "Answer from memory, then reveal and judge yourself honestly", href: route(c, "review") });
@@ -227,7 +232,7 @@ function tabToday(c, M) {
   if (q.length && nl && lt.length && S.extraLesson !== c.id) ap(left, h("button", { class: "btn ghost small", onclick: () => { S.extraLesson = c.id; go(route(c, "l/" + nl.id)); } }, "Start another new lesson today"));
   const right = h("div", { class: "stack" });
   const p = planOf();
-  if (p) {
+  if (p && !hidden("week")) {
     const w = p.weeks[curWeek(c) - 1];
     ap(right, h("p", { class: "sec-h" }, "This " + L.unit.toLowerCase()), h("div", { class: "card" },
       h("div", { class: "row between" }, h("h3", null, L.unit + " " + w.n + ": " + w.title), w.light ? pill("lighter " + L.unit.toLowerCase(), "due") : null),
@@ -235,14 +240,15 @@ function tabToday(c, M) {
       w.tasks.map(t => h("div", { class: "mini-task" }, ring(taskProg(Object.assign({ week: w.n }, t))), h("div", null, h("div", null, t.title), h("small", { class: "muted" }, (t.core ? "core" : "stretch") + " · " + t.h + " h")))),
       h("a", { class: "btn small", href: route(c, "t/plan") }, "Open the plan")));
   }
-  ap(right, h("p", { class: "sec-h" }, "How a study day works"), h("div", { class: "card small" }, h("ol", null,
+  if (!hidden("howto")) ap(right, h("p", { class: "sec-h" }, "How a study day works"), h("div", { class: "card small" }, h("ol", null,
     h("li", null, "Recall cards: say the answer before revealing it."),
     drillsOf().length ? h("li", null, "Drill reviews: write the answer from memory with the timer running.") : null,
     h("li", null, "One new lesson: read it, then answer every exercise. It counts as learned only when all are right."),
     drillsOf().length ? h("li", null, "New drills unlock the day after their lesson.") : null,
     allTasks().some(t => t.project != null) ? h("li", null, L.projects + ": do the work, then fill in the task card to tick it.") : null,
     h("li", null, "Stuck? Press Ask: " + (c.tutor.name || "your tutor") + " sees where you are."))));
-  rc(M, h("div", { class: "grid2" }, left, right));
+  if (hidden("queue")) left.hidden = true;
+  rc(M, h("div", { class: "grid2" + (hidden("queue") || !right.childElementCount ? " one" : "") }, hidden("queue") ? null : left, right.childElementCount ? right : null));
 }
 
 /* ---------- Plan and task cards ---------- */

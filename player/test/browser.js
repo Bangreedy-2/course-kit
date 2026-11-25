@@ -185,6 +185,19 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok(await page.waitForSelector(".heat", { timeout: 5000 }).then(() => true, () => false), "record shows the study-day heatmap");
   if (shots) await page.screenshot({ path: shots + "/6c-sigmoid-record.png", fullPage: true });
 
+  // Ask can reshape the course home: hide the week bars, reorder and drop tabs; plan data stays
+  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/t/today"); await page.waitForSelector(".timeline");
+  await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
+  await page.evaluate(() => window.__mockTools.push([{ name: "update_course", input: { design: { hide: ["timeline", "howto"], tabs: ["today", "lessons", "plan", "drills", "homework", "projects", "record"] } } }]));
+  await page.fill("#ask-input", "remove the 10 boxes for each week from the dashboard"); await page.click("#ask .btn.primary");
+  await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn);
+  await page.click("#ask .icon[aria-label=Close]"); await page.waitForTimeout(400);
+  ok(!(await page.$(".timeline")), "Ask hid the per-week bars on the dashboard");
+  ok(!(await page.$$eval(".sec-h", e => e.some(x => /How a study day/.test(x.textContent)))), "Ask hid the study-day card");
+  ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Lessons,Plan,Drills,Homework,Record", "tabs follow the order Ask set");
+  await page.click(".dtabs a:has-text('Plan')"); await page.waitForSelector("details.week");
+  ok((await page.$$eval("details.week", e => e.length)) === 10, "the plan still has its 10 weeks");
+
   const havePy = !!process.env.CK_PY && fs.existsSync(path.join(process.env.CK_PY, "py/pyodide.mjs"));
   // Lesson with a run block: check the model answer passes and a wrong one fails
   await page.evaluate(() => location.hash = "#/c/sigmoid-ml/l/oop");

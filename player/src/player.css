@@ -258,6 +258,7 @@ figure{margin:0}figcaption{color:var(--muted);font-size:14px;margin-top:6px}
 .dtabs a.on{background:var(--accent);color:var(--on-accent)}
 .dpanel{display:flex;flex-direction:column;gap:14px}
 .grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.grid2.one{grid-template-columns:minmax(0,1fr)}
 .stack{display:flex;flex-direction:column;gap:10px;min-width:0}
 .card{padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column;gap:8px;min-width:0}
 .card.flush{padding:0;gap:0}
