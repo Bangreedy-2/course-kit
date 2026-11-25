@@ -21,10 +21,7 @@
     "pattern": "grid",
     "density": "normal",
     "emblem": "σ",
-    "meter": "sigmoid",
-    "hide": [
-      "timeline"
-    ]
+    "meter": "sigmoid"
   },
   "inserts": [
     {

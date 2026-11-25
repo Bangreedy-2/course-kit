@@ -926,27 +926,34 @@ addEventListener("message", e => {
   if (!f || !m || m.ck !== 1) return;
   if (m.type === "height") { const hgt = Math.max(80, Math.min(1400, Number(m.h) || 0)); if (hgt) f.iframe.style.height = hgt + "px"; }
   else if (m.type === "done") { f.record(!!m.ok, m.ok ? "widget: success" : "widget: not yet"); }
-  else if (m.type === "save") { try { const s = JSON.stringify(m.state); if (s.length < 16000) { const p = prog(f.l.id); p.w[f.b.id] = JSON.parse(s); saveProg(f.l.id); } } catch (err) {} }
+  else if (m.type === "save") { try { const s = JSON.stringify(m.state); if (s.length < 16000) { if (!f.l) { const g = G(); g.w = g.w || {}; g.w[f.b.widget] = JSON.parse(s); saveG(); } else { const p = prog(f.l.id); p.w[f.b.id] = JSON.parse(s); saveProg(f.l.id); } } } catch (err) {} }
+  else if (m.type === "open" && f.home) { const c = S.courses[S.cid]; const t = String(m.to || ""); if (!c) return;
+    if (/^lesson:/.test(t) && S.lessons[t.slice(7)]) go(route(c, "l/" + t.slice(7)));
+    else if (/^week:\d+$/.test(t)) { S.openWeeks = S.openWeeks || new Set(); S.openWeeks.add(+t.slice(5)); go(route(c, "t/plan")); }
+    else if (CK.DASH_TABS.includes(t)) go(route(c, "t/" + t)); }
 });
 function renderWidget(c, l, b, record) {
   const w = b.widget ? c.widgets && c.widgets[b.widget] : b;
   if (!w) return h("p", { class: "note" }, "This widget is missing from the course.");
-  const p = S.progress[l.id]; const state = p && p.w && p.w[b.id] || null;
+  const p = l && S.progress[l.id]; const state = l ? (p && p.w && p.w[b.id] || null) : ((S.g && S.g.w || {})[b.widget] || null);
+  const data = l ? "" : "course:" + JSON.stringify(homeData(c)).replace(/</g, "\\u003c") + ",open:function(t){parent.postMessage({ck:1,type:'open',to:String(t)},'*')},";
   const vars = designVars(c.design);
   const css = ":root{" + Object.entries(vars).filter(([k]) => k.startsWith("--")).map(([k, v]) => k.replace("--", "--ck-") + ":" + v).join(";") + ";--ck-font:" + vars["--font-b"] + "}" +
     "html,body{margin:0;background:var(--ck-surface);color:var(--ck-ink);font-family:var(--ck-font);font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}";
   const prelude = '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + CK.FONTS[c.design.fonts.body][1] + '&display=swap"><style>' + css + "</style>" +
-    "<script>window.ck={state:" + JSON.stringify(state).replace(/</g, "\\u003c") + ",done:function(ok){parent.postMessage({ck:1,type:'done',ok:!!ok},'*')},save:function(s){this.state=s;parent.postMessage({ck:1,type:'save',state:s},'*')},height:function(px){parent.postMessage({ck:1,type:'height',h:px},'*')}};<\/script>";
+    "<script>window.ck={" + data + "state:" + JSON.stringify(state).replace(/</g, "\\u003c") + ",done:function(ok){parent.postMessage({ck:1,type:'done',ok:!!ok},'*')},save:function(s){this.state=s;parent.postMessage({ck:1,type:'save',state:s},'*')},height:function(px){parent.postMessage({ck:1,type:'height',h:px},'*')}};<\/script>";
   let html = String(w.html);
   if (/<head[^>]*>/i.test(html)) html = html.replace(/<head[^>]*>/i, m => m + prelude);
   else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + "<head>" + prelude + "</head>");
   else html = "<!doctype html><html><head>" + prelude + "</head><body>" + html + "</body></html>";
   const iframe = h("iframe", { sandbox: "allow-scripts", title: b.title || w.title || "Interactive widget", loading: "lazy", style: "height:" + (b.height || w.height || 360) + "px" });
   iframe.srcdoc = html;
-  iframe.addEventListener("load", () => { frames.set(iframe.contentWindow, { b, l, record, iframe }); });
+  const fr = { b, l, record: record || (() => {}), iframe, home: !l };
+  iframe.addEventListener("load", () => { frames.set(iframe.contentWindow, fr); });
   // contentWindow exists as soon as the frame is in the document.
-  queueMicrotask(() => { if (iframe.contentWindow) frames.set(iframe.contentWindow, { b, l, record, iframe }); });
+  queueMicrotask(() => { if (iframe.contentWindow) frames.set(iframe.contentWindow, fr); });
+  if (!l) iframe.removeAttribute("loading");
   return h("div", { class: "widget" }, h("p", { class: "co-title" }, b.title || w.title), iframe, b.graded ? h("p", { class: "muted small" }, "Finish the widget's challenge to complete this item.") : null);
 }
 
@@ -1198,6 +1205,27 @@ function noteError(where, e) {
 addEventListener("error", ev => noteError("page", ev.error || ev.message));
 addEventListener("unhandledrejection", ev => noteError("promise", ev.reason));
 
+/* The design as saved right now and what it puts on screen, so the tutor never guesses. */
+function designStateText(c) {
+  const d = c.design; const hide = d.hide || []; const tabs = (() => { try { return courseTabs(c).map(t => t[1] + " (" + t[0] + ")"); } catch (e) { return []; } })();
+  const parts = [["meter", "the " + d.meter + " progress meter in the header"], ["stats", "the stats row in the header"], ["timeline", planOf() ? "the row of per-" + unitWord(c).toLowerCase() + " progress bars in the header" : null],
+    ["queue", "Today's queue"], ["week", planOf() ? "the \"This " + unitWord(c).toLowerCase() + "\" card on Today" : null], ["howto", "the \"How a study day works\" card on Today"]].filter(x => x[1]);
+  const home = (d.home || []).map(id => id + (c.widgets && c.widgets[id] ? "" : " (missing from the widget library, not shown)"));
+  return "CURRENT DESIGN (saved now; this is the truth, check it before you say what the page shows or what you changed):\n" +
+    JSON.stringify({ layout: d.layout, meter: d.meter, pattern: d.pattern, density: d.density, tabs: d.tabs, hide, home: d.home }) +
+    "\nThe course home shows: " + [!hide.includes("meter") && "header with title and " + d.meter + " meter"].concat(parts.filter(([k]) => k !== "meter" && !hide.includes(k)).map(x => x[1])).filter(Boolean).join("; ") +
+    (home.length ? "; home widgets: " + home.join(", ") : "; no home widgets") + ". Tabs: " + tabs.join(", ") + "." +
+    (hide.length ? "\nHidden now: " + parts.filter(([k]) => hide.includes(k)).map(x => x[1]).join("; ") + "." : "\nNothing is hidden.") +
+    "\nWidget library: " + (Object.entries(c.widgets || {}).map(([k, w]) => k + " (" + w.title + ")").join(", ") || "empty");
+}
+const CHANGE_RULES = `How to handle change requests:
+- Do what was asked, where it was asked. "On the dashboard" or "on the home page" means the course home: use design.hide, design.tabs and design.home. Never put a dashboard visualization inside a lesson.
+- "Replace X with a clearer visualization": hide X and, in the same turn, build a home widget with set_widget that draws the same information from window.ck.course, then add its id to design.home. Both steps or neither.
+- Undo means restore exactly what was there before; read CURRENT DESIGN and the earlier turns to know what that was.
+- Report only what the tools returned. Describe the result in the learner's words ("the week bars are back above the tabs"), not setting names. Never claim an earlier state you have not checked; never contradict CURRENT DESIGN.
+- If something truly cannot be done, say so in one sentence first, then offer the closest thing; do not do a substitute the learner did not ask for.
+- Do not say you cannot see the screen: CURRENT DESIGN tells you what is on it. Keep the reply to two or three sentences.`;
+
 /* What the learner is looking at outside lessons, for the tutor. */
 function viewContext(c) {
   const r = S.route || {}; const g = S.g || {};
@@ -1233,6 +1261,8 @@ function buildAskInput(c, history, userTurn, attach) {
       "Progress: " + progressSummary(c),
       l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : viewContext(c),
       modulesSummary(c),
+      S.tools ? designStateText(c) : "",
+      S.tools ? CHANGE_RULES : "",
     ];
   } else {
     const list = Object.values(S.courses).filter(x => !x.archivedAt).map(x => "- " + x.title + " [" + x.id + "]: " + (S.stats[x.id]?.learned || 0) + " learned of " + x.units.reduce((n, u) => n + u.lessons.length, 0));
@@ -1278,10 +1308,12 @@ function courseTools(c, tx, changes) {
       for (const l of Object.values(S.lessons)) for (const b of l.blocks || []) { const t = JSON.stringify(b).toLowerCase(); if (q.every(w => t.includes(w))) hits.push({ lesson: l.id, block: b.id, t: b.t, text: (b.q || b.md || b.title || "").slice(0, 160) }); if (hits.length > 30) break; }
       return hits;
     }),
-    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part, including which course-home tabs show and in what order (design.tabs) and which home parts are hidden (design.hide)), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
+    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part, including which course-home tabs show and in what order (design.tabs) and which home parts are hidden (design.hide) and which library widgets show on the home (design.home)), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
       tx.touchCourse(); const m = meta();
       const design = i.design ? Object.assign({}, i.design, { palette: Object.assign({}, m.design.palette, i.design.palette || {}), fonts: Object.assign({}, m.design.fonts, i.design.fonts || {}) }) : undefined;
       const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
+      const missing = (next.design && next.design.home || []).filter(id => !(m.widgets || {})[id] && !(i.widgets || {})[id]);
+      if (missing.length) throw new Error("design.home names widgets that are not in the library: " + missing.join(", ") + ". Create them with set_widget first. Library: " + (Object.keys(m.widgets || {}).join(", ") || "empty"));
       Object.assign(m, next); const notes = m.designNotes || []; delete m.designNotes;
       changes.push(i.design ? "design" : i.runtimes || i.files || i.labels || i.tracks || i.schedule ? "course settings" : "course details");
       return notes.length ? "Saved. The rules adjusted: " + notes.join("; ") : "Saved.";
@@ -1358,7 +1390,7 @@ function courseTools(c, tx, changes) {
       const at = i.after ? u.lessons.indexOf(String(i.after)) + 1 : 0; u.lessons.splice(Math.max(0, at), 0, l.id); l.unit = u.id;
       changes.push("moved " + l.title); return "Moved.";
     }),
-    T("set_widget", "Adds or replaces a reusable widget in the course's widget library. Use {\"t\":\"widget\",\"widget\":id} blocks to place it. Returns its id.", { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, height: { type: "number" } }, ["title", "html"], i => {
+    T("set_widget", "Adds or replaces a reusable widget in the course's widget library. Place it in a lesson with a {\"t\":\"widget\",\"widget\":id} block, or on the course home by adding its id to design.home (update_course); home widgets get live progress as window.ck.course. Returns its id.", { widget: { type: "string" }, title: { type: "string" }, html: { type: "string" }, height: { type: "number" } }, ["title", "html"], i => {
       const m = meta(); m.widgets = m.widgets || {};
       const id = i.widget ? CK.slug(i.widget, 40) : CK.uniqueId(CK.slug(i.title, 40), new Set(Object.keys(m.widgets)));
       if (!m.widgets[id] && Object.keys(m.widgets).length >= CK.LIMITS.widgetsLib) throw new Error("The widget library is full.");
