@@ -9,6 +9,25 @@
 "use strict";
 const base = p => { try { return new URL(p, document.baseURI).href; } catch (e) { return p; } };
 
+/* ---------- runtime packs ----------
+   A pack is a set of files beside the page that a runtime needs (Python lives under py/, Streamlit under st/).
+   A fresh player has none; the learner's Claude copies a pack in from its public pack artifact.
+   The page only checks whether a pack is there and says how to get it. */
+const PACKS = {
+  python: { title: "Python", probe: "py/pyodide-lock.json", ask: "Install the Python pack in my Coursekit player" },
+  streamlit: { title: "Streamlit apps", probe: "st/stlite.js", ask: "Install the Streamlit pack in my Coursekit player" },
+};
+const packSeen = {}; const packListeners = new Set();
+function packCheck(name) {
+  const p = PACKS[name]; if (!p) return Promise.resolve(true);
+  if (!packSeen[name]) packSeen[name] = { state: "checking", p: fetch(base(p.probe), { method: "GET", cache: "no-store" }).then(r => !!r.ok, () => false).then(ok => { packSeen[name].state = ok ? "here" : "missing"; packListeners.forEach(f => { try { f(name); } catch (e) {} }); return ok; }) };
+  return packSeen[name].p;
+}
+const packState = name => (packSeen[name] && packSeen[name].state) || (packCheck(name), "checking");
+const packHelp = name => { const p = PACKS[name]; return p.title + " is not installed in this player yet. In Claude, with the Coursekit plugin, say: “" + p.ask + "”. Then reload this page."; };
+/* The packs a course needs, from its runtimes. */
+function packsFor(course) { const out = []; const rts = (course && course.runtimes) || {}; for (const k of Object.keys(rts)) if (rts[k] && rts[k].engine === "pyodide") { if (!out.includes("python")) out.push("python"); if (rts[k].apps && !out.includes("streamlit")) out.push("streamlit"); } return out; }
+
 /* ---------- Pyodide in a worker ---------- */
 function pyodideEngine() {
   let w = null, seq = 0, pend = {}, state = "off", bootP = null; const listeners = new Set(); const sent = new Map();
@@ -36,6 +55,7 @@ function pyodideEngine() {
   async function run(code, o) {
     o = o || {};
     if (state !== "ready" && o.onStatus) o.onStatus("Starting Python. The first time this downloads about 45 MB; after that your browser keeps it.");
+    if (!(await packCheck("python"))) return { ok: false, error: packHelp("python"), boot: true, missing: "python", out: "", imgs: [] };
     const ok = await boot(); if (!ok) return { ok: false, error: "Python did not load in this browser.", boot: true, out: "", imgs: [] };
     await ensureFiles(code, o.files);
     let out = "", timer = null; const imgs = []; const limit = o.limitMs || 60000;
@@ -218,6 +238,6 @@ function streamlit(host, src, files, onStatus) {
   return { apply, restart: start, get ran() { return C.ran; }, get err() { return C.err; }, get state() { return C.state; }, stop() { clearInterval(C.poll); try { const k = ctl(); if (k) k.unmount(); } catch (e) {} host.replaceChildren(); } };
 }
 
-const api = { forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
+const api = { PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
 root.CKRun = api;
 })(typeof window !== "undefined" ? window : globalThis);

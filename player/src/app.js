@@ -79,6 +79,7 @@ function RT() { const c = S.courses[S.cid]; if (!c) return CKRun.forCourse(null)
 function put(key, body) { return S.store.put(key, body); }
 
 async function boot() {
+  CKRun.onPack(() => { try { renderBanners(); } catch (e) {} });
   render();
   let cap = {};
   if (window.claude && claude.use) {
@@ -268,6 +269,8 @@ function renderBanners() {
     else if (b.op === "ask") items.push(banner("Your project asks: " + (b.text || ""), [["Do it", () => { doneCmd(id); if (b.course && S.route.cid !== b.course) go("#/c/" + b.course); setTimeout(() => { openAsk(); sendAsk(b.text, { from: "project" }); }, 60); }], ["Dismiss", () => doneCmd(id, "dismissed")]]));
     else if (b.op === "write") items.push(banner(b.text || "Your project queued lessons to be written.", [["Write them", () => { doneCmd(id); startWriter(b.course); }], ["Later", () => doneCmd(id, "dismissed")]]));
   }
+  { const c = S.courses[S.route && S.route.cid]; if (c) for (const name of CKRun.packsFor(c)) if (CKRun.packState(name) === "missing" && !(S.packDismissed || {})[name])
+      items.push(banner("This course runs " + CKRun.PACKS[name].title.toLowerCase().replace("python", "Python").replace("streamlit", "Streamlit") + " in the page, and that is not installed in this player yet. In Claude, with the Coursekit plugin, say: “" + CKRun.PACKS[name].ask + "”, then reload. Until then, lessons and written practice work, and code can be run on your own computer.", [["OK", () => { S.packDismissed = Object.assign({}, S.packDismissed, { [name]: true }); render(); }]])); }
   const w = S.writer;
   if (w && w.running) items.push(banner("Writing " + (w.label || "lessons") + (w.current ? ": " + w.current : "") + " (" + w.done + " of " + w.total + " done)", [["Stop", () => stopWriter()]], "busy"));
   else if (w && w.message) items.push(banner(w.message, [["OK", () => { S.writer = null; render(); }]]));
@@ -457,6 +460,7 @@ async function createCourse({ topic, about, intake, files, log }) {
   await saveImported(imp, { source });
   await put(K.mod(cid, "blueprint"), { kind: "module", course: cid, part: "blueprint", data: bp, updated: new Date().toISOString() });
   log("Planned “" + imp.meta.title + "”: " + imp.lessons.length + " lessons in " + imp.meta.units.length + (bp.paced ? " weeks" : " units") + (bp.projects.length ? ", " + bp.projects.length + " projects" : "") + (bp.checkpoints.length ? ", " + bp.checkpoints.length + " checkpoints" : "") + ". Writing the lessons now.");
+  for (const name of CKRun.packsFor(imp.meta)) if (!(await CKRun.packCheck(name))) log(CKRun.packHelp(name) + " The lessons are written now, but their code cannot be test-run until then.");
   go("#/c/" + encodeURIComponent(cid));
   startWriter(cid);
   return cid;
@@ -554,7 +558,7 @@ function outlineText(c, markId) {
 async function verifyLesson(c, lesson, drills) {
   const rt = CKRun.forCourse(c); const bad = []; let ran = 0, dead = false;
   const short = t => String(t || "").trim().slice(0, 500);
-  const run = async (lang, code, test, expect) => { const r = await rt.check(lang, code, test, expect); if (r.boot || /did not load|cannot run/i.test(r.err || "")) dead = true; ran++; return r; };
+  const run = async (lang, code, test, expect) => { const r = await rt.check(lang, code, test, expect); if (r.boot || /did not load|cannot run|not installed/i.test(r.err || "")) dead = true; ran++; return r; };
   const say = (what, r, expect) => r.reachedTests === false ? what + ": the model solution itself fails with: " + short(r.err) : r.err ? what + ": the test code fails with: " + short(r.err) : what + ": the solution with the test prints\n" + short(r.testOut) + "\nbut \"expect\" says\n" + expect.join("\n");
   for (const b of lesson.blocks) {
     if (dead) break;
@@ -564,10 +568,10 @@ async function verifyLesson(c, lesson, drills) {
       else if (!dead && String(b.starter || "").trim()) { const r0 = await run(b.lang, b.starter, b.test, b.expect); if (r0.pass) bad.push({ id: b.id, msg: "run block “" + short(b.q).slice(0, 80) + "”: the starter code already passes the test, so there is nothing to solve" }); }
     } else if (b.t === "predict") {
       const m = /```(python|py|javascript|js)\s*\n([\s\S]*?)```/i.exec(b.q || ""); const lang = m && CK.langOf(m[1]);
-      if (m && rt.has(lang)) { const r = await rt.run(lang, m[2]); ran++; if (r.boot || /did not load/i.test(r.error || "")) { dead = true; break; }
+      if (m && rt.has(lang)) { const r = await rt.run(lang, m[2]); ran++; if (r.boot || /did not load|not installed/i.test(r.error || "")) { dead = true; break; }
         if (r.ok && r.out.trim() && !CK.outputMatches(r.out, b.expect) && !(b.alts || []).some(x => CK.outputMatches(r.out, CK.lines(x)))) bad.push({ id: b.id, msg: "predict block: the code really prints\n" + short(r.out) + "\nbut \"expect\" says\n" + b.expect.join("\n") }); }
     } else if (b.t === "output" && rt.has(b.lang) && b.code && !b.local) {
-      const r = await rt.run(b.lang, b.code); ran++; if (r.boot || /did not load/i.test(r.error || "")) { dead = true; break; }
+      const r = await rt.run(b.lang, b.code); ran++; if (r.boot || /did not load|not installed/i.test(r.error || "")) { dead = true; break; }
       if (!r.ok) bad.push({ id: b.id, msg: "output block: its code fails with: " + short(r.error) });
       else if (!CK.checkAnswer(b, r.out)) bad.push({ id: b.id, msg: "output block: the code prints\n" + short(r.out) + "\nwhich does not contain every \"expect\" piece: " + (b.expect || []).join(" | ") });
     }

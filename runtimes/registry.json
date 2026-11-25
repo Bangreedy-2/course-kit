@@ -1,0 +1,14 @@
+{
+  "python": {
+    "title": "Python",
+    "what": "Real Python in the page: CPython 3.14 (Pyodide 314.0.8) with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, pyarrow and dask.",
+    "engine": "pyodide",
+    "artifact": "https://claude.ai/artifact/LvxxaxBuXPqgTVHrvdmiha",
+    "manifest": "pack.json",
+    "prefix": "py/",
+    "probe": "py/pyodide-lock.json",
+    "files": 64,
+    "bytes": 73360547,
+    "build": "node tools/runtime-pack.js python <dir>"
+  }
+}

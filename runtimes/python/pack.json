@@ -1,0 +1,330 @@
+{
+ "id": "python",
+ "title": "Python",
+ "version": "314.0.8",
+ "engine": "pyodide",
+ "probe": "py/pyodide-lock.json",
+ "note": "Pyodide 314.0.8 (CPython 3.14) with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, pyarrow, dask. Wheels and zips carry a .wasm suffix because artifacts refuse .whl and .zip; py/sp-worker.js adds it back when fetching.",
+ "files": [
+  {
+   "path": "py/altair-6.0.0-py3-none-any.whl.wasm",
+   "bytes": 795410,
+   "sha256": "061ad17cae2570dc8fb358723e8da37401f3573068099057f6e27ad608229d05"
+  },
+  {
+   "path": "py/anyio-4.13.0-py3-none-any.whl.wasm",
+   "bytes": 114353,
+   "sha256": "ea08c971f29d33d940864407ceb08601836ac8924d3b4f27db6612ed47faeafc"
+  },
+  {
+   "path": "py/attrs-26.1.0-py3-none-any.whl.wasm",
+   "bytes": 67548,
+   "sha256": "0506ebb8e46c83017941a7239eecb2f74420d332cf1f341bddc43a217ab0bb66"
+  },
+  {
+   "path": "py/click-8.3.1-py3-none-any.whl.wasm",
+   "bytes": 108274,
+   "sha256": "d3118144289833a6a3868e953a63a57f6166b33497e1cbe6231423de27465f78"
+  },
+  {
+   "path": "py/cloudpickle-3.1.2-py3-none-any.whl.wasm",
+   "bytes": 22228,
+   "sha256": "2e98667189dc634623d01f42ed32a624df38cd2043ca293111484da8ee4fc4a9"
+  },
+  {
+   "path": "py/contourpy-1.3.3-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 118874,
+   "sha256": "0ac15ebf9f820d2d1c3526388aa2818b631cb6c4aae1682efd6b4cc12c1f302c"
+  },
+  {
+   "path": "py/crucio-0.1.94-py3-none-any.whl.wasm",
+   "bytes": 29364,
+   "sha256": "73c20ccc1544635de7f9765066b047683f70b66d1915bb6cdc69086a3924aa2e"
+  },
+  {
+   "path": "py/cycler-0.12.1-py3-none-any.whl.wasm",
+   "bytes": 8321,
+   "sha256": "8ee450085f15b47f78b034d60059af6a3649e98fa5dde073363437742cc0b4ea"
+  },
+  {
+   "path": "py/dask-2026.11.0-py3-none-any.whl.wasm",
+   "bytes": 1497453,
+   "sha256": "3d826d9448c6834ccd1e0a9c932caa249e5a138aee254db791a0153c0a357f6d"
+  },
+  {
+   "path": "py/fonttools-4.62.1-py3-none-any.whl.wasm",
+   "bytes": 1152647,
+   "sha256": "0d1516e073fd0a8d8e6d9af46417b6a26209a42518024a18f7085e72d2599605"
+  },
+  {
+   "path": "py/fsspec-2026.3.0-py3-none-any.whl.wasm",
+   "bytes": 189819,
+   "sha256": "4b1cdd45e5ff356b57e883d53f5f529b8206261cb68e79f68d72f436a22665cf"
+  },
+  {
+   "path": "py/imbalanced_learn-0.14.2-py3-none-any.whl.wasm",
+   "bytes": 236073,
+   "sha256": "f9b81c47231aa1e3a71a1e4b3cc85b42e3b14f85e3a36922f3323c4da23605ef"
+  },
+  {
+   "path": "py/imperio-0.1.5-py3-none-any.whl.wasm",
+   "bytes": 24189,
+   "sha256": "3377a04d1e826fd0356564c3a6afc2fe79e0655e4e269ea29ca61e77cea7ac55"
+  },
+  {
+   "path": "py/itsdangerous-2.2.0-py3-none-any.whl.wasm",
+   "bytes": 16234,
+   "sha256": "c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef"
+  },
+  {
+   "path": "py/jinja2-3.1.6-py3-none-any.whl.wasm",
+   "bytes": 134899,
+   "sha256": "9330ec9cf2241fb8fc352928ea5e72016bf82de1d3d3b71ffea52a093a3ebab8"
+  },
+  {
+   "path": "py/joblib-1.5.3-py3-none-any.whl.wasm",
+   "bytes": 180317,
+   "sha256": "fb2860ff70d0b6b43a3df5e3ce52d3a938ad2fcacd80a3f2f3f37e930843e607"
+  },
+  {
+   "path": "py/jsonschema-4.26.0-py3-none-any.whl.wasm",
+   "bytes": 55406,
+   "sha256": "7ce77bd37ad161555c166d815bf1bc84980fd388a74059c73c9bc9214faa0a6e"
+  },
+  {
+   "path": "py/jsonschema_specifications-2025.9.1-py3-none-any.whl.wasm",
+   "bytes": 17467,
+   "sha256": "8e4353ea148aca60a2ea2aabbc068a62cf8d3deab5ee3ef91cfb991ecdb61c1b"
+  },
+  {
+   "path": "py/kiwisolver-1.5.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 36616,
+   "sha256": "47781998156721147c128a3c74547d5703e0e3cc454d8203e629339368308a93"
+  },
+  {
+   "path": "py/kydavra-0.3.4-py3-none-any.whl.wasm",
+   "bytes": 47144,
+   "sha256": "9fdfc25b85a4b0a4de5b580fa1bcec71000ff4a366072f8ca2d2d424ce2c2b05"
+  },
+  {
+   "path": "py/lime-0.2.0.1-py3-none-any.whl.wasm",
+   "bytes": 273378,
+   "sha256": "0435286a54c45d5b2273d325755c73f0ddb16f2c6be59fd7de83fa151bbef098"
+  },
+  {
+   "path": "py/locket-1.0.0-py2.py3-none-any.whl.wasm",
+   "bytes": 4398,
+   "sha256": "b6c819a722f7b6bd955b80781788e4a66a55628b858d347536b7e81325a3a5e3"
+  },
+  {
+   "path": "py/markupsafe-3.0.3-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 9986,
+   "sha256": "b44c364dc0d19e4210ce68ab77833c2b5d608f78fe6966263add4fc1fa667d97"
+  },
+  {
+   "path": "py/matplotlib-3.10.8-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 6982033,
+   "sha256": "722857932f8f62eac64f8439af15c94d427f9fb945f9590cd242805c983d2d54"
+  },
+  {
+   "path": "py/micropip-0.11.1-py3-none-any.whl.wasm",
+   "bytes": 115486,
+   "sha256": "e2d52886594fd4cd0d0847110a1c34ae0134d3a970eb4496d3b5eb31ee2d8af6"
+  },
+  {
+   "path": "py/narwhals-2.18.1-py3-none-any.whl.wasm",
+   "bytes": 444952,
+   "sha256": "1cc4f6985e9d93cd427ea20ff8248d0b6ef9ba385971162462bfb2666aea737f"
+  },
+  {
+   "path": "py/numba-0.0.0-py3-none-any.whl.wasm",
+   "bytes": 1263,
+   "sha256": "136a0184e2abb33bfb7214cac94528b95d83bea3c5505e8161921d1f4023e482"
+  },
+  {
+   "path": "py/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 2960568,
+   "sha256": "a292c1f5d7d8a2208cd5e94fc467604c131cabcd2fc14fed6eefde121e7fabdf"
+  },
+  {
+   "path": "py/packaging-26.1-py3-none-any.whl.wasm",
+   "bytes": 95852,
+   "sha256": "565acbbea54da30348b6d68b6a54373e6f777987db9f1db6966b4b3a5060d303"
+  },
+  {
+   "path": "py/pandas-3.0.2-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 4177749,
+   "sha256": "45ff57772cc2f366a8582c7d3097cc4e6676342ecd5a3c08184a43462d5a02ae"
+  },
+  {
+   "path": "py/partd-1.4.2-py3-none-any.whl.wasm",
+   "bytes": 18905,
+   "sha256": "978e4ac767ec4ba5b86c6eaa52e5a2a3bc748a2ca839e8cc798f1cc6ce6efb0f"
+  },
+  {
+   "path": "py/patsy-1.0.2-py2.py3-none-any.whl.wasm",
+   "bytes": 121050,
+   "sha256": "64e931013dc7c23d2661327531b04c4370605cd439cdee4bb1a55846c5f41771"
+  },
+  {
+   "path": "py/pillow-12.2.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 1037806,
+   "sha256": "e29838b7a756e4ee0f27a9cfa9a387ee0dfa2e9dd44be2dd595130b9f9d93ac3"
+  },
+  {
+   "path": "py/protobuf-7.34.1-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 247991,
+   "sha256": "3611ac20c08a353638c642da2a0cac78a595829ca2c6c5438b57fae9e91ed61c"
+  },
+  {
+   "path": "py/pyarrow-22.0.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 10018597,
+   "sha256": "e681ddbfaf096dd8c42dd5045342c1f218b853c42c08678c91011baf1f9f2d2d"
+  },
+  {
+   "path": "py/pyodide-lock.json",
+   "bytes": 123945,
+   "sha256": "82486a9b3d383615c3fa89b071dd8a2cd2d33a13762858d398f794c90368d7fb"
+  },
+  {
+   "path": "py/pyodide.asm.mjs",
+   "bytes": 1250259,
+   "sha256": "22514b8be6980e28a02c8b1d6387ce8dfe666fc4edf8d547cff5dce29ff4d972"
+  },
+  {
+   "path": "py/pyodide.asm.wasm",
+   "bytes": 9597892,
+   "sha256": "e14d49ceca9b4a0e274ea918f3a898de2d3880b6e5573a6cfe1a2267ecc70329"
+  },
+  {
+   "path": "py/pyodide.mjs",
+   "bytes": 17758,
+   "sha256": "1bb8cc14f9405aaa7cd4e00c12edd0a8539de9cc026618d6ee5a9663f367dc70"
+  },
+  {
+   "path": "py/pyodide_http-0.2.2-py3-none-any.whl.wasm",
+   "bytes": 9796,
+   "sha256": "f987d500bccd6ef49b6a9b8dcdb9b2fc41fd6f5b0e7305cef06acfcd74bbc55f"
+  },
+  {
+   "path": "py/pyodide_unix_timezones-1.0.0-py3-none-any.whl.wasm",
+   "bytes": 2168,
+   "sha256": "0f5eed55b123bdcbbe704d8d0808efb1a086d9924c0e534b8d2d1fb92bf5acf7"
+  },
+  {
+   "path": "py/pyparsing-3.3.2-py3-none-any.whl.wasm",
+   "bytes": 122781,
+   "sha256": "f0dd8225b5f8e945980b400bd465b4b90cb0498a2eede0d9dbea98372f6110c5"
+  },
+  {
+   "path": "py/pyrsistent-0.20.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 58223,
+   "sha256": "6252303d76b705f83c68a78fd2d7860be5b39f84482fee8aced8b52d7fd5ae80"
+  },
+  {
+   "path": "py/python_dateutil-2.9.0.post0-py2.py3-none-any.whl.wasm",
+   "bytes": 229892,
+   "sha256": "9b13365edf9c188f570baf9c540bbb3029ada2a2dacb9694b3659941693ee9e5"
+  },
+  {
+   "path": "py/python_multipart-0.0.34-py3-none-any.whl.wasm",
+   "bytes": 32585,
+   "sha256": "ebacd224bd686eee2f9aa1066a657affe07435a185834e05e5235e2e59173e91"
+  },
+  {
+   "path": "py/python_stdlib.zip.wasm",
+   "bytes": 2545550,
+   "sha256": "2bd3394a145bfbbe5bbc9d9d6ab9136abbb986c6fef6c142b3a2962227aa5c28"
+  },
+  {
+   "path": "py/pytz-2026.1.post1-py2.py3-none-any.whl.wasm",
+   "bytes": 510489,
+   "sha256": "b8249d6450146e0b61e6d710dc02ebb35a904796c4c2f97fe87d4ac5872db36a"
+  },
+  {
+   "path": "py/pyyaml-6.0.3-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 112901,
+   "sha256": "a05d2a48c13ed72a8c60c73b30b753a25c3a591bb66c15428b7e95e69a9e806f"
+  },
+  {
+   "path": "py/referencing-0.37.0-py3-none-any.whl.wasm",
+   "bytes": 16903,
+   "sha256": "db67659fe2ec73040d2b9785f0c8a7c45b8c1ca03dc2cd8e8b1fbc6f752854d8"
+  },
+  {
+   "path": "py/reparo-0.0.6-py3-none-any.whl.wasm",
+   "bytes": 16431,
+   "sha256": "01f68b9b9c7815bc66906a5416d5932ea145440efad37b94290fdb1cabf3922e"
+  },
+  {
+   "path": "py/rpds_py-0.30.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 115722,
+   "sha256": "9997dcfaee4465d4e877397c0f95fb9ec1dddb0e9da6dac94e96ff9621cdcd05"
+  },
+  {
+   "path": "py/scikit_learn-1.8.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 4449204,
+   "sha256": "432f560f54c5283d13e9d7c11dddc8bdf2f15aec326cc1d7314f600786154181"
+  },
+  {
+   "path": "py/scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 14029750,
+   "sha256": "17ee329a957863516d1bb6a6aaa0c60576fac027e9cd3d43de27f58b5b599b50"
+  },
+  {
+   "path": "py/seaborn-0.13.2-py3-none-any.whl.wasm",
+   "bytes": 294914,
+   "sha256": "636f8336facf092165e27924f223d3c62ca560b1f2bb5dff7ab7fad265361987"
+  },
+  {
+   "path": "py/six-1.17.0-py2.py3-none-any.whl.wasm",
+   "bytes": 11050,
+   "sha256": "228c50f73aa7addf2c2ccf2979c256802a59ab69cad8152b31b9443cc8140f42"
+  },
+  {
+   "path": "py/sklearn_compat-0.1.6-py3-none-any.whl.wasm",
+   "bytes": 22868,
+   "sha256": "b555db6c09d21eb50ee4a767dc08478a865f33f0e42b3ff8fc33f33c616bd7c1"
+  },
+  {
+   "path": "py/sniffio-1.3.1-py3-none-any.whl.wasm",
+   "bytes": 9560,
+   "sha256": "1e0f350ca8eac5252c1af9a8d93a7edd70056c1eddf5661f6950688094d1f670"
+  },
+  {
+   "path": "py/sp-worker.js",
+   "bytes": 5224,
+   "sha256": "a2c1191148e6075f67fe2c638f74d6624f696a535adb25b98c14f5448b138777"
+  },
+  {
+   "path": "py/starlette-1.0.0-py3-none-any.whl.wasm",
+   "bytes": 72651,
+   "sha256": "df724767987f398d2c504d1201acdb3aa8c0032f2e50c9815c389863f62d0ce1"
+  },
+  {
+   "path": "py/statsmodels-0.14.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl.wasm",
+   "bytes": 8162663,
+   "sha256": "8ee50091810f8ac540a4b94eeba777028cfe8200a78bc5367ea01ad2d6a3a951"
+  },
+  {
+   "path": "py/threadpoolctl-3.6.0-py3-none-any.whl.wasm",
+   "bytes": 18638,
+   "sha256": "3521783ffb6bf212e03fb67ec1955af206d6ba7ea09ac21f200875077bbbe7c2"
+  },
+  {
+   "path": "py/toolz-1.1.0-py3-none-any.whl.wasm",
+   "bytes": 35093,
+   "sha256": "922a9ae8e43e98b9d4f0c269c93c66424f7ecfe68d23d163ac787743da738f74"
+  },
+  {
+   "path": "py/tqdm-4.67.3-py3-none-any.whl.wasm",
+   "bytes": 78374,
+   "sha256": "68e0f4945f9f6fc5ef23c3eb198fb3df7363559b21523f0e65a82583f1e614e8"
+  },
+  {
+   "path": "py/typing_extensions-4.15.0-py3-none-any.whl.wasm",
+   "bytes": 44613,
+   "sha256": "4fec68770a05408e668a4fa53d6bf4f0f684b9dacf820c7c5d6e97d3ad225e29"
+  }
+ ]
+}
