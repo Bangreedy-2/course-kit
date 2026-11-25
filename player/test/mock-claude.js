@@ -39,6 +39,7 @@
     if (opts.tools && window.__mockTools.length) {
       const script = window.__mockTools.shift(); const results = [];
       for (const step of script) { const t = opts.tools.find(x => x.name === step.name); try { results.push(await t.execute(step.input, { signal: new AbortController().signal })); } catch (e) { results.push("Error: " + e.message); } }
+      window.__mockToolResults = (window.__mockToolResults || []).concat(results);
       window.__mockToolResults = results; text = "Done: I made the change.";
     }
     if (opts.onText) opts.onText({ text, delta: text });

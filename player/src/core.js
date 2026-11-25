@@ -751,6 +751,7 @@ home: up to 3 widgets from the course's widget library shown on the course home,
    weeks:[{n, title, goal, progress (0-1), current, done, start, end, tasks:[{id, title, core, progress}]}],
    units:[{id, title, lessons:[{id, title, learned}]}], checkpoints:[{id, title, pass, best, ready}], drills:{total, due}}
   (weeks is [] when the course has no plan). Draw from this data; never hard-code progress. ck.open(target) moves the page: "plan", "today", "lessons", "drills", "projects", "record", "week:<n>" or "lesson:<id>". ck.height(px) sets its height.
+  Home widgets must be compact and belong to the page: under about 340px tall on desktop, no background of their own (the frame already uses the page colours; --ck-bg, --ck-surface, --ck-ink, --ck-muted, --ck-accent, --ck-accent2 are defined), and a drawing must cap its height (svg{width:100%;max-height:220px}) or it grows with the page and looks zoomed in. The frame fits its content by itself; do not set heights from script.
 layout changes only how units and lessons are listed (the Lessons tab, and the list beside a lesson). It does not change the dashboard header or the Today tab.
 layout: sidebar = lesson list beside the lesson (reference-style courses); tabs = units as tabs on top (short courses); path = a journey map of units (step-by-step skills).
 Fonts allowed: ${Object.keys(FONTS).join(", ")} (Playfair Display and DM Serif Display only for display).`;
@@ -786,7 +787,7 @@ const api = {
   FORMAT, FONTS, BODY_FONTS, LAYOUTS, SHAPES, PATTERNS, DENSITIES, METERS, DASH_TABS, DASH_PARTS, CALLOUTS, PRACTICE, BLOCK_TYPES, LIMITS, DEFAULT_DESIGN,
   DESIGN_RULES, DESIGN_DOC, BLOCK_DOC, BOX_DAYS,
   RuleError, slug, uniqueId, newBlockId, clone, words, str, clamp,
-  hexToRgb, contrast, ensureContrast, onColor, isDark,
+  hexToRgb, rgbToHex, contrast, ensureContrast, onColor, isDark,
   normalizeDesign, normalizeBlock, normalizeLesson, normalizeCourseMeta, normalizeTutor, checkWidgetHtml, lessonStats,
   importCourse, exportCourse, checkAnswer, normAns, nextCard, lessonText,
   ENGINES, MODULE_KEYS, MODULES_DOC, langOf, runtimeFor, normalizeRuntimes, normalizeFiles, normalizeLabels, normalizeTracks, normalizeSchedule,
