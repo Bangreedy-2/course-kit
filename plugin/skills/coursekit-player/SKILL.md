@@ -11,7 +11,7 @@ Requirements: a paid Claude plan (artifact storage and Claude inside artifacts a
 
 ## Install or update the player
 
-Publish [coursekit-player.html](coursekit-player.html) unchanged as the artifact's page, together with every `player-code-N.txt` file that sits beside it in this skill folder, each published under its own name next to the page (the `files` map: `{"player-code-1.txt": "<path to it>", …}`). The page loads its code from those files, so a page published without them shows an error. Use these capabilities:
+The page is stored as [coursekit-player-page.txt](coursekit-player-page.txt) (a text file holding the complete HTML page). Copy it byte for byte to a working file named `coursekit-player.html`, without reading it into the conversation or changing it, and publish that copy as the artifact's page, together with every `player-code-N.txt` file that sits beside it in this skill folder, each published under its own name next to the page (the `files` map: `{"player-code-1.txt": "<path to it>", …}`). The page loads its code from those files, so a page published without them shows an error. Use these capabilities:
 
 ```json
 {

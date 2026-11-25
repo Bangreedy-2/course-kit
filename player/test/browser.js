@@ -7,7 +7,7 @@ const root = path.join(__dirname, "..", "..");
 const shots = process.argv[2] || null;
 // CK_SPLIT=1 tests the page as the plugin ships it: a small page that loads its code from player-code-N.txt beside it.
 const split = !!process.env.CK_SPLIT, splitDir = path.join(root, "plugin/skills/coursekit-player");
-const page_html = fs.readFileSync(split ? path.join(splitDir, "coursekit-player.html") : path.join(root, "player/dist/coursekit-player.html"), "utf8");
+const page_html = fs.readFileSync(split ? path.join(splitDir, "coursekit-player-page.txt") : path.join(root, "player/dist/coursekit-player.html"), "utf8");
 const mock = fs.readFileSync(path.join(__dirname, "mock-claude.js"), "utf8");
 const html = "<!doctype html><html><head><meta charset=utf8><meta name=viewport content='width=device-width,initial-scale=1'></head><body><script>" + mock + "</script>" + page_html + "</body></html>";
 
