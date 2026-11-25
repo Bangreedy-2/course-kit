@@ -278,11 +278,11 @@ function renderBanners() {
       const missing = L.state === "ready" ? langs.filter(l => !L.langs[l]) : [];
       if (L.state === "ready" && localAllowed(c.id) && missing.length) items.push(banner(missing.map(l => CK.LOCAL_LANGS[l].label).join(", ") + " is not installed on this computer yet. Install it, then reload this page.", [["OK", () => { S.localDismissed = Object.assign({}, S.localDismissed, { [c.id]: true }); render(); }]]));
       else if (!(L.state === "ready" && localAllowed(c.id))) {
-        const offer = S.localOffer || "runner"; if (!S.localOfferAsked) { S.localOfferAsked = true; L.offer().then(o => { S.localOffer = o; renderBanners(); }); }
+        const offer = S.localOffer || "none"; if (!S.localOfferAsked) { S.localOfferAsked = true; L.offer().then(o => { S.localOffer = o; renderBanners(); }); }
         const text = "This course runs " + names + " on your own computer. " + (L.state === "ready" ? "Allow it only for a course you trust: its code runs with your own access to this computer, and only when you press Run."
           : offer === "install" ? "Install this player as an app and it can run your code here, with nothing else to set up."
           : offer === "allow" ? "Allow this app to run programs and your code runs here, only when you press Run."
-          : "Open this player in the Claude desktop app with the Coursekit runner on (it comes with the Coursekit plugin), then press Connect. Without it, lessons still work and you run code yourself and paste the output." + (L.lastError && S.localTried ? " (Last try: " + L.lastError + ")" : ""));
+          : (L.help || "This page has no way to run programs on this computer from here.") + " Without it, lessons still work and you run code yourself and paste the output." + (L.lastError && S.localTried ? " (Last try: " + L.lastError + ")" : ""));
         const act = L.state === "ready" ? ["Allow for this course", () => { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); render(); }]
           : offer === "install" ? ["Install as app", async () => { const r = await L.install().catch(() => "failed"); if (r !== "installed") toast("The app was not installed."); }]
           : [offer === "allow" ? "Allow running programs" : "Connect", async () => { S.localTried = true; const ok = await L.connect(true); if (ok) { try { localStorage.setItem("ck-local-ok:" + c.id, "1"); } catch (e) {} S.localOk = Object.assign({}, S.localOk, { [c.id]: true }); toast("Connected. " + Object.keys(L.langs).length + " languages found on this computer."); } else toast(L.note || "This page could not reach your computer."); render(); }];
@@ -433,7 +433,7 @@ function localRow() {
       h("button", { type: "button", class: "btn small", onclick: async e => { const b = e.currentTarget; b.disabled = true; b.textContent = "Connecting…";
         const offer = await L.offer();
         if (offer === "install") { const r = await L.install().catch(() => "failed"); toast(r === "installed" ? "Installing Coursekit as an app. Open it from there and connect again." : "The app was not installed."); }
-        else if (!(await L.connect(true))) toast(L.note || "This page could not reach your computer. Open it in the Claude desktop app with the Coursekit runner on." + (L.lastError ? " (" + L.lastError + ")" : ""));
+        else if (!(await L.connect(true))) toast(L.note || "This page could not reach your computer. " + (L.help || "") + (L.lastError ? " (" + L.lastError + ")" : ""));
         paint(); } }, "connect this computer"), ".");
   };
   paint(); return row;

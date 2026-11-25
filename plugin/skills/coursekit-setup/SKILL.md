@@ -44,7 +44,7 @@ Open the player for them and reply with three lines at most:
 - what to do first: press "New course" and describe what they want to learn, with their weekly time and any deadline;
 - that the first time they press Ask or create a course, the page asks once for permission to use Claude.
 
-Offer to pin it to their sidebar. Do not explain packs, runners or records unless they ask.
+Offer to pin it to their sidebar. Do not explain packs or records unless they ask.
 
 ## Running code on their own computer (only when they ask, or a course needs it)
 

@@ -6,7 +6,7 @@ const fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "..");
 const shots = process.argv[2] || null;
 // CK_SPLIT=1 tests the page as the plugin ships it: a small page that loads its code from player-code-N.txt beside it.
-const split = !!process.env.CK_SPLIT, splitDir = path.join(root, "plugin/skills/coursekit-player");
+const split = !!process.env.CK_SPLIT, splitDir = path.join(root, process.env.CK_SPLIT === "plain" ? "plugin/skills/coursekit-player" : "runner/skills/coursekit-runner-connect");
 const page_html = fs.readFileSync(split ? path.join(splitDir, "coursekit-player-page.txt") : path.join(root, "player/dist/coursekit-player.html"), "utf8");
 const mock = fs.readFileSync(path.join(__dirname, "mock-claude.js"), "utf8");
 const html = "<!doctype html><html><head><meta charset=utf8><meta name=viewport content='width=device-width,initial-scale=1'></head><body><script>" + mock + "</script>" + page_html + "</body></html>";
@@ -226,6 +226,10 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     ok(await page.evaluate(() => window.__mockRunner.calls.length === 0), "no code reaches the computer before the learner connects and allows the course");
     await page.evaluate(() => { window.__mockRunner.on = true; });
     await page.click("#banners button:has-text('Connect')");
+    if (process.env.CK_SPLIT === "plain") {
+      await page.waitForTimeout(600);
+      ok(await page.evaluate(() => window.CKRun.local.state !== "ready" && window.__mockRunner.calls.length === 0), "the plain build has no link to a local runner");
+    } else {
     await page.waitForFunction(() => window.CKRun.local.state === "ready", null, { timeout: 10000 });
     await page.waitForTimeout(300);
     await page.click(".blk-run button:has-text('Run and check')");
@@ -239,6 +243,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     await page.waitForFunction(() => !window.__ck.ask.busy);
     ok(await page.evaluate(n => window.__mockRunner.calls.length === n && /only when they press Run/.test(String(window.__mockToolResults[0])), before), "the tutor cannot run code on the learner's computer");
     await page.click("#ask .icon[aria-label=Close]");
+    }
   }
 
   // Sigmoid: every feature of the old app, with real Python when py/ is available

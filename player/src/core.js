@@ -364,7 +364,7 @@ function checkLessonShape(o) {
      frame   = a runner the course brings: one HTML document (same rules as widgets) that runs code
                it receives by postMessage. This is how a course adds any other language (SQL, Lua, R in wasm...). */
 const ENGINES = ["pyodide", "js", "frame", "local"];
-/* Languages the "local" engine can run on the learner's own computer, through the Coursekit runner.
+/* Languages the "local" engine can run on the learner's own computer.
    {file} is the source file, {exe} a path for a compiled program. "win" overrides the command on Windows. */
 const LOCAL_LANGS = {
   python: { label: "Python", ext: "py", cmd: "python3 {file}", win: "python {file}", probe: "python3 --version", winProbe: "python --version" },
@@ -715,7 +715,7 @@ function scoreCourse(stats, ref) {
 }
 const MODULES_DOC =
 `Course modules (all optional; add the ones the subject needs):
-- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. {"elixir":{"engine":"local"}} runs the language on the learner's own computer through the Coursekit runner (languages: ${Object.keys(LOCAL_LANGS).join(", ")}); use it only when the learner has the runner, and never for code the learner has not seen. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
+- runtimes: {"python":{"engine":"pyodide","apps":true}, "js":{"engine":"js"}, "sql":{"engine":"frame","label":"SQL","html":"<runner document>"}} languages the page runs. {"elixir":{"engine":"local"}} runs the language on the learner's own computer (languages: ${Object.keys(LOCAL_LANGS).join(", ")}); use it only when the learner has connected their computer, and never for code the learner has not seen. pyodide = real Python with numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, statsmodels, dask and more; "apps": true lets notebook cells tagged "app" run as Streamlit apps. A frame runner is one self-contained HTML document (widget rules) that listens for {ck:1,type:"run",id,code} messages and answers {ck:1,type:"out",id,text}, {ck:1,type:"img",id,png:"base64"} and finally {ck:1,type:"done",id,ok,error,value}.
 - files: [{"name":"data.csv","url":"/_blob/<asset id>"}] data files code can open by name.
 - labels: {"unit":"Week","lessons":"Lessons","drills":"Drills","projects":"Projects","project":"Project","checkpoint":"Checkpoint","projectsIntro":"..."} words the page uses.
 - tracks: {"id":"Label"} strands of the subject; lessons, tasks and drills may name a "track".
