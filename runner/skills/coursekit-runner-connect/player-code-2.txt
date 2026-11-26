@@ -1422,7 +1422,7 @@ async function restoreBackup(c, text) {
     for (const nb of o.notebooks || []) { nb.course = c.id; await put(K.nbw(c.id, nb.nb), nb); n++; }
     S.gRev = (S.gRev || 0) + 1; S.view = null; render(); return n;
   }
-  // A progress backup from Coursekit 1 or Sigmoid Prep: lessons by practice index.
+  // A progress backup from Coursekit 1: lessons by practice index.
   if (o && o.lessons && o.prac) { const r = CK.fromV1Progress(o, S.lessons, c.id); for (const p of r.progress) { S.progress[p.lesson] = p; await put(K.prog(c.id, p.lesson), p); } S.g = normG(r.state, c.id); await flushG(c.id); S.gRev = (S.gRev || 0) + 1; S.view = null; render(); return r.progress.length + 1; }
   throw new Error("unknown format");
 }

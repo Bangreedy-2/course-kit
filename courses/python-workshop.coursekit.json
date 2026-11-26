@@ -1,0 +1,1605 @@
+{
+ "coursekit": 2,
+ "course": {
+  "id": "python-workshop",
+  "title": "Python Workshop",
+  "subtitle": "A ten-week practice programme",
+  "language": "en",
+  "description": "A made-up ten-week Python programme used to test the player: lessons with code that runs, drills from memory, a homework notebook and a timed checkpoint.",
+  "tutor": {
+   "name": "Ada",
+   "persona": "A patient workshop lead. Asks you to predict before you run, and keeps examples small."
+  },
+  "design": {
+   "palette": {
+    "bg": "#0e1318",
+    "surface": "#151c24",
+    "ink": "#e6edf3",
+    "muted": "#9fb0c3",
+    "accent": "#3fd0c4",
+    "accent2": "#f2a65a"
+   },
+   "fonts": {
+    "display": "Space Grotesk",
+    "body": "IBM Plex Sans"
+   },
+   "shape": "square",
+   "layout": "sidebar",
+   "pattern": "grid",
+   "density": "normal",
+   "emblem": "Py",
+   "meter": "steps"
+  },
+  "units": [
+   {
+    "id": "w1",
+    "title": "Objects and lists",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w2",
+    "title": "Dictionaries",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w3",
+    "title": "Functions",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w4",
+    "title": "Text",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w5",
+    "title": "Files",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w6",
+    "title": "Errors",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w7",
+    "title": "Modules",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w8",
+    "title": "Tests",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w9",
+    "title": "A whole program",
+    "goal": "Finish this week's lesson and its drills."
+   },
+   {
+    "id": "w10",
+    "title": "Review and final build",
+    "goal": "Finish this week's lesson and its drills."
+   }
+  ],
+  "labels": {
+   "unit": "Week",
+   "projects": "Homework",
+   "project": "Homework",
+   "projectsIntro": "Two pieces of homework, each scheduled after the lessons it needs."
+  },
+  "tracks": {
+   "core": "Core language",
+   "data": "Data in memory",
+   "tools": "Tools and habits"
+  },
+  "runtimes": {
+   "python": {
+    "engine": "pyodide"
+   }
+  },
+  "schedule": {
+   "unitDays": 7
+  }
+ },
+ "lessons": [
+  {
+   "id": "oop",
+   "unit": "w1",
+   "week": 1,
+   "track": "core",
+   "title": "Classes and objects",
+   "summary": "A class is a blueprint and an object is one thing built from it.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA class is a blueprint and an object is one thing built from it. `__init__` runs when the object is created and stores its data on `self`. A method is a function that lives on the class and receives the object as `self`. A child class written as `class Cat(Animal)` inherits every method of its parent and may replace any of them; `super()` reaches the parent's version.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "boopx000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nclass Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return self.name + ' makes a sound'\n\nclass Cat(Animal):\n    def speak(self):\n        return self.name + ' says miaow'\n\nprint(Cat('Tom').speak())\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "boopx001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\nclass Box:\n    def __init__(self, n):\n        self.n = n\n    def add(self, k):\n        self.n += k\n        return self\n\nprint(Box(1).add(2).add(3).n)\n```",
+     "expect": [
+      "6"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "boopx002"
+    },
+    {
+     "t": "choice",
+     "q": "A child class defines its own `__init__` and never calls `super().__init__()`. What happens to the parent's constructor?",
+     "options": [
+      "It runs first automatically",
+      "It does not run",
+      "Python raises an error at once",
+      "It runs last"
+     ],
+     "answer": 1,
+     "why": "Defining `__init__` in the child replaces the parent's. The parent's version runs only when you call it through `super()`.",
+     "id": "boopx003"
+    },
+    {
+     "t": "run",
+     "lang": "python",
+     "q": "Write a class `Counter` whose constructor takes an optional `start` (default 0). `inc()` adds 1 and returns the new value; `reset()` sets the value to 0 and returns 0. Keep the value in `self.value`.",
+     "starter": "class Counter:\n    pass",
+     "test": "c = Counter()\nprint(c.inc())\nprint(c.inc())\nprint(c.reset())\nprint(Counter(5).inc())",
+     "expect": [
+      "1",
+      "2",
+      "0",
+      "6"
+     ],
+     "solution": "class Counter:\n    def __init__(self, start=0):\n        self.value = start\n    def inc(self):\n        self.value += 1\n        return self.value\n    def reset(self):\n        self.value = 0\n        return 0",
+     "id": "boopx004"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What is `self`?",
+       "a": "The object the method was called on."
+      },
+      {
+       "q": "What does `class Cat(Animal)` mean?",
+       "a": "Cat inherits from Animal."
+      },
+      {
+       "q": "When does `__init__` run?",
+       "a": "When a new object is created."
+      }
+     ],
+     "id": "boopx005"
+    }
+   ]
+  },
+  {
+   "id": "lists",
+   "unit": "w1",
+   "week": 1,
+   "track": "data",
+   "title": "Lists and loops",
+   "summary": "A list keeps values in order.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA list keeps values in order. You read one with an index that starts at 0, add with `append`, and walk through all of them with `for`. A slice `xs[1:3]` copies part of a list. A list comprehension builds a new list in one line from an old one.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "blist000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nxs = [3, 1, 4]\nxs.append(1)\nsquares = [x * x for x in xs]\nprint(squares, len(xs))\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "blist001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\nxs = [10, 20, 30, 40]\nprint(xs[1:3], xs[-1])\n```",
+     "expect": [
+      "[20, 30] 40"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "blist002"
+    },
+    {
+     "t": "choice",
+     "q": "What does `xs[0]` return for `xs = [7, 8, 9]`?",
+     "options": [
+      "8",
+      "7",
+      "9",
+      "An error"
+     ],
+     "answer": 1,
+     "why": "Indexes start at 0, so the first item is `xs[0]`.",
+     "id": "blist003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "Where do list indexes start?",
+       "a": "At 0."
+      },
+      {
+       "q": "What does `append` do?",
+       "a": "Adds one item to the end of the list."
+      },
+      {
+       "q": "What is `xs[-1]`?",
+       "a": "The last item."
+      }
+     ],
+     "id": "blist004"
+    }
+   ]
+  },
+  {
+   "id": "dicts",
+   "unit": "w2",
+   "week": 2,
+   "track": "data",
+   "title": "Dictionaries",
+   "summary": "A dictionary maps keys to values.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA dictionary maps keys to values. You read with `d[key]`, which fails for a missing key, or with `d.get(key, default)`, which does not. `for k, v in d.items()` walks through pairs. Keys must be values that cannot change, such as strings and numbers.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bdict000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nages = {'ana': 31, 'ben': 27}\nages['cy'] = 40\nfor name, age in ages.items():\n    print(name, age)\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bdict001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\nd = {'a': 1}\nprint(d.get('b', 0) + d['a'])\n```",
+     "expect": [
+      "1"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bdict002"
+    },
+    {
+     "t": "choice",
+     "q": "Which of these can be a dictionary key?",
+     "options": [
+      "A list",
+      "A string",
+      "Another dictionary",
+      "A set"
+     ],
+     "answer": 1,
+     "why": "Keys must be hashable. Strings are; lists, dictionaries and sets are not.",
+     "id": "bdict003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "How do you read a key that may be missing?",
+       "a": "`d.get(key, default)`."
+      },
+      {
+       "q": "What does `d.items()` give?",
+       "a": "Pairs of key and value."
+      },
+      {
+       "q": "Can a list be a key?",
+       "a": "No, keys must be hashable."
+      }
+     ],
+     "id": "bdict004"
+    }
+   ]
+  },
+  {
+   "id": "functions",
+   "unit": "w3",
+   "week": 3,
+   "track": "core",
+   "title": "Functions and arguments",
+   "summary": "A function names a piece of work.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA function names a piece of work. Arguments go in, `return` hands one value back, and a function without `return` gives `None`. A default value such as `def greet(name, loud=False)` makes an argument optional. Names created inside a function stay inside it.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bfunc000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\ndef area(w, h=1):\n    return w * h\n\nprint(area(3), area(3, 2))\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bfunc001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\ndef f(x):\n    x = x + 1\n\nprint(f(1))\n```",
+     "expect": [
+      "None"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bfunc002"
+    },
+    {
+     "t": "choice",
+     "q": "What does a function return when it has no `return` statement?",
+     "options": [
+      "0",
+      "None",
+      "An empty string",
+      "It cannot be called"
+     ],
+     "answer": 1,
+     "why": "Without `return`, the call evaluates to `None`.",
+     "id": "bfunc003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What does `return` do?",
+       "a": "Ends the function and hands a value back."
+      },
+      {
+       "q": "What is a default argument?",
+       "a": "A value used when the caller leaves the argument out."
+      },
+      {
+       "q": "What does a function with no return give?",
+       "a": "`None`."
+      }
+     ],
+     "id": "bfunc004"
+    }
+   ]
+  },
+  {
+   "id": "strings",
+   "unit": "w4",
+   "week": 4,
+   "track": "data",
+   "title": "Strings and formatting",
+   "summary": "A string is text, and it cannot be changed in place: every method returns a new string.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA string is text, and it cannot be changed in place: every method returns a new string. `split` cuts text into a list, `join` glues a list back, and `strip` removes spaces at both ends. An f-string such as `f'{x:.2f}'` puts a value into text with a format.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bstri000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nline = ' a,b,c '\nparts = line.strip().split(',')\nprint('-'.join(parts), f'{3.14159:.2f}')\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bstri001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\ns = 'abc'\ns.upper()\nprint(s)\n```",
+     "expect": [
+      "abc"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bstri002"
+    },
+    {
+     "t": "choice",
+     "q": "What does `' hi '.strip()` return?",
+     "options": [
+      "' hi '",
+      "'hi'",
+      "'h i'",
+      "An error"
+     ],
+     "answer": 1,
+     "why": "`strip` removes whitespace from both ends and returns a new string.",
+     "id": "bstri003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "Can a string be changed in place?",
+       "a": "No. Methods return a new string."
+      },
+      {
+       "q": "What does `split(',')` return?",
+       "a": "A list of the pieces between commas."
+      },
+      {
+       "q": "What does `:.2f` do in an f-string?",
+       "a": "Formats a number with two decimals."
+      }
+     ],
+     "id": "bstri004"
+    }
+   ]
+  },
+  {
+   "id": "files",
+   "unit": "w5",
+   "week": 5,
+   "track": "tools",
+   "title": "Reading and writing files",
+   "summary": "`open(path)` gives a file object, and `with` closes it for you even when an error happens.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\n`open(path)` gives a file object, and `with` closes it for you even when an error happens. Reading gives text; iterating gives one line at a time, each ending in a newline. Mode `'w'` replaces the file and `'a'` adds to its end.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bfile000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nwith open('notes.txt', 'w') as f:\n    f.write('one\\ntwo\\n')\nwith open('notes.txt') as f:\n    print([line.strip() for line in f])\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bfile001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\nprint(len('one\\ntwo\\n'.splitlines()))\n```",
+     "expect": [
+      "2"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bfile002"
+    },
+    {
+     "t": "choice",
+     "q": "What does opening a file with mode `'w'` do to its old contents?",
+     "options": [
+      "Keeps them and adds to the end",
+      "Removes them",
+      "Raises an error",
+      "Reads them first"
+     ],
+     "answer": 1,
+     "why": "`'w'` truncates the file. Use `'a'` to add to the end.",
+     "id": "bfile003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "Why use `with open(...)`?",
+       "a": "The file is closed for you, even after an error."
+      },
+      {
+       "q": "Which mode adds to the end?",
+       "a": "`'a'`."
+      },
+      {
+       "q": "What does each line end with when you iterate a file?",
+       "a": "A newline."
+      }
+     ],
+     "id": "bfile004"
+    }
+   ]
+  },
+  {
+   "id": "errors",
+   "unit": "w6",
+   "week": 6,
+   "track": "core",
+   "title": "Errors and exceptions",
+   "summary": "An exception stops the program where the problem happens.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nAn exception stops the program where the problem happens. `try` runs code that may fail and `except SomeError` handles that one kind of failure. Catch the narrowest error you can, so real bugs are not hidden. `raise ValueError('why')` signals a problem of your own.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "berro000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\ndef to_int(s):\n    try:\n        return int(s)\n    except ValueError:\n        return None\n\nprint(to_int('12'), to_int('x'))\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "berro001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\ntry:\n    print(1 / 0)\nexcept ZeroDivisionError:\n    print('no')\n```",
+     "expect": [
+      "no"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "berro002"
+    },
+    {
+     "t": "choice",
+     "q": "Why is a bare `except:` usually a mistake?",
+     "options": [
+      "It is slower",
+      "It hides every error, including real bugs",
+      "It does not run",
+      "It only catches ValueError"
+     ],
+     "answer": 1,
+     "why": "A bare except swallows everything, so mistakes you did not expect disappear silently.",
+     "id": "berro003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What does `raise` do?",
+       "a": "Signals an error on purpose."
+      },
+      {
+       "q": "Which errors should you catch?",
+       "a": "The narrowest kind you know how to handle."
+      },
+      {
+       "q": "What happens to an uncaught exception?",
+       "a": "The program stops with a traceback."
+      }
+     ],
+     "id": "berro004"
+    }
+   ]
+  },
+  {
+   "id": "modules",
+   "unit": "w7",
+   "week": 7,
+   "track": "tools",
+   "title": "Modules and imports",
+   "summary": "A module is a file of Python you can reuse.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA module is a file of Python you can reuse. `import math` gives you `math.sqrt`; `from math import sqrt` gives the name directly. The standard library covers dates, paths, random numbers and much more. Your own file `tools.py` is imported as `import tools`.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bmodu000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\nimport math\nfrom statistics import mean\nprint(math.sqrt(16), mean([1, 2, 3]))\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bmodu001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\nimport math\nprint(math.floor(2.7) + math.ceil(2.1))\n```",
+     "expect": [
+      "5"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bmodu002"
+    },
+    {
+     "t": "choice",
+     "q": "After `import math`, how do you call the square root function?",
+     "options": [
+      "sqrt(9)",
+      "math.sqrt(9)",
+      "math->sqrt(9)",
+      "import sqrt(9)"
+     ],
+     "answer": 1,
+     "why": "A plain import keeps names inside the module, so you write `math.sqrt`.",
+     "id": "bmodu003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What is a module?",
+       "a": "A file of Python code you can import."
+      },
+      {
+       "q": "What does `from m import f` do?",
+       "a": "Brings the name `f` in directly."
+      },
+      {
+       "q": "How do you import your own `tools.py`?",
+       "a": "`import tools`."
+      }
+     ],
+     "id": "bmodu004"
+    }
+   ]
+  },
+  {
+   "id": "testing",
+   "unit": "w8",
+   "week": 8,
+   "track": "tools",
+   "title": "Testing your code",
+   "summary": "A test is code that checks other code.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA test is code that checks other code. `assert expr` stops with an error when `expr` is false. Write a test for the normal case, for an edge such as an empty list, and for an input that should fail. A test that never failed has not proved anything yet: break the code once to see it fail.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "btest000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\ndef total(xs):\n    return sum(xs)\n\nassert total([1, 2]) == 3\nassert total([]) == 0\nprint('ok')\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "btest001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\ndef double(x):\n    return x * 2\n\nprint(double(2) == 4, double('a') == 'aa')\n```",
+     "expect": [
+      "True True"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "btest002"
+    },
+    {
+     "t": "choice",
+     "q": "What does `assert x > 0` do when `x` is -1?",
+     "options": [
+      "Prints False",
+      "Raises AssertionError",
+      "Sets x to 0",
+      "Nothing"
+     ],
+     "answer": 1,
+     "why": "A false assertion raises `AssertionError` and stops the program there.",
+     "id": "btest003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What is an edge case?",
+       "a": "An unusual input such as an empty list or zero."
+      },
+      {
+       "q": "What does `assert` do?",
+       "a": "Stops with an error when its condition is false."
+      },
+      {
+       "q": "Why break the code once?",
+       "a": "To see that the test can fail."
+      }
+     ],
+     "id": "btest004"
+    }
+   ]
+  },
+  {
+   "id": "project",
+   "unit": "w9",
+   "week": 9,
+   "track": "core",
+   "title": "Putting a small program together",
+   "summary": "A program is small parts that each do one thing: read input, turn it into data, compute, and print.",
+   "minutes": 20,
+   "blocks": [
+    {
+     "t": "md",
+     "md": "## The idea\n\nA program is small parts that each do one thing: read input, turn it into data, compute, and print. Keep the computing part in functions that take values and return values, so they can be tested without files or a keyboard. Put the part that runs everything under `if __name__ == '__main__':`.\n\nRead it once, then read the example below line by line and say out loud what each line does before you run it. Saying it first is what makes the next questions easy.",
+     "id": "bproj000"
+    },
+    {
+     "t": "md",
+     "md": "## A worked example\n\n```python\ndef parse(line):\n    name, n = line.split(',')\n    return name, int(n)\n\ndef total(rows):\n    return sum(n for _, n in rows)\n\nrows = [parse(x) for x in ['a,2', 'b,5']]\nprint(total(rows))\n```\n\nChange one line and predict the new output before you run it again. The mistake people make most often here is running first and reading second.",
+     "id": "bproj001"
+    },
+    {
+     "t": "predict",
+     "q": "What does this print?\n```python\ndef parse(line):\n    a, b = line.split(',')\n    return int(a) + int(b)\n\nprint(parse('2,3'))\n```",
+     "expect": [
+      "5"
+     ],
+     "why": "Trace it one line at a time with the rule from the lesson.",
+     "id": "bproj002"
+    },
+    {
+     "t": "choice",
+     "q": "Why keep computing code in functions that take and return values?",
+     "options": [
+      "They run faster",
+      "They can be tested without files or input",
+      "Python requires it",
+      "They use less memory"
+     ],
+     "answer": 1,
+     "why": "A function that depends only on its arguments can be checked with a one-line test.",
+     "id": "bproj003"
+    },
+    {
+     "t": "cards",
+     "cards": [
+      {
+       "q": "What goes under `if __name__ == '__main__':`?",
+       "a": "The code that runs the program."
+      },
+      {
+       "q": "What makes a function easy to test?",
+       "a": "It takes values and returns values."
+      },
+      {
+       "q": "What are the four parts of a small program?",
+       "a": "Read, turn into data, compute, print."
+      }
+     ],
+     "id": "bproj004"
+    }
+   ]
+  }
+ ],
+ "plan": {
+  "phases": [
+   {
+    "id": "p1",
+    "title": "Phase 1 · The language",
+    "goal": "Classes, lists, dictionaries, functions and text. Pass Checkpoint 1.",
+    "weeks": [
+     1,
+     2,
+     3,
+     4
+    ]
+   },
+   {
+    "id": "p2",
+    "title": "Phase 2 · Working programs",
+    "goal": "Files, errors, modules and tests.",
+    "weeks": [
+     5,
+     6,
+     7,
+     8
+    ]
+   },
+   {
+    "id": "p3",
+    "title": "Phase 3 · Your own program",
+    "goal": "Put it together and hand in homework 2.",
+    "weeks": [
+     9,
+     10
+    ]
+   }
+  ],
+  "weeks": [
+   {
+    "title": "Objects and lists",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w1-oop",
+      "title": "Classes and objects",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "core",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "oop"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "oop"
+       },
+       {
+        "t": "drill",
+        "id": "d-animal"
+       }
+      ]
+     },
+     {
+      "id": "w1-lists",
+      "title": "Lists and loops",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "data",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "lists"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "lists"
+       },
+       {
+        "t": "drill",
+        "id": "d-squares"
+       }
+      ]
+     },
+     {
+      "id": "w1-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 1
+       },
+       {
+        "t": "quiz",
+        "w": 1,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 1 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Dictionaries",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w2-dicts",
+      "title": "Dictionaries",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "data",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "dicts"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "dicts"
+       },
+       {
+        "t": "drill",
+        "id": "d-count"
+       }
+      ]
+     },
+     {
+      "id": "hw1",
+      "title": "Homework 1: a word counter",
+      "desc": "Build the word counter in the notebook and paste the count it prints for the sample text.",
+      "track": "data",
+      "core": true,
+      "h": 2,
+      "project": "1",
+      "notebook": "hw1",
+      "crit": [
+       {
+        "t": "number",
+        "label": "Number of distinct words in the sample",
+        "min": 1,
+        "max": 50,
+        "unit": "words"
+       },
+       {
+        "t": "text",
+        "label": "What was hardest, in two sentences",
+        "min": 10,
+        "lines": 3
+       }
+      ]
+     },
+     {
+      "id": "w2-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 2
+       },
+       {
+        "t": "quiz",
+        "w": 2,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 2 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Functions",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w3-functions",
+      "title": "Functions and arguments",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "core",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "functions"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "functions"
+       }
+      ]
+     },
+     {
+      "id": "w3-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 3
+       },
+       {
+        "t": "quiz",
+        "w": 3,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 3 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Text",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w4-strings",
+      "title": "Strings and formatting",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "data",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "strings"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "strings"
+       }
+      ]
+     },
+     {
+      "id": "w4-cp",
+      "title": "Checkpoint 1",
+      "desc": "A timed check of weeks 1 to 4.",
+      "track": "core",
+      "core": true,
+      "h": 1,
+      "crit": [
+       {
+        "t": "checkpoint",
+        "id": "cp1"
+       }
+      ]
+     },
+     {
+      "id": "w4-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 4
+       },
+       {
+        "t": "quiz",
+        "w": 4,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 4 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Files",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w5-files",
+      "title": "Reading and writing files",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "tools",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "files"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "files"
+       }
+      ]
+     },
+     {
+      "id": "w5-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 5
+       },
+       {
+        "t": "quiz",
+        "w": 5,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 5 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Errors",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w6-errors",
+      "title": "Errors and exceptions",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "core",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "errors"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "errors"
+       },
+       {
+        "t": "drill",
+        "id": "d-explain-errors"
+       }
+      ]
+     },
+     {
+      "id": "w6-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 6
+       },
+       {
+        "t": "quiz",
+        "w": 6,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 6 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Modules",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w7-modules",
+      "title": "Modules and imports",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "tools",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "modules"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "modules"
+       }
+      ]
+     },
+     {
+      "id": "w7-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 7
+       },
+       {
+        "t": "quiz",
+        "w": 7,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 7 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Tests",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w8-testing",
+      "title": "Testing your code",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "tools",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "testing"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "testing"
+       }
+      ]
+     },
+     {
+      "id": "w8-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 8
+       },
+       {
+        "t": "quiz",
+        "w": 8,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 8 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "A whole program",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "w9-project",
+      "title": "Putting a small program together",
+      "desc": "Study the lesson, then do its drills from memory.",
+      "track": "core",
+      "core": true,
+      "h": 1.5,
+      "lessons": [
+       "project"
+      ],
+      "res": [
+       [
+        "The Python tutorial",
+        "https://docs.python.org/3/tutorial/"
+       ]
+      ],
+      "crit": [
+       {
+        "t": "lesson",
+        "id": "project"
+       }
+      ]
+     },
+     {
+      "id": "w9-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 9
+       },
+       {
+        "t": "quiz",
+        "w": 9,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 9 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   },
+   {
+    "title": "Review and final build",
+    "goal": "Finish this week's lesson and its drills, and study on four days.",
+    "tasks": [
+     {
+      "id": "hw2",
+      "title": "Homework 2: your own small program",
+      "desc": "Write a program of your own with at least three functions and a test for each. Paste a link to it.",
+      "track": "core",
+      "core": true,
+      "h": 4,
+      "project": "2",
+      "crit": [
+       {
+        "t": "link",
+        "label": "Link to your program",
+        "hosts": [
+         "github.com",
+         "gitlab.com"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "w10-habit",
+      "title": "Study on four days",
+      "desc": "Short and often beats one long sitting.",
+      "track": "tools",
+      "core": false,
+      "h": 0,
+      "crit": [
+       {
+        "t": "days",
+        "n": 4,
+        "w": 10
+       },
+       {
+        "t": "quiz",
+        "w": 10,
+        "max": 1
+       }
+      ]
+     }
+    ],
+    "quizMax": 1,
+    "quiz": [
+     {
+      "q": "Week 10 check: which habit does this programme ask for before you run an example?",
+      "o": [
+       "Run it first",
+       "Predict the output first",
+       "Skip it",
+       "Copy it"
+      ],
+      "a": 1,
+      "why": "Predicting first is what makes the result teach you something."
+     }
+    ]
+   }
+  ]
+ },
+ "drills": [
+  {
+   "id": "d-animal",
+   "track": "core",
+   "level": 1,
+   "week": 1,
+   "lesson": "oop",
+   "mins": 8,
+   "title": "Animal and Dog classes",
+   "lang": "python",
+   "prompt": "From memory, write a class `Animal` with `__init__(self, name)` and a method `speak(self)` that returns `name + ' makes a sound'`. Then write `Dog(Animal)` that overrides `speak` to return `name + ' says woof'`.",
+   "hints": [
+    "Store the name on `self`.",
+    "Overriding means defining a method with the same name in the child."
+   ],
+   "starter": "class Animal:\n    pass\n\n\nclass Dog(Animal):\n    pass\n",
+   "solution": "class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return self.name + ' makes a sound'\n\n\nclass Dog(Animal):\n    def speak(self):\n        return self.name + ' says woof'\n",
+   "tests": "print(Animal('Kit').speak())\nprint(Dog('Rex').speak())",
+   "expect": [
+    "Kit makes a sound",
+    "Rex says woof"
+   ]
+  },
+  {
+   "id": "d-squares",
+   "track": "data",
+   "level": 1,
+   "week": 1,
+   "lesson": "lists",
+   "mins": 5,
+   "title": "Squares of the even numbers",
+   "lang": "python",
+   "prompt": "From memory, write `even_squares(xs)` that returns a list with the square of every even number in `xs`, in order.",
+   "hints": [
+    "`x % 2 == 0` is true for even numbers."
+   ],
+   "starter": "def even_squares(xs):\n    pass\n",
+   "solution": "def even_squares(xs):\n    return [x * x for x in xs if x % 2 == 0]\n",
+   "tests": "print(even_squares([1, 2, 3, 4]))\nprint(even_squares([]))",
+   "expect": [
+    "[4, 16]",
+    "[]"
+   ]
+  },
+  {
+   "id": "d-count",
+   "track": "data",
+   "level": 2,
+   "week": 2,
+   "lesson": "dicts",
+   "mins": 8,
+   "title": "Count the words",
+   "lang": "python",
+   "prompt": "From memory, write `count_words(text)` that returns a dictionary from each word (split on spaces) to how many times it appears.",
+   "hints": [
+    "`d.get(w, 0) + 1`."
+   ],
+   "starter": "def count_words(text):\n    pass\n",
+   "solution": "def count_words(text):\n    d = {}\n    for w in text.split():\n        d[w] = d.get(w, 0) + 1\n    return d\n",
+   "tests": "print(count_words('a b a'))",
+   "expect": [
+    "{'a': 2, 'b': 1}"
+   ]
+  },
+  {
+   "id": "d-explain-errors",
+   "track": "core",
+   "level": 2,
+   "week": 6,
+   "lesson": "errors",
+   "mins": 5,
+   "title": "Explain try and except",
+   "prompt": "Without looking, explain what `try` and `except` do and why a bare `except:` is a mistake.",
+   "solution": "try runs code that may fail; except handles one named kind of failure. A bare except hides every error, including bugs you did not expect."
+  }
+ ],
+ "checkpoints": [
+  {
+   "id": "cp1",
+   "title": "Checkpoint 1",
+   "week": 4,
+   "minutes": 30,
+   "pass": 70,
+   "lessons": [
+    "oop",
+    "lists"
+   ],
+   "items": [
+    "oop:boopx002",
+    "oop:boopx003",
+    "lists:blist002",
+    "lists:blist003",
+    "drill:d-squares"
+   ]
+  }
+ ],
+ "notebooks": {
+  "hw1": {
+   "lang": "python",
+   "title": "Homework 1: a word counter",
+   "v": 1,
+   "datasets": [],
+   "cells": [
+    {
+     "t": "md",
+     "src": "# Homework 1: a word counter\n\nWrite `count_words(text)` so it returns a dictionary from each word to how often it appears. **Use this name** so the checks can call it."
+    },
+    {
+     "t": "code",
+     "src": "SAMPLE = 'the cat and the hat and the bat'\n\ndef count_words(text):\n    pass"
+    },
+    {
+     "t": "code",
+     "src": "counts = count_words(SAMPLE)\nprint(counts)"
+    },
+    {
+     "t": "md",
+     "src": "How many distinct words are in the sample? Enter that number in the plan."
+    }
+   ],
+   "checks": [
+    {
+     "label": "`count_words` returns a dictionary",
+     "test": "isinstance(count_words('a a b'), dict)"
+    },
+    {
+     "label": "It counts correctly",
+     "test": "count_words('a a b') == {'a': 2, 'b': 1}"
+    }
+   ]
+  }
+ }
+}

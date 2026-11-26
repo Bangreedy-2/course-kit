@@ -39,7 +39,7 @@ This starts the Coursekit helper and opens <http://127.0.0.1:8737/app/>. The hel
 To run code in a specific environment (for example one with CUDA builds of PyTorch), install the course's libraries there and point the helper at its Python:
 
 ```sh
-pip install -r packs/sigmoid-ml/requirements.txt       # inside that environment
+pip install numpy pandas                                # whatever your course uses, inside that environment
 python3 helper/coursekit.py --python ~/envs/ml/bin/python
 ```
 
@@ -66,8 +66,8 @@ Setup steps are in [docs/connect-ai.md](docs/connect-ai.md).
 
 ## Courses included
 
-- **Sigmoid Prep** (`packs/sigmoid-ml`): a 10-week machine learning programme with Python, 18 notebooks and their datasets.
 - **Music Theory Basics** (`packs/music-theory`): a 3-week course with no code at all, to show the app works for any subject.
+- **Python Workshop** (`courses/python-workshop.coursekit.json`, for the player): a made-up ten-week programme with code, drills, a notebook and a checkpoint, used by the tests.
 
 ## Make or change a course
 
