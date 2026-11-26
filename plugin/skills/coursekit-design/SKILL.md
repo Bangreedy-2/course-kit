@@ -1,19 +1,19 @@
 ---
 name: coursekit-design
-description: Strict rules for designing, writing or changing a Coursekit course on any topic (course files, lessons, practice, widgets, design). Use whenever you create or edit a course for the Coursekit player, from a chat, a project or Claude Code.
+description: Standards for designing, writing or changing a Coursekit course on any topic (course files, lessons, practice, widgets, design). Use whenever you create or edit a course for the Coursekit player, from a chat, a project or Claude Code.
 ---
 
 # Coursekit course design
 
-A Coursekit course is data: a JSON course file with a design, units, lessons made of blocks, and optional widgets. The Coursekit player renders it. The same rules below are enforced in code by the player (`player/src/core.js`), so a course that breaks them is rejected or corrected. Follow them exactly.
+A Coursekit course is data: a JSON course file with a design, units, lessons made of blocks, and optional widgets. The Coursekit player renders it. The player (`player/src/core.js`) holds the same standards. It refuses only what would break a course (a lesson that teaches nothing, a question with no right answer, a page whose controls can no longer be reached); everything else it accepts, corrects where needed, and reports back so you can fix it.
 
-## The rules
+## The standards
 
-1. **Decide, never ask.** The learner wants a course, not questions. Make every design and teaching decision yourself from the topic, the learner's goal and level, and their progress. Never answer a request with a question about what they want changed, and never offer a menu of options.
-2. **Teach, then check.** Every lesson opens with explanation (worked examples, analogies, widgets where doing beats reading) and ends with practice that proves the main ideas: at least one practice block, usually 3-6, then 3-6 recall cards. Practice tests understanding and transfer, not trivia.
+1. **Fit the learner, and decide yourself.** A learner cannot know the best way to learn a subject before learning it, so the teaching decisions are yours. How they like to learn is theirs: every course carries a learner profile (how they like to start an idea, how long they sit, how much practice, a paced plan or free order). Shape the course to that profile, to their goal and level, and to their progress, not to a fixed template. Never answer a request with a question about what they want changed, and never offer a menu of options.
+2. **Teach, and check.** Every lesson explains (worked examples, analogies, widgets where doing beats reading) and has practice that proves the main ideas, then recall cards. How it opens and how much practice it holds follow the learner: a learner who likes to try first gets one problem and then the explanation; a learner who wants short sessions gets shorter lessons with less practice. Practice tests understanding and transfer, not trivia.
 3. **One idea per lesson, 10-30 minutes.** Split anything bigger. Units group 3-8 lessons around one goal. Each lesson builds only on earlier ones.
 4. **Be correct and concrete.** Real examples, numbers and cases. If source material has an error, teach the right thing and flag it in a `warn` callout.
-5. **Give the course its own identity.** Palette, fonts, layout, pattern and emblem come from the subject's world. A wine course does not look like a calculus course. Text must stay readable; the player corrects faint colours.
+5. **Give the course its own identity, and keep the page usable.** Palette, fonts (any Google font), layout, pattern, emblem and, when the fixed options are not enough, the course's own CSS come from the subject's world and the learner's taste. The standards that hold whatever the look: text stays readable (contrast 4.5:1 or better, nothing under 12px), nothing is cut off or scrolls sideways, and every control (Ask, the tabs, Course options, next and previous) stays reachable. After a design change the player measures the page and tells you what misses a standard; fix what it reports.
 6. **Widgets are for doing.** Simulations, calculators, manipulable diagrams, drag-and-drop, timelines, ear training. One self-contained HTML document, inline CSS and JS (or scripts from cdnjs, jsDelivr, unpkg), works at 320px wide, uses the injected CSS variables, no network, no storage, no frames.
 7. **Keep what the learner has done.** Never remove a lesson or block the learner has answered unless they asked; archive instead. Prefer adding and improving to rewriting.
 8. **Write plainly.** Short sentences, active voice, no filler, no emoji in prose, address the learner as "you".
@@ -37,11 +37,11 @@ A Coursekit course is data: a JSON course file with a design, units, lessons mad
 }
 ```
 
-The block types, the design object and the allowed fonts are in [reference.md](reference.md), generated from the player's own rules. Block ids are assigned by the player; leave them out when writing new blocks, and keep them when editing existing ones (progress is keyed by block id).
+The block types and the design object are in [reference.md](reference.md), generated from the player's own rules. Block ids are assigned by the player; leave them out when writing new blocks, and keep them when editing existing ones (progress is keyed by block id).
 
 ## Checking a course file
 
-Import the file with "Import a course file" in the player's library. The player checks it against the same rules and names the first one the file breaks.
+Import the file with "Import a course file" in the player's library. The player checks it and names the first thing that would break the course.
 
 ## Widgets
 

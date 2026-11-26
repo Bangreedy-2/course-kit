@@ -17,8 +17,7 @@ Otherwise take `../coursekit-player/coursekit-player-page.txt` (a text file hold
 
 ```json
 {
-  "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {},
-  "desktop": {}
+  "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {}
 }
 ```
 
@@ -46,11 +45,6 @@ Open the player for them and reply with three lines at most:
 
 Offer to pin it to their sidebar. Do not explain packs or records unless they ask.
 
-## Running code on their own computer (only when they ask, or a course needs it)
+## What runs code
 
-Courses in Python and JavaScript run inside the page. Other languages (Elixir, C, C++, Rust, Go, Java, Ruby, R, Julia and more), and Python with their own libraries or GPU, run on their computer:
-
-- **Mac or Windows:** in the Claude desktop app, open the player and press "Install as app" in the course's note (or in the artifact's menu). The first Run asks once to allow running programs. Nothing else to install.
-- **Other systems:** this plugin has no way to run code there. Say so plainly; such a course still works with predict-the-output practice and checks the learner runs themselves.
-
-The language itself must be installed on the computer; The page sends code only when the learner presses Run, and each course must be allowed once.
+Python and JavaScript run inside the page. A course in any other language still works: it teaches with predict-the-output practice and tasks the learner runs on their own computer and pastes back. Do not promise that the page runs other languages.

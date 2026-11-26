@@ -13,17 +13,47 @@ t("faint text colours are corrected", () => {
   assert(CK.contrast(design.palette.accent, design.palette.surface) >= 3);
   assert(notes.length >= 3);
 });
-t("unknown fonts and layouts are refused", () => {
-  throwsRule(() => CK.normalizeDesign({ fonts: { body: "Comic Sans" } }), /fonts.body/);
-  throwsRule(() => CK.normalizeDesign({ fonts: { body: "Playfair Display" } }), /display-only/);
-  throwsRule(() => CK.normalizeDesign({ layout: "grid" }), /layout/);
+t("an unknown design value is reported and never rejects the rest", () => {
+  const { design, notes } = CK.normalizeDesign({ fonts: { body: "Comic Neue", display: "<bad>" }, layout: "grid", shape: "round", palette: { accent: "blue" }, emblem: "toolong" });
+  assert.equal(design.fonts.body, "Comic Neue"); assert.equal(design.layout, "sidebar"); assert.equal(design.shape, "round");
+  assert(notes.some(n => /layout "grid" is not one of/.test(n)) && notes.some(n => /fonts.display/.test(n)) && notes.some(n => /palette.accent/.test(n)) && notes.some(n => /emblem/.test(n)));
+  assert(CK.normalizeDesign({ fonts: { body: "Playfair Display" } }).notes.some(n => /display face/.test(n)));
+});
+t("custom css is kept, and cannot load from elsewhere", () => {
+  const { design, notes } = CK.normalizeDesign({ css: "@import url(https://x/y.css); .hero{background:url(https://x/a.png)} .card{border-radius:0;background:url(data:image/png;base64,AA)}" });
+  assert(!/@import|https:/.test(design.css) && /border-radius:0/.test(design.css) && /data:image/.test(design.css) && notes.length === 2);
+  assert.equal(CK.normalizeDesign({ meter: "ring" }, design).design.css, design.css);
+});
+t("home widgets can sit above or below the tabs", () => {
+  const { design } = CK.normalizeDesign({ home: ["a", { id: "b", at: "bottom" }, "a"] });
+  assert.deepStrictEqual(design.home, ["a", "b"]); assert.deepStrictEqual(design.homeAt, { b: "bottom" });
+});
+t("the bar for a lesson follows the learner", () => {
+  const short = CK.lessonBar({ session: "short", practice: "light" }), deep = CK.lessonBar({ session: "long", practice: "heavy" });
+  assert(short.minWords < deep.minWords && short.minPractice < deep.minPractice);
+  const l = { blocks: [{ t: "md", md: "word ".repeat(260) }, { t: "choice", q: "q", options: ["a", "b"], answer: 0, why: "w" }, { t: "answer", q: "q", accept: ["1"], why: "w" }, { t: "cards", cards: [{ q: "a", a: "b" }, { q: "c", a: "d" }] }] };
+  assert.deepStrictEqual(CK.lessonIssues(l, { learner: { session: "short" } }), []); assert(CK.lessonIssues(l, { learner: { session: "long" } }).length >= 2);
+  assert.equal(CK.normalizeLearner({ approach: "nonsense", practice: "HEAVY", notes: "x" }).approach, ""); assert.equal(CK.normalizeLearner({ practice: "HEAVY" }).practice, "heavy");
+});
+t("a course file never carries the learner's profile", () => {
+  const imp = CK.importCourse({ course: { title: "T", learner: { approach: "try" }, units: [{ title: "U" }] }, lessons: [] });
+  assert.equal(imp.meta.learner.approach, "try"); assert(!("learner" in CK.exportCourse(imp.meta, []).course));
+});
+t("a created course is checked against its own plan", () => {
+  const st = { lessons: 10, unwritten: 0, thinLessons: 1, checkedPerLesson: 2, practiceTypes: 3, cardsPerLesson: 3, runBlocks: 0, drillsPerLesson: 0, checkpoints: 0, proofTasks: 0 };
+  const plain = CK.reviewCourse(st, {}), withDrills = CK.reviewCourse(st, { drills: true });
+  assert(plain.score >= 90 && withDrills.score < plain.score && !plain.parts.some(p => /Drills|Checkpoints|Project/.test(p.name)));
 });
 t("course home sections can be reordered and hidden", () => {
   const { design, notes } = CK.normalizeDesign({ tabs: ["plan", "today", "bogus", "plan"], hide: ["timeline"] });
   assert.deepStrictEqual(design.tabs, ["plan", "today"]); assert.deepStrictEqual(design.hide, ["timeline"]); assert(notes.some(n => /bogus/.test(n)));
   assert.deepStrictEqual(CK.normalizeDesign({ meter: "ring" }, design).design.hide, ["timeline"]);
 });
-t("a lesson must teach before it tests", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "choice", q: "q", options: ["a", "b"], answer: 0 }, teach] }), /open with teaching/));
+t("a lesson may open with one problem to try, then must teach", () => {
+  const q = { t: "choice", q: "q", options: ["a", "b"], answer: 0 };
+  CK.normalizeLesson({ title: "x", blocks: [q, teach] });
+  throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [q, q, teach] }), /open with teaching/);
+});
 t("long teaching needs practice", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "md", md: "word ".repeat(300) }] }), /no practice/));
 t("a thin lesson is refused", () => throwsRule(() => CK.normalizeLesson({ title: "x", blocks: [{ t: "md", md: "Hi." }] }), /teaches almost nothing/));
 t("choice answers must point at an option", () => throwsRule(() => CK.normalizeBlock({ t: "choice", q: "q", options: ["a", "b"], answer: 5 }), /answer/));

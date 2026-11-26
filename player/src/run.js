@@ -165,6 +165,7 @@ LOCAL.via = {
 /* Finds a way to this computer. "interactive" means the learner just clicked, so the page may ask for permission. */
 async function localConnect(interactive) {
   if (LOCAL.state === "ready") return true;
+  if (!LOCAL.via) return false; // this build has no way to the learner's computer
   localSet("connecting");
   try {
     const d = LOCAL.desktop || (LOCAL.desktop = window.claude && claude.use ? await claude.use("desktop").catch(() => null) : null);
@@ -187,6 +188,7 @@ async function localConnect(interactive) {
 }
 /* What to offer the learner: "install" (make this player a desktop app), "allow" (app is installed, ask permission), "none" (no way to this computer from here). */
 async function localOffer() {
+  if (!LOCAL.via) return "none";
   const d = LOCAL.desktop || (LOCAL.desktop = window.claude && claude.use ? await claude.use("desktop").catch(() => null) : null);
   if (d && d.childProcess) return "allow";
   if (d && d.install) { try { if ((await d.install.state()) === "available") return "install"; } catch (e) {} }
@@ -331,6 +333,6 @@ function streamlit(host, src, files, onStatus) {
   return { apply, restart: start, get ran() { return C.ran; }, get err() { return C.err; }, get state() { return C.state; }, stop() { clearInterval(C.poll); try { const k = ctl(); if (k) k.unmount(); } catch (e) {} host.replaceChildren(); } };
 }
 
-const api = { local: { get state() { return LOCAL.state; }, get langs() { return LOCAL.langs; }, get provider() { return LOCAL.provider; }, get note() { return LOCAL.note; }, get lastError() { return LOCAL.lastError; }, get help() { return LOCAL.via ? LOCAL.via.help : ""; }, connect: localConnect, offer: localOffer, install: async () => { const d = LOCAL.desktop; return d && d.install ? d.install.request() : "unavailable"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); }, setAllowed: f => { LOCAL.allowed = f; }, uses: course => Object.entries((course && course.runtimes) || {}).filter(([, r]) => r && r.engine === "local").map(([k]) => k) }, PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
+const api = { local: { get state() { return LOCAL.state; }, get langs() { return LOCAL.langs; }, get provider() { return LOCAL.provider; }, get note() { return LOCAL.note; }, get lastError() { return LOCAL.lastError; }, get help() { return LOCAL.via ? LOCAL.via.help : ""; }, get enabled() { return !!LOCAL.via; }, connect: localConnect, offer: localOffer, install: async () => { const d = LOCAL.desktop; return d && d.install ? d.install.request() : "unavailable"; }, on: f => { LOCAL.listeners.add(f); return () => LOCAL.listeners.delete(f); }, setAllowed: f => { LOCAL.allowed = f; }, uses: course => Object.entries((course && course.runtimes) || {}).filter(([, r]) => r && r.engine === "local").map(([k]) => k) }, PACKS, packCheck, packState, packHelp, packsFor, onPack: f => { packListeners.add(f); return () => packListeners.delete(f); }, forCourse, streamlit, register: (name, engine) => { overrides[name] = engine; }, JS_RUNNER };
 root.CKRun = api;
 })(typeof window !== "undefined" ? window : globalThis);
