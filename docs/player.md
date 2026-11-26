@@ -15,13 +15,15 @@ The player is Coursekit's main app: one page that lives in your own Claude accou
 
 You need a paid Claude plan: artifact storage and Claude inside artifacts are not available on Free.
 
-## The design rules
+## The design standards
 
 Every change to a course passes through `player/src/core.js`, whoever makes it. It enforces:
 
 - readable colours (text contrast at least 7:1, secondary text 4.5:1, accents 3:1; faint colours are corrected, not rejected);
-- fonts, layouts, shapes, patterns and densities from fixed lists;
-- lessons that open with teaching and, once they teach anything substantial, include practice;
+- layouts, shapes, patterns and densities from named options, any Google font, and optional course CSS; a value the player does not know is reported back and never rejects the rest of a change;
+- a measured page check after every design change (contrast, text size, sideways overflow, controls still reachable); course CSS that hides a control is not kept;
+- lessons that teach and, once they teach anything substantial, include practice; a lesson may open with one problem to try when teaching follows it;
+- a learner profile per course (how to start an idea, session length, amount of practice, paced plan or free order) that sets the bar a lesson is held to and is never exported with the course;
 - well-formed practice (a right answer that exists, distinct options, 3-8 items to order or match);
 - widgets that are one self-contained document, run in a sandboxed frame, and load scripts only from cdnjs, jsDelivr or unpkg;
 - images only from the learner's own uploads;

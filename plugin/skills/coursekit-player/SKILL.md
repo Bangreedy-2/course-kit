@@ -15,12 +15,11 @@ The page is stored as [coursekit-player-page.txt](coursekit-player-page.txt) (a 
 
 ```json
 {
-  "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {},
-  "desktop": {}
+  "db": {}, "user": {}, "sample": {}, "downloads": true, "assets": {}
 }
 ```
 
-`desktop` is what lets a course run code on the learner's own computer once they install the player as an app (see the `coursekit-setup` skill). When you update a player that already has more capabilities than these, keep the ones it has. For a first setup, use the `coursekit-setup` skill, which does every step.
+When you update a player that already has more capabilities than these, keep the ones it has. For a first setup, use the `coursekit-setup` skill, which does every step.
 
 Title it "Coursekit", icon "book". To update an existing player, publish the new page and its `player-code-N.txt` files to the same artifact URL. Courses and progress live in the database and survive every update. Never edit the page to add a course: courses are data.
 

@@ -188,14 +188,15 @@ function viewCourse(c, tab) {
   const tabs = courseTabs(c);
   if (tabs.length <= 1) return classicHome(c);
   const cur = tabs.find(t => t[0] === tab) ? tab : tabs[0][0];
-  const wrap = h("div", { class: "course dash" }, dashHero(c), homeWidgets(c),
-    h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
+  const wrap = h("div", { class: "course dash", "data-morph": "dash" }, dashHero(c));
   if (S.courseMenu) ap(wrap, courseMenu(c));
+  ap(wrap, homeWidgets(c, "top"),
+    h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
   if (!S.courseLoaded) { ap(wrap, h("p", { class: "muted" }, "Loading lessons…")); return wrap; }
   const panel = h("section", { class: "dpanel" });
   if (cur.startsWith("page-")) tabPage(c, panel, cur.slice(5));
   else ({ today: tabToday, plan: tabPlan, lessons: tabLessons, drills: tabDrills, projects: tabProjects, record: tabRecord })[cur](c, panel);
-  ap(wrap, panel);
+  ap(wrap, panel, homeWidgets(c, "bottom"));
   return wrap;
 }
 function dashHero(c) {
@@ -221,7 +222,7 @@ function dashHero(c) {
       hidden("stats") ? null : h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
       timeline,
       h("div", { class: "row" },
-        h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
+        h("button", { class: "btn ghost small opt-btn", "aria-expanded": String(!!S.courseMenu), onclick: () => toggleCourseMenu() }, "Course options"),
         pendingLessons(c.id).length && S.sample && !(S.writer && S.writer.running) ? h("button", { class: "btn small", onclick: () => startWriter(c.id) }, "Write " + pendingLessons(c.id).length + " waiting lessons") : null)));
 }
 
@@ -239,10 +240,16 @@ function homeData(c) {
     checkpoints: cpsOf().map(x => ({ id: x.id, title: x.title, pass: x.pass, best: (g.exams[x.id] || {}).best ?? null, ready: x.lessons.every(learned) })),
     drills: { total: drillsOf().length, due: dueDrills().length } };
 }
-function homeWidgets(c) {
-  const ids = (c.design.home || []).filter(id => c.widgets && c.widgets[id]);
+/* Home widgets at one spot ("top" under the header, "bottom" under the tab's content). A widget whose document
+   did not change is kept as it is when the page is patched, so it does not reload while the learner uses it. */
+function homeWidgets(c, at) {
+  const spot = id => (c.design.homeAt || {})[id] || "top";
+  const ids = (c.design.home || []).filter(id => c.widgets && c.widgets[id] && spot(id) === at);
   if (!ids.length) return null;
-  return h("div", { class: "home-widgets" }, ids.map(id => renderWidget(c, null, { widget: id, id: "home-" + id })));
+  return h("div", { class: "home-widgets at-" + at, "data-morph": "hw-" + at }, ids.map(id => {
+    const b = { widget: id, id: "home-" + id }; const key = "hw:" + c.id + ":" + id + ":" + hashOf(widgetDoc(c, c.widgets[id], { home: true, state: null }));
+    const ph = kept(key); if (ph) return ph;
+    const el = renderWidget(c, null, b); el.dataset.keep = key; return el; }));
 }
 
 /* ---------- Today ---------- */

@@ -147,9 +147,10 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
 
   // Create a course from a sentence (scripted Claude)
   await page.evaluate(() => {
-    window.__mockJson.push({ title: "Espresso at Home", subtitle: "For a home barista", description: "Dial in shots.", language: "en", tutor: { name: "Bea", persona: "Warm." },
+    window.__mockJson.push(() => { window.__sawSteps = !!document.querySelector(".gen-steps .gen-step[data-state=now] .bar"); return window.__espresso; });
+    window.__espresso = ({ title: "Espresso at Home", subtitle: "For a home barista", description: "Dial in shots.", language: "en", tutor: { name: "Bea", persona: "Warm." },
       design: { palette: { bg: "#1c1410", surface: "#261b15", ink: "#f3e6d8", muted: "#c8b29e", accent: "#e08a3c", accent2: "#d4b26a" }, fonts: { display: "Fraunces", body: "Work Sans" }, shape: "round", layout: "tabs", pattern: "dots", density: "normal", emblem: "☕" },
-      units: [{ title: "Extraction", goal: "Pull a balanced shot", lessons: [{ title: "What extraction is", summary: "Solubles", minutes: 12 }, { title: "Brew ratio", summary: "Dose and yield", minutes: 12 }] }] });
+      drills: true, units: [{ title: "Extraction", goal: "Pull a balanced shot", lessons: [{ title: "What extraction is", summary: "Solubles", minutes: 20 }, { title: "Brew ratio", summary: "Dose and yield", minutes: 20 }] }] });
     const teach = "Espresso extraction dissolves flavour from coffee grounds into water under pressure, and the grind sets how fast that happens. ".repeat(24);
     const practice = [{ t: "choice", q: "What does a finer grind do?", options: ["Slows the flow", "Speeds the flow"], answer: 0, why: "Finer grounds pack tighter." }, { t: "answer", q: "A 1:2 ratio from 18 g gives how many grams?", accept: ["36"], why: "18 × 2." },
       { t: "order", q: "Order the steps", items: ["Grind", "Tamp", "Brew"], why: "That is the workflow." }, { t: "choice", q: "A sour shot is usually…", options: ["Under-extracted", "Over-extracted"], answer: 0, why: "Acids come out first." }];
@@ -157,15 +158,19 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     window.__lessonOk = (extra) => ({ summary: "s", minutes: 12, blocks: [{ t: "md", md: "## Idea\n\n" + teach }].concat(extra || []).concat(practice, [cards]),
       drills: [{ title: "Explain it", prompt: "Explain extraction from memory.", mins: 5, solution: "Water dissolves solubles." }], quiz: [{ q: "Finer grind?", o: ["Slower", "Faster"], a: 0, why: "Packs tighter." }, { q: "Sour?", o: ["Under", "Over"], a: 0, why: "Acids first." }] });
     window.__mockJson.push(() => ({ summary: "s", minutes: 12, blocks: [{ t: "md", md: teach.slice(0, 700) }, { t: "choice", q: "What does a finer grind do?", options: ["Slows the flow", "Speeds the flow"], answer: 0 }] }));
-    window.__mockJson.push((p) => { window.__sawFeedback = /too thin/.test(String(p)) && /at least 4/.test(String(p)); return window.__lessonOk(); }, () => window.__lessonOk());
+    window.__mockJson.push((p) => { window.__sawFeedback = /too thin/.test(String(p)) && /at least 3/.test(String(p)); window.__sawLearner = /Trying|a small problem to try first/.test(String(p)); return window.__lessonOk(); }, () => window.__lessonOk());
   });
   await page.evaluate(() => location.hash = "#/new");
   await page.fill("#nc-topic", "How espresso extraction works");
+  await page.selectOption("#nc-approach", "try");
   await page.click(".newc .btn.primary");
+
   await page.waitForFunction(() => location.hash.startsWith("#/c/espresso-at-home"), null, { timeout: 10000 });
   await page.waitForFunction(() => { const l = window.__ck.lessons; return Object.keys(l).length === 2 && Object.values(l).every(x => !x.pending); }, null, { timeout: 10000 });
   ok(true, "a course is planned and every lesson written");
+  ok(await page.evaluate(() => window.__sawSteps), "creating a course shows its steps with a progress bar while Claude plans");
   ok(await page.evaluate(() => window.__sawFeedback), "a thin lesson is sent back with what it lacks, and the rewrite is the one saved");
+  ok(await page.evaluate(() => window.__sawLearner && window.__ck.courses["espresso-at-home"].learner.approach === "try"), "how the learner likes to learn is saved with the course and reaches the lesson writer");
   ok(await page.evaluate(() => Object.values(window.__ck.lessons).every(l => l.blocks.length >= 6) && (window.__ck.mods.drills || []).length === 2), "each lesson meets the bar and brings its drill");
   await page.waitForSelector(".dtabs");
   ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Lessons,Drills,Record", "a short created course gets Today, Lessons, Drills and Record");
@@ -173,7 +178,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
 
   // Create a paced programme with code: the plan, drills, quiz and checkpoint grow as lessons are written, and code is run before it is saved
   await page.evaluate(() => {
-    window.__mockJson.push({ title: "JS for Data", subtitle: "Six weeks", description: "Learn to write small programs.", language: "en", tutor: { name: "Kit", persona: "Direct." }, paced: true, runtime: "js",
+    window.__mockJson.push({ title: "JS for Data", subtitle: "Six weeks", description: "Learn to write small programs.", language: "en", tutor: { name: "Kit", persona: "Direct." }, paced: true, drills: true, runtime: "js",
       tracks: { core: "Core", lab: "Lab" }, phases: [{ title: "Foundations", goal: "Write loops", weeks: [1, 2] }],
       units: [{ title: "Values", goal: "Use numbers", lessons: [{ title: "Adding numbers", summary: "Sum", minutes: 20, track: "core", code: true }, { title: "Loops", summary: "For", minutes: 20, track: "core", code: true }] },
         { title: "Lists", goal: "Use arrays", lessons: [{ title: "Arrays", summary: "Lists", minutes: 20, track: "lab", code: true }] }],
@@ -203,7 +208,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok(grown.weeks && grown.weeks.length === 2 && grown.weeks[0].some(i => i.startsWith("l-")) && grown.weeks[0].includes("w1-drills") && grown.weeks[0].includes("pg-apply-1") && grown.weeks[1].includes("p1-1") && grown.weeks[1].includes("t-cp1"), "the plan grows from the blueprint: lesson, drill, project, page and checkpoint tasks");
   ok(grown.quiz[0] >= 4 && grown.cps[0] >= 3 && grown.projects.length === 1 && grown.sched && grown.rt.js, "weekly quiz, checkpoint, project, pace and runtime are in place");
   const sc = await page.evaluate(() => window.__ck.mods.blueprint.score);
-  ok(sc && sc.score > 50 && sc.parts.length >= 10, "the finished course is scored against the reference (" + (sc && sc.score) + "/100)");
+  ok(sc && sc.score > 50 && sc.parts.length >= 6 && !/reference/i.test(JSON.stringify(sc)), "the finished course is checked against its own plan, not against another course (" + (sc && sc.score) + "/100)");
   await page.evaluate(() => location.hash = "#/c/js-for-data"); await page.waitForSelector(".dtabs");
   const jtabs = (await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",");
   ok(/Today/.test(jtabs) && /Plan/.test(jtabs) && /Drills/.test(jtabs) && /Apply/.test(jtabs), "the created programme has the full dashboard (" + jtabs + ")");
@@ -225,11 +230,10 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     await page.waitForSelector(".blk-run .fb .bad, .blk-run .err, .blk-run .out", { timeout: 10000 }).catch(() => {});
     ok(await page.evaluate(() => window.__mockRunner.calls.length === 0), "no code reaches the computer before the learner connects and allows the course");
     await page.evaluate(() => { window.__mockRunner.on = true; });
-    await page.click("#banners button:has-text('Connect')");
     if (process.env.CK_SPLIT === "plain") {
-      await page.waitForTimeout(600);
-      ok(await page.evaluate(() => window.CKRun.local.state !== "ready" && window.__mockRunner.calls.length === 0), "the plain build has no link to a local runner");
+      ok(await page.evaluate(() => !document.querySelector("#banners button") || ![...document.querySelectorAll("#banners button")].some(b => /Connect|Install/.test(b.textContent))) && await page.evaluate(() => window.CKRun.local.state !== "ready" && !window.CKRun.local.enabled && window.__mockRunner.calls.length === 0), "the public build has no link to the learner's computer and offers none");
     } else {
+    await page.click("#banners button:has-text('Connect')");
     await page.waitForFunction(() => window.CKRun.local.state === "ready", null, { timeout: 10000 });
     await page.waitForTimeout(300);
     await page.click(".blk-run button:has-text('Run and check')");
@@ -309,13 +313,52 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.fill("#ask-input", "make it bigger"); await page.click("#ask .btn.primary");
   await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn, null, { timeout: 20000 });
   const wres = await page.evaluate(() => window.__mockToolResults.slice(-2).map(x => typeof x === "string" ? x : JSON.stringify(x)));
-  ok(/TOO TALL/.test(wres[0]) && /Desktop, \d+px wide: 9\d\dpx tall/.test(wres[0]) && /Phone, 360px wide/.test(wres[0]), "set_widget returns a measured render check that flags a too-tall widget");
+  ok(/VERY TALL/.test(wres[0]) && /Desktop, \d+px wide: 9\d\dpx tall/.test(wres[0]) && /Phone, 360px wide/.test(wres[0]), "set_widget returns a measured render check that flags a widget taller than the screen");
   ok(/occurs 0 times/.test(wres[1]), "an edit that does not match is refused with the current html");
   await page.click("#ask .icon[aria-label=Close]");
   const fh = await page.waitForFunction(() => { const f = document.querySelector(".home-widgets iframe"); return f && parseInt(f.style.height) > 900 ? f.style.height : null; }, null, { timeout: 5000 }).then(x => x.jsonValue(), () => null);
   ok(fh, "the frame grows to fit its content by itself (" + fh + ")");
   const lastCall = await page.evaluate(() => window.__mockCalls[window.__mockCalls.length - 1].input[0].content);
   ok(/CURRENT DESIGN/.test(lastCall) && /Hidden now: .*progress bars/.test(lastCall), "the tutor is told the saved design and what is hidden");
+
+  // The page is patched in place while the tutor edits: untouched widgets do not reload, typing is kept, nothing jumps
+  await page.evaluate(() => location.hash = "#/c/music-theory/l/pitch"); await page.waitForSelector(".lesson .widget iframe");
+  await page.waitForTimeout(400);
+  await page.evaluate(() => { document.querySelector(".lesson .widget iframe").__same = 1; const ta = document.querySelector(".blk-write textarea"); ta.value = "half typed"; ta.dispatchEvent(new Event("input", { bubbles: true })); window.scrollTo(0, 700); window.__firstMd = document.querySelector(".blk-md").dataset.block; });
+  await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
+  await page.evaluate(() => window.__mockTools.push([
+    { name: "update_block", input: { lesson: "pitch", block: window.__firstMd, fields: { md: "## Changed heading\n\nNew opening text." } } },
+    { name: "update_course", input: { design: { css: ".lesson h1{letter-spacing:.01em}" } } }]));
+  await page.fill("#ask-input", "reword the opening"); await page.click("#ask .btn.primary");
+  await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn, null, { timeout: 20000 });
+  await page.waitForTimeout(500);
+  const pt = await page.evaluate(() => { const f = document.querySelector(".lesson .widget iframe"), ta = document.querySelector(".blk-write textarea"); return { same: f && f.__same === 1, typed: ta && ta.value, head: document.querySelector(".blk-md").textContent, y: window.scrollY }; });
+  ok(pt.same && pt.typed === "half typed" && /Changed heading/.test(pt.head), "a tutor edit patches the page: the changed block is new, the widget did not reload and typed text is kept");
+  ok(pt.y > 400, "the page does not jump to the top while the tutor edits (scroll " + Math.round(pt.y) + ")");
+  await page.evaluate(() => window.__mockTools.push([
+    { name: "update_block", input: { lesson: "pitch", block: window.__firstMd, fields: { md: "## Changed heading\n\nNew opening text, again." } } },
+    { name: "update_course", input: { design: { layout: "zigzag", fonts: { body: "Comic Neue" }, css: ".hero h1{letter-spacing:.2em}" } } },
+    { name: "update_course", input: { design: { css: ".ask-btn{display:none}" } } },
+    { name: "update_course", input: { learner: { approach: "examples", notes: "asked for more worked examples" } } },
+    { name: "set_widget", input: { title: "Ring", html: "<p style='margin:8px'>ring</p>" } },
+    { name: "update_course", input: { design: { home: ["ring", "nope"] } } },
+    { name: "get_outline", input: { page: true } }]));
+  await page.fill("#ask-input", "change a few things"); await page.click("#ask .btn.primary");
+  await page.waitForFunction(() => !window.__ck.ask.busy && !window.__ck.txn, null, { timeout: 20000 });
+  const st = await page.evaluate(() => { const f = document.querySelector(".lesson .widget iframe"), ta = document.querySelector(".blk-write textarea"); const c = window.__ck.courses["music-theory"];
+    return { same: f && f.__same === 1, typed: ta && ta.value, head: document.querySelector(".blk-md").textContent, y: window.scrollY, d: c.design, learner: c.learner, ask: !!document.querySelector(".ask-btn") && getComputedStyle(document.querySelector(".ask-btn")).display !== "none", res: window.__mockToolResults.slice(-7).map(x => typeof x === "string" ? x : JSON.stringify(x)) }; });
+  ok(/zigzag.*is not one of/.test(st.res[1]) && st.d.layout !== "zigzag" && st.d.fonts.body === "Comic Neue" && /letter-spacing/.test(st.d.css) && /Page check/.test(st.res[1]), "an unknown design value is reported and the rest of the change applies; any font and custom css are allowed, and the page is measured");
+  ok(/NOT kept/.test(st.res[2]) && /Ask button/.test(st.res[2]) && st.ask && /letter-spacing/.test(st.d.css), "css that hides a control the learner needs is taken back and the tutor is told why");
+  ok(st.learner.approach === "examples" && /worked examples/.test(st.learner.notes) && /Later lessons/.test(st.res[3]), "the tutor can save how the learner likes to learn");
+  ok(/left out/.test(st.res[5]) && st.d.home.join() === "ring", "a home widget that does not exist is left out and reported, the rest is kept");
+  ok(/Page check/.test(st.res[6]) && /lesson \d+x\d+/.test(st.res[6]), "the tutor can measure the page the learner has open");
+  await page.click("#ask .icon[aria-label=Close]");
+  // Course options open under the header even with a widget on the home page
+  await page.evaluate(() => location.hash = "#/c/music-theory"); await page.waitForSelector(".home-widgets iframe");
+  await page.click(".opt-btn"); await page.waitForSelector(".menu-panel");
+  const mp = await page.evaluate(() => ({ menu: document.querySelector(".menu-panel").getBoundingClientRect().top, hw: document.querySelector(".home-widgets").getBoundingClientRect().top, btn: document.querySelector(".opt-btn").getBoundingClientRect().bottom, vh: innerHeight }));
+  ok(mp.menu < mp.hw && mp.menu < mp.vh && mp.menu - mp.btn < 120, "Course options open right under the header, above any home widget");
+  await page.click(".opt-btn");
 
   const havePy = !!process.env.CK_PY && fs.existsSync(path.join(process.env.CK_PY, "py/pyodide.mjs"));
   // Lesson with a run block: check the model answer passes and a wrong one fails

@@ -1,3 +1,238 @@
+    h("p", null, "Delete “" + c.title + "” and all its progress for good?"),
+    h("button", { class: "btn danger", onclick: () => deleteCourse(c.id) }, "Delete for good"));
+  return h("section", { class: "menu-panel" },
+    h("div", { class: "row" },
+      h("button", { class: "btn", onclick: () => exportCourseFile(c.id) }, "Export course file"),
+      h("a", { class: "btn", href: "#/c/" + c.id + "/history" }, "Changes and undo"),
+      h("button", { class: "btn", onclick: () => saveMeta(c.id, m => { m.archivedAt = new Date().toISOString(); }, "Archived the course").then(() => go("#/")) }, "Archive"),
+      h("button", { class: "btn ghost", onclick: () => { confirmDel.hidden = false; } }, "Delete…")),
+    h("p", { class: "muted small" }, "A course file holds the lessons, design and widgets but none of your progress. Anyone with Coursekit can import it and make it their own."),
+    confirmDel);
+}
+
+/* ================= lesson ================= */
+/* A block is rebuilt only when what it shows changed. A widget's frame also carries the course colours and font. */
+function blockKey(c, l, b) { const w = b.t === "widget"; return "b:" + l.id + ":" + b.id + ":" + hashOf(JSON.stringify(b) + (w && b.widget && c.widgets && c.widgets[b.widget] ? JSON.stringify(c.widgets[b.widget]) : "") + JSON.stringify([c.runtimes || {}, c.language, w ? [c.design.palette, c.design.fonts] : 0])); }
+function viewLesson(c, lid) {
+  const l = S.lessons[lid];
+  const phs = {}; if (l && S.morphing) for (const b of l.blocks || []) { const ph = kept(blockKey(c, l, b)); if (ph) phs[b.id] = ph; }
+  for (const k of Object.keys(blockState)) if (!phs[k]) delete blockState[k];
+  if (!S.lessonsLoaded) return h("p", { class: "muted" }, "Loading…");
+  if (!l) return h("div", { class: "empty" }, h("h2", null, "This lesson is not in the course"), h("a", { href: "#/c/" + c.id }, "Back to the course"));
+  const ls = orderedLessons(c); const i = ls.findIndex(x => x.id === lid);
+  const prev = ls[i - 1], next = ls[i + 1];
+  const unit = c.units.find(u => u.lessons.includes(lid));
+  const body = h("article", { class: "lesson", id: "lesson", "data-morph": "lesson" },
+    h("header", null,
+      h("p", { class: "eyebrow" }, [l.week ? unitWord(c) + " " + l.week : unit ? unit.title : "", l.track && c.tracks && c.tracks[l.track] ? c.tracks[l.track] : "", l.minutes ? l.minutes + " min" : ""].filter(Boolean).join(" · ")),
+      h("h1", null, l.title), l.summary ? h("p", { class: "lede" }, l.summary) : null,
+      lessonDrillsNote(c, l),
+      l.archived ? h("p", { class: "note" }, "This lesson is archived. It stays here with your progress but is hidden from the course.") : null));
+  if (l.pending || (l.rewrite && !l.blocks?.length)) {
+    const w = S.writer && S.writer.running;
+    ap(body, h("div", { class: "pending" }, h("p", null, w && S.writer.current === l.title ? "Claude is writing this lesson now…" : "This lesson has not been written yet."),
+      !w && S.sample ? h("button", { class: "btn primary", onclick: () => startWriter(c.id, [l.id]) }, "Write it now") : null));
+  } else {
+    if (l.rewrite) ap(body, h("p", { class: "note" }, "A new version of this lesson is waiting to be written: " + l.rewrite));
+    for (const b of l.blocks) { if (phs[b.id]) { ap(body, phs[b.id]); continue; } const el = renderBlock(c, l, b); el.dataset.keep = blockKey(c, l, b); ap(body, el); }
+    ap(body, h("div", { class: "lesson-end", id: "lesson-end" }));
+  }
+  ap(body, h("nav", { class: "pager" },
+    prev ? h("a", { class: "btn", href: "#/c/" + c.id + "/l/" + prev.id }, "← " + prev.title) : h("span"),
+    next ? h("a", { class: "btn primary", href: "#/c/" + c.id + "/l/" + next.id }, next.title + " →") : h("a", { class: "btn", href: "#/c/" + c.id }, "Back to the course")));
+  if (c.design.layout !== "sidebar") return h("div", { class: "lesson-wrap single", "data-morph": "lw" }, body);
+  const side = h("nav", { class: "side", "aria-label": "Lessons" }, c.units.map((u, ui) => h("div", null, h("p", { class: "side-unit" }, u.title),
+    h("ol", null, u.lessons.map(id => S.lessons[id]).filter(x => x && !x.archived).map(x => h("li", { class: "st-" + lessonStatus(x.id) + (x.id === lid ? " on" : "") }, h("a", { href: "#/c/" + c.id + "/l/" + x.id, "aria-current": x.id === lid ? "page" : null }, x.title)))))));
+  return h("div", { class: "lesson-wrap", "data-morph": "lw" }, side, body);
+}
+
+/* ---------- progress ---------- */
+function prog(lid) {
+  let p = S.progress[lid];
+  if (!p) p = S.progress[lid] = { kind: "progress", course: S.cid, lesson: lid, b: {}, cards: {}, w: {}, opened: new Date().toISOString() };
+  p.b = p.b || {}; p.cards = p.cards || {}; p.w = p.w || {};
+  return p;
+}
+const saveTimers = {};
+function saveProg(lid) {
+  const p = S.progress[lid]; if (!p) return; p._dirty = true; p.updated = new Date().toISOString();
+  clearTimeout(saveTimers[lid]);
+  saveTimers[lid] = setTimeout(async () => { const body = Object.assign({}, p); delete body._dirty; await put(K.prog(S.cid, lid), body); p._dirty = false; }, 600);
+  scheduleStats();
+}
+let statsTimer = null;
+function scheduleStats() {
+  clearTimeout(statsTimer); const cid = S.cid;
+  statsTimer = setTimeout(() => {
+    const c = S.courses[cid]; if (!c || S.cid !== cid) return;
+    const ls = orderedLessons(c);
+    const body = { kind: "stats", course: cid, learned: ls.filter(l => lessonStatus(l.id) === "learned").length, started: ls.filter(l => lessonStatus(l.id) === "started").length, due: dueCards(c).length, last: { lesson: S.route.lid || null, at: new Date().toISOString() }, updated: new Date().toISOString() };
+    S.stats[cid] = body; put(K.stats(cid), body);
+  }, 2500);
+}
+function practiceBlocks(l) { return (l.blocks || []).filter(b => CK.PRACTICE.includes(b.t) || (b.t === "widget" && b.graded)); }
+function updateLearned(lid) {
+  const l = S.lessons[lid]; const p = prog(lid);
+  const pr = practiceBlocks(l);
+  const all = pr.length > 0 && pr.every(b => p.b[b.id] && p.b[b.id].ok);
+  if (all && !p.done) {
+    p.done = new Date().toISOString();
+    for (const b of l.blocks) if (b.t === "cards") b.cards.forEach((_, i) => { const k = b.id + "." + i; if (!p.cards[k]) p.cards[k] = { box: -1, due: now() + 864e5 - 3600e3 }; });
+    logEvent("learned", { c: S.cid, l: lid });
+    toast("Lesson learned. Its recall cards come back tomorrow.", "ok");
+  }
+  saveProg(lid); refreshProgress();
+}
+function refreshProgress() {
+  if (!S.route || S.route.name !== "lesson") { render(); return; }
+  const lid = S.route.lid, p = S.progress[lid];
+  for (const [bid, fn] of Object.entries(blockState)) fn(p && p.b[bid], p);
+  const l = S.lessons[lid]; const end = $("#lesson-end");
+  if (end && l) {
+    const pr = practiceBlocks(l); const done = pr.filter(b => p && p.b[b.id] && p.b[b.id].ok).length;
+    rc(end, pr.length ? h("p", { class: p && p.done ? "ok" : "muted" }, p && p.done ? "✓ Lesson learned." : done + " of " + pr.length + " practice items right. Get them all right to learn this lesson.")
+      : p && p.done ? h("p", { class: "ok" }, "✓ Marked as done.") : h("button", { class: "btn", onclick: () => { const q = prog(lid); q.done = new Date().toISOString(); saveProg(lid); refreshProgress(); } }, "Mark as done"));
+  }
+  document.querySelectorAll(".side li").forEach(li => {
+    const a = li.querySelector("a"); const id = a && a.getAttribute("href").split("/l/")[1]; if (!id) return;
+    li.className = "st-" + lessonStatus(id) + (id === lid ? " on" : "");
+  });
+}
+const blockState = {};
+
+/* ---------- blocks ---------- */
+/* ex (optional): {ans, key, num} renders the block as a checkpoint item: answers go to ans[key], nothing is revealed. */
+function renderBlock(c, l, b, ex) {
+  if (!ex) delete blockState[b.id];
+  const box = h("section", { class: "blk blk-" + b.t + (b.kind ? " co-" + b.kind : ""), id: ex ? null : "b-" + b.id, "data-block": b.id });
+  const mark = h("span", { class: "pmark", "aria-hidden": "true" });
+  const saved = ex ? (ex.ans[ex.key] || null) : ((S.progress[l.id] || {}).b || {})[b.id] || null;
+  const record = (ok, a) => {
+    if (ex) { ex.ans[ex.key] = { ok: !!ok, a: typeof a === "string" ? a.slice(0, 20000) : a }; saveG(); return; }
+    const p = prog(l.id); const cur = p.b[b.id] || { n: 0 };
+    cur.n = (cur.n || 0) + 1; if (ok) cur.ok = true; if (a !== undefined) cur.a = typeof a === "string" ? a.slice(0, 20000) : a;
+    p.b[b.id] = cur; logEvent("check", { c: S.cid, l: l.id, b: b.id, ok: !!ok }); updateLearned(l.id);
+  };
+  const keep = a => { if (ex) { ex.ans[ex.key] = Object.assign(ex.ans[ex.key] || {}, { a }); saveGSoon(); return; } const p = prog(l.id); const cur = p.b[b.id] || { n: 0 }; cur.a = a; p.b[b.id] = cur; saveProg(l.id); };
+  const feedback = h("div", { class: "fb", "aria-live": "polite" });
+  const showWhy = (ok, extra) => { if (ex) { rc(feedback, h("p", { class: "muted" }, "Answer saved. It is marked when you submit.")); return; } rc(feedback, h("p", { class: ok ? "ok" : "bad" }, ok ? "Right." : "Not yet. Try again."), ok && b.why ? mdEl(b.why) : null, extra || null); };
+  if (ex) ap(box, h("p", { class: "qnum" }, ex.num));
+  switch (b.t) {
+    case "md": ap(box, mdEl(b.md)); break;
+    case "callout": ap(box, b.title ? h("p", { class: "co-title" }, b.title) : null, mdEl(b.md)); break;
+    case "code": {
+      const pre = h("pre", { "data-lang": b.lang }, h("code", null, b.src));
+      const runnable = b.run !== false && RT().has(b.lang);
+      const bar = h("div", { class: "row" }, b.caption ? h("p", { class: "muted small" }, b.caption) : null,
+        runnable ? h("button", { class: "btn small run-btn", onclick: () => { const cell = codeCell(b.src, b.lang, "lesson:" + l.id, { onClose: () => { cell.replaceWith(pre); bar.hidden = false; } }); pre.replaceWith(cell); bar.hidden = true; cell.querySelector("textarea").focus(); } }, "▶ Run this code") : null,
+        runnable ? h("span", { class: "muted small" }, "Runs in real " + RT().label(b.lang) + " here; snippets in this lesson share variables.") : null,
+        h("button", { class: "link small", onclick: () => copy(b.src) }, "Copy"));
+      ap(box, pre, bar);
+      break;
+    }
+    case "run": {
+      const ta = codeArea(saved && typeof saved.a === "string" ? saved.a : (b.starter || ""), b.lang);
+      ta.addEventListener("input", () => keep(ta.value));
+      const out = h("div", { class: "runout" });
+      const solBox = h("div");
+      const can = RT().has(b.lang);
+      const btns = h("div", { class: "row" },
+        h("button", { class: "btn small primary", disabled: !can, onclick: async e => {
+          const btn = e.currentTarget; btn.disabled = true; rc(out, statusLine("Running your code and the hidden tests…"));
+          const r = await RT().check(b.lang, ta.value, b.test, b.expect, { onStatus: t => rc(out, statusLine(t)) });
+          btn.disabled = false;
+          rc(out, runOutput({ out: r.own, error: r.err, imgs: r.imgs }, "(your code printed nothing)"));
+          if (ex) { record(r.pass, ta.value); ap(out, h("p", { class: "muted" }, r.pass ? "Tests pass. Answer saved." : "Tests do not pass yet. Answer saved.")); return; }
+          record(r.pass, ta.value);
+          if (r.pass) { rc(feedback, h("p", { class: "ok" }, "All tests pass."), b.why ? mdEl(b.why) : null); rc(solBox, modelCode(b.solution, b.lang, "Model answer")); }
+          else rc(feedback, h("p", { class: "bad" }, r.err ? (r.reachedTests ? "The tests raised an error." : "Your code raised an error.") : "The test output does not match."),
+            r.reachedTests && !r.err ? h("div", null, h("p", { class: "small" }, "Tests printed:"), h("pre", { class: "out" }, r.testOut || "(nothing)"), h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n"))) : null);
+        } }, "Run and check"),
+        h("button", { class: "btn small", disabled: !can, onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput(r, "(no output)")); } }, "Run only"),
+        ex ? null : h("button", { class: "btn small ghost", onclick: () => rc(solBox, modelCode(b.solution, b.lang, "Model answer"), h("p", { class: "muted small" }, "Close it, then type your own version. Rebuilding it teaches more than copying.")) }, "Show model answer"));
+      ap(box, h("p", { class: "co-title" }, "Write and run · " + RT().label(b.lang)), h("div", { class: "q" }, mdEl(b.q)), ta, can ? null : h("p", { class: "note" }, "This course has no " + b.lang + " runtime here, so the code cannot be checked."), btns, out, feedback, solBox);
+      if (!ex) blockState[b.id] = st => { if (st && typeof st.a === "string" && !ta.dataset.touched && ta.value !== st.a) { ta.value = st.a; fitArea(ta); } if (st && st.ok && !solBox.childElementCount) rc(solBox, modelCode(b.solution, b.lang, "Model answer")); box.classList.toggle("solved", !!(st && st.ok)); };
+      ta.addEventListener("input", () => { ta.dataset.touched = "1"; });
+      break;
+    }
+    case "predict": {
+      const multi = b.expect.length > 1;
+      const inp = multi ? h("textarea", { class: "code", rows: Math.min(10, b.expect.length + 1), "aria-label": "The exact output", spellcheck: "false" }) : h("input", { type: "text", "aria-label": "The exact output", autocomplete: "off", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") inp.value = saved.a;
+      let wrong = 0;
+      const check = () => {
+        const ok = CK.checkAnswer(b, inp.value); if (!ok) wrong++;
+        if (ex) { record(ok, inp.value); showWhy(ok); return; }
+        showWhy(ok, !ok && wrong >= 2 ? h("div", null, h("p", { class: "small" }, "Expected:"), h("pre", { class: "out" }, b.expect.join("\n")), b.why ? mdEl(b.why) : null, h("p", { class: "small muted" }, "Type it in to continue.")) : null);
+        record(ok, inp.value);
+      };
+      if (!multi) inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+      ap(box, h("p", { class: "co-title" }, "Predict the output"), h("div", { class: "q" }, mdEl(b.q)), h("div", { class: multi ? "" : "row" }, inp, h("button", { class: "btn small", onclick: check }, "Check")), feedback);
+      break;
+    }
+    case "output": {
+      const can = b.code && RT().has(b.lang);
+      const paste = h("textarea", { class: "code", rows: 6, placeholder: "Paste the output here", "aria-label": "The output", spellcheck: "false" });
+      if (saved && typeof saved.a === "string") paste.value = saved.a;
+      paste.addEventListener("input", () => keep(paste.value));
+      const check = () => {
+        const v = paste.value; const n = v.split("\n").filter(x => x.trim()).length;
+        const miss = (b.expect || []).filter(e => !CK.normLine(v).toLowerCase().includes(CK.normLine(e).toLowerCase()));
+        const ok = CK.checkAnswer(b, v); record(ok, v);
+        if (ex) return showWhy(ok);
+        if (ok) rc(feedback, h("p", { class: "ok" }, "Output accepted."), b.why ? mdEl(b.why) : null);
+        else rc(feedback, h("p", { class: "bad" }, n < (b.min || 1) ? "Paste at least " + b.min + " lines of output." : "The output is missing: " + miss.join(", ")));
+      };
+      ap(box, h("p", { class: "co-title" }, "Run it" + (can ? "" : " on your computer")), h("div", { class: "q" }, mdEl(b.q)));
+      if (can) {
+        const ta = codeArea(b.code, b.lang); const out = h("div", { class: "runout" });
+        ap(box, h("p", { class: "muted small" }, "Runs here in real " + RT().label(b.lang) + ". Edit it if you like; the output is pasted and checked for you."), ta,
+          h("div", { class: "row" }, h("button", { class: "btn small primary", onclick: async () => { rc(out, statusLine("Running…")); const r = await RT().run(b.lang, ta.value, { onStatus: t => rc(out, statusLine(t)) }); rc(out, runOutput({ imgs: r.imgs, error: r.error, out: "" }, null)); paste.value = (r.out || "").replace(/\s+$/, ""); keep(paste.value); if (!r.error) check(); } }, "Run here and check")), out,
+          h("p", { class: "muted small" }, "Or run it on your own machine and paste the output:"));
+      }
+      ap(box, paste, h("div", { class: "row" }, h("button", { class: "btn small", onclick: check }, "Check the output")), feedback);
+      break;
+    }
+    case "math": { const d = h("div", { class: "math" }); d.innerHTML = mathHtml(b.tex, true); ap(box, d, b.caption ? h("p", { class: "muted small" }, b.caption) : null); break; }
+    case "image": ap(box, h("figure", null, h("img", { src: "/_blob/" + b.asset, alt: b.alt, loading: "lazy" }), b.caption ? h("figcaption", null, b.caption) : null)); break;
+    case "widget": ap(box, renderWidget(c, l, b, record)); break;
+    case "cards": {
+      ap(box, h("p", { class: "co-title" }, "Recall cards"), h("p", { class: "muted small" }, "These come back for review on a spaced schedule once the lesson is learned."),
+        h("div", { class: "rcards" }, b.cards.map(card => h("details", { class: "rcard" }, h("summary", null, card.q), mdEl(card.a)))));
+      break;
+    }
+    case "choice": {
+      const multi = Array.isArray(b.answer); const order = shuffled(b.options.map((_, i) => i), b.id);
+      const chosen = new Set();
+      const opts = order.map(i => h("button", { class: "opt", "aria-pressed": "false", onclick: e => {
+        if (multi) { chosen.has(i) ? chosen.delete(i) : chosen.add(i); e.currentTarget.setAttribute("aria-pressed", String(chosen.has(i))); return; }
+        opts.forEach(o => o.setAttribute("aria-pressed", "false")); e.currentTarget.setAttribute("aria-pressed", "true");
+        const ok = CK.checkAnswer(b, i); if (!ex) e.currentTarget.classList.add(ok ? "right" : "wrong"); showWhy(ok); record(ok, b.options[i]);
+      } }, mdInline(b.options[i])));
+      ap(box, h("div", { class: "q" }, mdEl(b.q)), h("div", { class: "opts" }, opts));
+      if (multi) ap(box, h("p", { class: "muted small" }, "Choose every right option."), h("button", { class: "btn small", onclick: () => { const ok = CK.checkAnswer(b, [...chosen]); showWhy(ok); record(ok, [...chosen].map(i => b.options[i]).join(" | ")); } }, "Check"));
+      ap(box, feedback); break;
+    }
+    case "answer": {
+      const inp = h("input", { type: "text", "aria-label": "Your answer", autocomplete: "off", spellcheck: "false" });
+      let wrong = 0;
+      const check = () => { const ok = CK.checkAnswer(b, inp.value); if (!ok) wrong++; showWhy(ok, !ok && wrong >= 3 ? h("button", { class: "link small", onclick: e => { e.target.replaceWith(h("p", null, "Answer: " + b.accept[0])); } }, "Show the answer") : null); record(ok, inp.value); };
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+      ap(box, h("div", { class: "q" }, mdEl(b.q)), h("div", { class: "row" }, inp, h("button", { class: "btn small", onclick: check }, "Check")), feedback); break;
+    }
+    case "order": {
+      let cur = shuffled(b.items, b.id);
+      const list = h("ol", { class: "order" });
+      const draw = () => rc(list, ...cur.map((it, i) => h("li", null, h("span", null, it),
+        h("span", { class: "mv" }, h("button", { class: "icon", "aria-label": "Move up", disabled: i === 0, onclick: () => { [cur[i - 1], cur[i]] = [cur[i], cur[i - 1]]; draw(); } }, "↑"),
+          h("button", { class: "icon", "aria-label": "Move down", disabled: i === cur.length - 1, onclick: () => { [cur[i + 1], cur[i]] = [cur[i], cur[i + 1]]; draw(); } }, "↓")))));
+      draw();
+      ap(box, h("div", { class: "q" }, mdEl(b.q)), list, h("button", { class: "btn small", onclick: () => { const ok = CK.checkAnswer(b, cur); showWhy(ok); record(ok, cur.join(" → ")); } }, "Check"), feedback); break;
+    }
+    case "match": {
+      const rights = shuffled(b.pairs.map(p => p[1]), b.id + "m");
+      const sels = b.pairs.map(p => h("select", { "aria-label": "Match for " + p[0] }, h("option", { value: "" }, "Choose…"), rights.map(r => h("option", { value: r }, r))));
+      ap(box, h("div", { class: "q" }, mdEl(b.q)), h("div", { class: "match" }, b.pairs.map((p, i) => h("label", null, h("span", null, p[0]), sels[i]))),
         h("button", { class: "btn small", onclick: () => { const v = {}; b.pairs.forEach((p, i) => v[p[0]] = sels[i].value); const ok = CK.checkAnswer(b, v); showWhy(ok); record(ok, b.pairs.map((p, i) => p[0] + "=" + sels[i].value).join("; ")); } }, "Check"), feedback); break;
     }
     case "write": {
@@ -86,10 +321,11 @@ async function tutorFeedback(c, l, b, text, out, btn) {
 
 /* ---------- widgets: isolated frames with a small message channel ---------- */
 const frames = new Map(); // window -> {b, l, record, iframe}
+const frameH = new Map(); // widget -> its last measured height, so a reloaded widget opens at its real size instead of jumping
 addEventListener("message", e => {
   const f = frames.get(e.source); const m = e.data;
   if (!f || !m || m.ck !== 1) return;
-  if (m.type === "height") { const hgt = Math.max(24, Math.min(1400, Number(m.h) || 0)); if (hgt) f.iframe.style.height = hgt + "px"; }
+  if (m.type === "height") { const hgt = Math.max(24, Math.min(1400, Number(m.h) || 0)); if (hgt) { f.iframe.style.height = hgt + "px"; if (f.hkey) frameH.set(f.hkey, hgt); } }
   else if (m.type === "done") { f.record(!!m.ok, m.ok ? "widget: success" : "widget: not yet"); }
   else if (m.type === "save") { try { const s = JSON.stringify(m.state); if (s.length < 16000) { if (!f.l) { const g = G(); g.w = g.w || {}; g.w[f.b.widget] = JSON.parse(s); saveG(); } else { const p = prog(f.l.id); p.w[f.b.id] = JSON.parse(s); saveProg(f.l.id); } } } catch (err) {} }
   else if (m.type === "open" && f.home) { const c = S.courses[S.cid]; const t = String(m.to || ""); if (!c) return;
@@ -105,7 +341,7 @@ function widgetDoc(c, w, o) {
     "html,body{margin:0;background:var(--ck-" + (o.home ? "bg" : "surface") + ");color:var(--ck-ink);font-family:var(--ck-font);font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}svg{max-width:100%" + (o.home ? ";max-height:260px" : "") + "}";
   const data = o.home ? "course:" + JSON.stringify(homeData(c)).replace(/</g, "\\u003c") + ",open:function(t){parent.postMessage({ck:1,type:'open',to:String(t)},'*')}," : "";
   const prelude = '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + CK.FONTS[c.design.fonts.body][1] + '&display=swap"><style>' + css + "</style>" +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + CK.fontOf(c.design.fonts.body)[1] + '&display=swap"><style>' + css + "</style>" +
     "<script>window.__ckErr=[];window.addEventListener('error',function(e){window.__ckErr.push(String(e.message||e).slice(0,200))});" +
     "window.ck={" + data + "state:" + JSON.stringify(o.state == null ? null : o.state).replace(/</g, "\\u003c") + ",done:function(ok){parent.postMessage({ck:1,type:'done',ok:!!ok},'*')},save:function(s){this.state=s;parent.postMessage({ck:1,type:'save',state:s},'*')},height:function(px){parent.postMessage({ck:1,type:'height',h:px},'*')}};" +
     // The frame always fits its content: no cropped drawings, no empty space below.
@@ -145,8 +381,9 @@ async function probeWidget(c, w, home) {
   out.push("Render check (measured in the learner's browser, the frame now always fits its content):");
   if (a) out.push("- Desktop, " + a.w + "px wide: " + a.h + "px tall" + (a.svgs && a.svgs.length ? "; svg drawn at " + a.svgs.join(", ") : "") + (a.canvases && a.canvases.length ? "; canvas " + a.canvases.join(", ") : "") + ".");
   if (b) out.push("- Phone, " + b.w + "px wide: " + b.h + "px tall" + (b.svgs && b.svgs.length ? "; svg drawn at " + b.svgs.join(", ") : "") + ".");
-  const limit = home ? 340 : 700;
-  if (a && a.h > limit) fix.push("TOO TALL on desktop (" + a.h + "px; " + (home ? "a course-home widget must stay under about " + limit + "px so the tabs remain visible" : "keep it under " + limit + "px") + "). A drawing with width:100% grows with the page and looks zoomed in: cap it, e.g. svg{width:100%;max-height:220px} with preserveAspectRatio, or max-width on its container.");
+  const vh = window.innerHeight || 800; const limit = home ? Math.round(vh * 0.7) : 1200;
+  if (a && a.h > limit) fix.push("VERY TALL on desktop (" + a.h + "px in a " + vh + "px window" + (home ? ", so it pushes the course's tabs off the first screen" : "") + "). If that is not what the learner asked for: a drawing with width:100% grows with the page and looks zoomed in, so cap it, e.g. svg{width:100%;max-height:220px} with preserveAspectRatio, or max-width on its container.");
+  else if (a && home && a.h > 340) out.push("- It takes " + a.h + "px of the first screen above the tabs. Fine when it is the main thing the learner asked for; otherwise make it more compact.");
   if (a && a.h < 24) fix.push("NEARLY EMPTY on desktop (" + a.h + "px tall): nothing visible is being drawn.");
   for (const x of [a, b]) if (x && x.sw > x.w + 4) fix.push("OVERFLOWS sideways at " + x.w + "px (content is " + x.sw + "px wide): part of it is cut off. Use relative widths and let rows wrap.");
   const bg = hex(r.bodyBg) === "transparent" ? hex(r.htmlBg) : hex(r.bodyBg);
@@ -166,9 +403,10 @@ function renderWidget(c, l, b, record) {
   if (!w) return h("p", { class: "note" }, "This widget is missing from the course.");
   const p = l && S.progress[l.id]; const state = l ? (p && p.w && p.w[b.id] || null) : ((S.g && S.g.w || {})[b.widget] || null);
   const html = widgetDoc(c, w, { home: !l, state });
-  const iframe = h("iframe", { sandbox: "allow-scripts", title: b.title || w.title || "Interactive widget", loading: "lazy", style: "height:" + (b.height || w.height || 360) + "px" });
+  const hkey = c.id + ":" + (l ? l.id + ":" + b.id : "home:" + b.widget);
+  const iframe = h("iframe", { sandbox: "allow-scripts", title: b.title || w.title || "Interactive widget", loading: "lazy", style: "height:" + (frameH.get(hkey) || b.height || w.height || 360) + "px" });
   iframe.srcdoc = html;
-  const fr = { b, l, record: record || (() => {}), iframe, home: !l };
+  const fr = { b, l, record: record || (() => {}), iframe, home: !l, hkey };
   iframe.addEventListener("load", () => { frames.set(iframe.contentWindow, fr); });
   // contentWindow exists as soon as the frame is in the document.
   queueMicrotask(() => { if (iframe.contentWindow) frames.set(iframe.contentWindow, fr); });
@@ -424,6 +662,47 @@ function noteError(where, e) {
 addEventListener("error", ev => noteError("page", ev.error || ev.message));
 addEventListener("unhandledrejection", ev => noteError("promise", ev.reason));
 
+/* Measures the page the learner has open against the standards: can everything be read, does anything spill
+   sideways, can the learner still reach what they need. Returns {must, fix, text}: "must" lists controls the
+   learner cannot do without that are hidden or covered; "fix" lists what falls short; text is the report. */
+async function pageCheck() {
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const r0 = S.route || {}; const W = window.innerWidth, H = window.innerHeight; const must = [], fix = [], info = [];
+  const rgba = v => { const m = /rgba?\(([^)]+)\)/.exec(v || ""); if (!m) return null; const p = m[1].split(/[,\/\s]+/).filter(Boolean).map(parseFloat); return p.length >= 3 && p.slice(0, 3).every(isFinite) ? [p[0], p[1], p[2], p.length > 3 && isFinite(p[3]) ? p[3] : 1] : null; };
+  const shown = el => { if (!el) return false; const b = el.getBoundingClientRect(); if (b.width < 16 || b.height < 12) return false;
+    for (let x = el; x && x.nodeType === 1; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) < 0.4) return false; } return true; };
+  const reachable = el => { if (!shown(el)) return false; const b = el.getBoundingClientRect(); const x = b.left + b.width / 2, y = b.top + b.height / 2;
+    if (b.right < 0 || b.left > W) return false; if (x < 0 || y < 0 || x > W || y > H) return true; // below the fold is fine
+    const top = document.elementFromPoint(x, y); return !top || el.contains(top) || top.contains(el) || !!top.closest("#ask, #toasts"); };
+  const need = [[".ask-btn", "the Ask button"], ["#top .brand", "the link back to all courses"]];
+  if (r0.cid) need.push(["#top .crumb", "the link back to the course home"]);
+  if (r0.name === "course") { need.push([".opt-btn", "the Course options button"]); if (document.querySelector(".dtabs")) need.push([".dtabs a", "the course tabs"]); }
+  if (r0.name === "lesson" && document.querySelector(".pager")) need.push([".pager a", "the links at the end of the lesson"]);
+  for (const [sel, label] of need) { const els = [...document.querySelectorAll(sel)]; if (!els.length || !els.some(reachable)) must.push(label); }
+  const sw = document.documentElement.scrollWidth; if (sw > W + 4) fix.push("The page is " + sw + "px wide in a " + W + "px window, so it scrolls sideways and part of it is cut off. Let rows wrap and use relative widths.");
+  const bgOf = el => { for (let x = el; x && x.nodeType === 1; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.backgroundImage && cs.backgroundImage !== "none" && x !== document.body) return null; const c = rgba(cs.backgroundColor); if (c && c[3] > 0.5) return c; } return rgba(getComputedStyle(document.body).backgroundColor) || [255, 255, 255, 1]; };
+  const hex = c => CK.rgbToHex(c.slice(0, 3).map(v => Math.round(v)));
+  const faint = [], tiny = []; let seen = 0;
+  for (const el of document.querySelectorAll("#top a, #top button, #main h1, #main h2, #main h3, #main p, #main li, #main a, #main button, #main td, #main th, #main label, #main summary, #main .stat b, #main .stat span")) {
+    if (seen > 500) break; const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()); if (!own || !shown(el)) continue; seen++;
+    const cs = getComputedStyle(el); const fs = parseFloat(cs.fontSize); const txt = el.textContent.trim().replace(/\s+/g, " ").slice(0, 40);
+    if (fs < 11.5 && tiny.length < 4) tiny.push("“" + txt + "” at " + Math.round(fs * 10) / 10 + "px");
+    const fg = rgba(cs.color), bg = bgOf(el); if (!fg || !bg) continue;
+    const mix = fg[3] < 1 ? [0, 1, 2].map(i => fg[i] * fg[3] + bg[i] * (1 - fg[3])) : fg; const ratio = CK.contrast(hex(mix), hex(bg)); const big = fs >= 24 || (fs >= 18.6 && parseInt(cs.fontWeight, 10) >= 700);
+    if (ratio < (big ? 3 : 4.5) && faint.length < 5 && !faint.some(f => f.k === hex(mix) + hex(bg))) faint.push({ k: hex(mix) + hex(bg), t: "“" + txt + "” is " + hex(mix) + " on " + hex(bg) + " (contrast " + ratio.toFixed(1) + ", needs " + (big ? 3 : 4.5) + ")" });
+  }
+  if (faint.length) fix.push("Text that is hard to read: " + faint.map(f => f.t).join("; ") + ".");
+  if (tiny.length) fix.push("Text smaller than 12px: " + tiny.join("; ") + ".");
+  const parts = [[".hero", "header"], [".stats", "stats row"], [".timeline", "unit progress bars"], [".home-widgets.at-top", "home widgets (top)"], [".dtabs", "tabs"], [".dpanel", "tab content"], [".home-widgets.at-bottom", "home widgets (bottom)"], [".side", "lesson list"], [".lesson", "lesson"], [".menu-panel", "course options panel"]];
+  for (const [sel, name] of parts) { const el = document.querySelector(sel); if (!el) continue; const b = el.getBoundingClientRect(); info.push(name + (shown(el) ? " " + Math.round(b.width) + "x" + Math.round(b.height) + " at y=" + Math.round(b.top + window.scrollY) : " (hidden)")); }
+  const where = r0.name === "lesson" ? "a lesson" : r0.name === "course" ? "the course home" + (r0.tab ? ", tab " + r0.tab : "") : r0.name || "the library";
+  const text = "Page check (measured now in the learner's browser, " + W + "px wide, on " + where + "):\n- On screen: " + (info.join("; ") || "nothing measured") + "." +
+    (must.length ? "\n- THE LEARNER CAN NO LONGER REACH: " + must.join(", ") + ". These must stay visible and clickable." : "") +
+    (fix.length ? "\n- Falls short of the standards, fix before you reply:\n  - " + fix.join("\n  - ") : "") +
+    (!must.length && !fix.length ? "\n- Everything checked meets the standards (readable text, nothing cut off, all controls reachable)." : "") +
+    "\n- Not measured: other pages of the course, and other screen widths.";
+  return { must, fix, text };
+}
 /* The design as saved right now and what it puts on screen, so the tutor never guesses. */
 function designStateText(c) {
   const d = c.design; const hide = d.hide || []; const tabs = (() => { try { return courseTabs(c).map(t => t[1] + " (" + t[0] + ")"); } catch (e) { return []; } })();
@@ -431,23 +710,21 @@ function designStateText(c) {
     ["queue", "Today's queue"], ["week", planOf() ? "the \"This " + unitWord(c).toLowerCase() + "\" card on Today" : null], ["howto", "the \"How a study day works\" card on Today"]].filter(x => x[1]);
   const home = (d.home || []).map(id => id + (c.widgets && c.widgets[id] ? "" : " (missing from the widget library, not shown)"));
   return "CURRENT DESIGN (saved now; this is the truth, check it before you say what the page shows or what you changed):\n" +
-    JSON.stringify({ layout: d.layout, meter: d.meter, pattern: d.pattern, density: d.density, tabs: d.tabs, hide, home: d.home }) +
+    JSON.stringify({ palette: d.palette, fonts: d.fonts, shape: d.shape, layout: d.layout, meter: d.meter, pattern: d.pattern, density: d.density, emblem: d.emblem, tabs: d.tabs, hide, home: (d.home || []).map(id => (d.homeAt || {})[id] ? { id, at: d.homeAt[id] } : id) }) +
+    "\nCustom css now: " + (d.css ? "\n" + d.css.slice(0, 6000) : "(none)") +
     "\nThe course home shows: " + [!hide.includes("meter") && "header with title and " + d.meter + " meter"].concat(parts.filter(([k]) => k !== "meter" && !hide.includes(k)).map(x => x[1])).filter(Boolean).join("; ") +
     (home.length ? "; home widgets: " + home.join(", ") : "; no home widgets") + ". Tabs: " + tabs.join(", ") + "." +
     (hide.length ? "\nHidden now: " + parts.filter(([k]) => hide.includes(k)).map(x => x[1]).join("; ") + "." : "\nNothing is hidden.") +
     "\nWidget library: " + (Object.entries(c.widgets || {}).map(([k, w]) => k + " (" + w.title + ")").join(", ") || "empty") +
     (d.home || []).filter(id => c.widgets && c.widgets[id]).map(id => "\nHome widget \"" + id + "\" html now:\n" + c.widgets[id].html.slice(0, 12000)).join("");
 }
-const CHANGE_RULES = `How to handle change requests:
-- Do what was asked, where it was asked. "On the dashboard" or "on the home page" means the course home: use design.hide, design.tabs and design.home. Never put a dashboard visualization inside a lesson.
-- "Replace X with a clearer visualization": hide X and, in the same turn, build a home widget with set_widget that draws the same information from window.ck.course, then add its id to design.home. Both steps or neither.
-- Undo means restore exactly what was there before; read CURRENT DESIGN and the earlier turns to know what that was.
-- Report only what the tools returned. Describe the result in the learner's words ("the week bars are back above the tabs"), not setting names. Never claim an earlier state you have not checked; never contradict CURRENT DESIGN.
-- If something truly cannot be done, say so in one sentence first, then offer the closest thing; do not do a substitute the learner did not ask for.
-- Do not say you cannot see the screen or that you have not seen it render: CURRENT DESIGN tells you what is on the page, and set_widget returns a render check measured in the learner's browser. Fix every problem the check lists (call set_widget again) before you reply. Keep the reply to two or three sentences.
-- Change only what the learner complained about. "I don't like the background" changes the background and nothing else; "too big" changes the size and nothing else. Use set_widget edits for that; never rebuild a widget from scratch unless asked.
-- A widget on the page must look like part of the page: page colours and fonts only, no panel or gradient of its own, compact.
-- When the learner reports a visual problem ("zoomed in", "white box", "cut off"), find the cause in the widget's html (shown below for home widgets) before changing anything, and say in one clause what the cause was.`;
+const CHANGE_RULES = `Changing the course, by the standards:
+- Do what the learner asked, where they asked it. You have real freedom over the look: the design fields for the common choices, design.css for anything else on the page, widgets for anything interactive or drawn from progress. "On the dashboard" or "on the home page" means the course home.
+- Work from what is there: CURRENT DESIGN is the saved truth, and get_outline with page: true measures the page the learner has open. Every design change and every widget returns a measured check. Read it, fix what it lists, then reply. That is how you see the page, so do not say you cannot see it.
+- Change what was asked and leave the rest. "I don't like the background" changes the background; "too big" changes the size. Edit a widget with set_widget edits; rebuild it only when asked. Undo means putting back exactly what was there.
+- To replace a built-in part with your own (a different progress view, say), hide the part and add a home widget that draws the same information from window.ck.course, in the same turn.
+- When the learner tells you how they like to learn, or you see it in their progress (skipping long text, failing practice, asking for more examples), save it with update_course learner, so every later lesson is written for them.
+- Say what changed in the learner's words, in two or three sentences, and only what the tools confirmed. If something cannot be done, say so first and offer the closest thing.`;
 
 /* What the learner is looking at outside lessons, for the tutor. */
 function viewContext(c) {
@@ -479,7 +756,7 @@ function buildAskInput(c, history, userTurn, attach) {
       "Give hints before answers for practice the learner has not solved yet; give the answer when they ask for it after trying. Reply in Markdown, concise, in the course's language (" + c.language + ").",
       CK.DESIGN_RULES,
       S.tools ? CK.BLOCK_DOC + "\n\n" + CK.MODULES_DOC + "\n\n" + CK.DESIGN_DOC : "",
-      "Course description: " + (c.description || "") + (c.origin && c.origin.about ? "\nAbout the learner: " + c.origin.about : ""),
+      "Course description: " + (c.description || "") + (c.origin && c.origin.about ? "\nAbout the learner: " + c.origin.about : "") + "\n" + CK.learnerText(c.learner),
       "Course outline (lesson ids in brackets):\n" + outlineText(c, l && l.id),
       "Progress: " + progressSummary(c),
       l ? "The learner is reading this lesson now (answers included for you; do not reveal unsolved ones unprompted):\n" + CK.lessonText(l, { answers: true }).slice(0, 60000) + "\n\nTheir progress on it:\n" + lessonProgressText(l) + (S.focusBlock && S.focusBlock.l === l.id ? "\nThey last worked on block " + S.focusBlock.b + "." : "") : viewContext(c),
@@ -521,7 +798,8 @@ function courseTools(c, tx, changes) {
   const T = (name, description, props, required, fn) => ({ name, description, inputSchema: props ? { type: "object", properties: props, required: required || [] } : undefined, execute: async input => { const r = await fn(input || {}); after(); return r; } });
   const blocksSchema = { type: "array", items: { type: "object" }, description: "Blocks, see the block types" };
   return [
-    T("get_outline", "Returns the course: title, description, tutor, design, units with lesson ids, titles and status, and the widget library ids.", null, null, () => {
+    T("get_outline", "Returns the course: title, description, tutor, design, units with lesson ids, titles and status, and the widget library ids. With page: true it instead measures the page the learner has open right now: what is on screen and how big, text that is too faint or too small, anything cut off, and whether the learner can reach every control. Use that before you describe the page or when the learner reports a visual problem.", { page: { type: "boolean" } }, [], async i => {
+      if (i.page) return (await pageCheck()).text;
       const m = meta(); return { id: m.id, title: m.title, subtitle: m.subtitle, description: m.description, tutor: m.tutor, design: m.design, widgets: Object.keys(m.widgets || {}),
         units: m.units.map(u => ({ id: u.id, title: u.title, goal: u.goal, lessons: u.lessons.map(id => { const l = S.lessons[id]; return l ? { id, title: l.title, status: l.archived ? "archived" : lessonStatus(id), blocks: (l.blocks || []).length } : { id }; }) })) };
     }),
@@ -531,16 +809,27 @@ function courseTools(c, tx, changes) {
       for (const l of Object.values(S.lessons)) for (const b of l.blocks || []) { const t = JSON.stringify(b).toLowerCase(); if (q.every(w => t.includes(w))) hits.push({ lesson: l.id, block: b.id, t: b.t, text: (b.q || b.md || b.title || "").slice(0, 160) }); if (hits.length > 30) break; }
       return hits;
     }),
-    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part, including which course-home tabs show and in what order (design.tabs) and which home parts are hidden (design.hide) and which library widgets show on the home (design.home)), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). Returns any colour corrections the rules made.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], i => {
-      tx.touchCourse(); const m = meta();
+    T("update_course", "Changes the course title, subtitle, description, tutor {name, persona}, design (any part: palette, fonts, shape, layout, pattern, density, meter, emblem, tabs, hide, home, and css for anything else on the page), learner (how this learner likes to learn: {approach: examples|concepts|try|projects, session: short|standard|long, structure: plan|free, practice: light|standard|heavy, notes: \"what you have learned about them\"}; give only what changed, later lessons are written to it), and the course settings: runtimes, files, labels, tracks, schedule (each replaces the whole setting; see course modules). A design change returns what the page adjusted and a measured page check.", { title: { type: "string" }, subtitle: { type: "string" }, description: { type: "string" }, tutor: { type: "object" }, design: { type: "object" }, learner: { type: "object" }, runtimes: { type: "object" }, files: { type: "array", items: { type: "object" } }, labels: { type: "object" }, tracks: { type: "object" }, schedule: { type: "object" } }, [], async i => {
+      tx.touchCourse(); const m = meta(); const before = m.design.css || "";
       const design = i.design ? Object.assign({}, i.design, { palette: Object.assign({}, m.design.palette, i.design.palette || {}), fonts: Object.assign({}, m.design.fonts, i.design.fonts || {}) }) : undefined;
-      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
-      const missing = (next.design && next.design.home || []).filter(id => !(m.widgets || {})[id] && !(i.widgets || {})[id]);
-      if (missing.length) throw new Error("design.home names widgets that are not in the library: " + missing.join(", ") + ". Create them with set_widget first. Library: " + (Object.keys(m.widgets || {}).join(", ") || "empty"));
-      Object.assign(m, next); const notes = m.designNotes || []; delete m.designNotes;
-      changes.push(i.design ? "design" : i.runtimes || i.files || i.labels || i.tracks || i.schedule ? "course settings" : "course details");
-      return notes.length ? "Saved. The rules adjusted: " + notes.join("; ") : "Saved.";
+      const next = CK.normalizeCourseMeta({ title: i.title, subtitle: i.subtitle, description: i.description, tutor: i.tutor, design, learner: i.learner, runtimes: i.runtimes, files: i.files, labels: i.labels, tracks: i.tracks, schedule: i.schedule }, m);
+      const notes = next.designNotes || []; delete next.designNotes;
+      // A home widget that does not exist yet is left out and reported; the rest of the change still applies.
+      const missing = (next.design.home || []).filter(id => !(m.widgets || {})[id]);
+      if (missing.length) { next.design.home = next.design.home.filter(id => !missing.includes(id)); notes.push("home: no widget \"" + missing.join("\", \"") + "\" in the library, so it was left out (make it with set_widget, then add it). Library: " + (Object.keys(m.widgets || {}).join(", ") || "empty")); }
+      Object.assign(m, next);
+      changes.push(i.design ? "design" : i.learner ? "how the course fits you" : i.runtimes || i.files || i.labels || i.tracks || i.schedule ? "course settings" : "course details");
+      if (!i.design) return "Saved." + (i.learner ? " Later lessons are written to this profile: " + CK.learnerText(m.learner) : "");
+      S.view = null; render(true);
+      let check = await pageCheck();
+      if (check.must.length && i.design.css != null && m.design.css !== before) {
+        // The one hard line: the learner must always be able to reach the course and its controls.
+        const lost = check.must.join(", "); m.design.css = before; S.view = null; render(true); check = await pageCheck();
+        return "The css was NOT kept, because with it the learner could no longer reach: " + lost + ". The rest of the change is saved. Write the css again so these stay visible and clickable.\n" + check.text;
+      }
+      return "Saved." + (notes.length ? " The page adjusted: " + notes.join("; ") + "." : "") + "\n" + check.text;
     }),
+
     T("upsert_unit", "Creates a unit (omit unit) or changes one (give unit id). position is the 0-based place among units.", { unit: { type: "string" }, title: { type: "string" }, goal: { type: "string" }, position: { type: "number" } }, [], i => {
       tx.touchCourse(); const m = meta(); let u;
       if (i.unit) { u = U(i.unit); if (i.title) u.title = String(i.title).slice(0, 90); if (i.goal != null) u.goal = String(i.goal).slice(0, 400); }
@@ -863,14 +1152,15 @@ function viewCourse(c, tab) {
   const tabs = courseTabs(c);
   if (tabs.length <= 1) return classicHome(c);
   const cur = tabs.find(t => t[0] === tab) ? tab : tabs[0][0];
-  const wrap = h("div", { class: "course dash" }, dashHero(c), homeWidgets(c),
-    h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
+  const wrap = h("div", { class: "course dash", "data-morph": "dash" }, dashHero(c));
   if (S.courseMenu) ap(wrap, courseMenu(c));
+  ap(wrap, homeWidgets(c, "top"),
+    h("nav", { class: "dtabs", "aria-label": "Course sections" }, tabs.map(([k, label]) => h("a", { href: route(c, "t/" + k), class: k === cur ? "on" : "", "aria-current": k === cur ? "page" : null }, label))));
   if (!S.courseLoaded) { ap(wrap, h("p", { class: "muted" }, "Loading lessons…")); return wrap; }
   const panel = h("section", { class: "dpanel" });
   if (cur.startsWith("page-")) tabPage(c, panel, cur.slice(5));
   else ({ today: tabToday, plan: tabPlan, lessons: tabLessons, drills: tabDrills, projects: tabProjects, record: tabRecord })[cur](c, panel);
-  ap(wrap, panel);
+  ap(wrap, panel, homeWidgets(c, "bottom"));
   return wrap;
 }
 function dashHero(c) {
@@ -896,7 +1186,7 @@ function dashHero(c) {
       hidden("stats") ? null : h("div", { class: "stats" }, stats.map(([k, v, s]) => h("div", { class: "stat" }, h("span", { class: "k" }, k), h("b", null, v), h("small", null, s)))),
       timeline,
       h("div", { class: "row" },
-        h("button", { class: "btn ghost small", "aria-expanded": String(!!S.courseMenu), onclick: () => { S.courseMenu = !S.courseMenu; S.view = null; render(); } }, "Course options"),
+        h("button", { class: "btn ghost small opt-btn", "aria-expanded": String(!!S.courseMenu), onclick: () => toggleCourseMenu() }, "Course options"),
         pendingLessons(c.id).length && S.sample && !(S.writer && S.writer.running) ? h("button", { class: "btn small", onclick: () => startWriter(c.id) }, "Write " + pendingLessons(c.id).length + " waiting lessons") : null)));
 }
 
@@ -914,10 +1204,16 @@ function homeData(c) {
     checkpoints: cpsOf().map(x => ({ id: x.id, title: x.title, pass: x.pass, best: (g.exams[x.id] || {}).best ?? null, ready: x.lessons.every(learned) })),
     drills: { total: drillsOf().length, due: dueDrills().length } };
 }
-function homeWidgets(c) {
-  const ids = (c.design.home || []).filter(id => c.widgets && c.widgets[id]);
+/* Home widgets at one spot ("top" under the header, "bottom" under the tab's content). A widget whose document
+   did not change is kept as it is when the page is patched, so it does not reload while the learner uses it. */
+function homeWidgets(c, at) {
+  const spot = id => (c.design.homeAt || {})[id] || "top";
+  const ids = (c.design.home || []).filter(id => c.widgets && c.widgets[id] && spot(id) === at);
   if (!ids.length) return null;
-  return h("div", { class: "home-widgets" }, ids.map(id => renderWidget(c, null, { widget: id, id: "home-" + id })));
+  return h("div", { class: "home-widgets at-" + at, "data-morph": "hw-" + at }, ids.map(id => {
+    const b = { widget: id, id: "home-" + id }; const key = "hw:" + c.id + ":" + id + ":" + hashOf(widgetDoc(c, c.widgets[id], { home: true, state: null }));
+    const ph = kept(key); if (ph) return ph;
+    const el = renderWidget(c, null, b); el.dataset.keep = key; return el; }));
 }
 
 /* ---------- Today ---------- */
