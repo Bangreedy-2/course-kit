@@ -250,14 +250,14 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     }
   }
 
-  // Sigmoid: every feature of the old app, with real Python when py/ is available
-  const sig = JSON.parse(fs.readFileSync(path.join(root, "courses/sigmoid-ml.coursekit.json"), "utf8"));
+  // A paced programme: every feature of the old app, with real Python when py/ is available
+  const sig = JSON.parse(fs.readFileSync(path.join(root, "courses/python-workshop.coursekit.json"), "utf8"));
   const yday = Date.now() - 86400000 * 1.2;
-  await page.evaluate(([ids, t]) => { for (const id of ids) window.__mockDocs.set("data/users/u1/p~sigmoid-ml~" + id, { kind: "progress", course: "sigmoid-ml", lesson: id, b: {}, cards: {}, w: {}, done: t }); }, [sig.checkpoints[0].lessons, yday]);
+  await page.evaluate(([ids, t]) => { for (const id of ids) window.__mockDocs.set("data/users/u1/p~python-workshop~" + id, { kind: "progress", course: "python-workshop", lesson: id, b: {}, cards: {}, w: {}, done: t }); }, [sig.checkpoints[0].lessons, yday]);
   await page.evaluate(() => location.hash = "#/");
-  await page.setInputFiles(".lib-head input[type=file]", path.join(root, "courses/sigmoid-ml.coursekit.json"));
+  await page.setInputFiles(".lib-head input[type=file]", path.join(root, "courses/python-workshop.coursekit.json"));
   await page.waitForSelector(".dtabs");
-  ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Plan,Lessons,Drills,Homework,Record", "Sigmoid dashboard has all six sections, with its own labels");
+  ok((await page.$$eval(".dtabs a", e => e.map(x => x.textContent))).join(",") === "Today,Plan,Lessons,Drills,Homework,Record", "Programme dashboard has all six sections, with its own labels");
   ok((await page.$$eval(".stat", e => e.length)) === 5, "dashboard shows week, pace, core work, streak and due");
   await page.waitForTimeout(400);
   { const miss = await page.$$eval("#banners", e => e.some(x => /Install the Python pack in my Coursekit player/.test(x.textContent))); const have = !!process.env.CK_PY;
@@ -265,21 +265,21 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.waitForSelector(".q-item");
   const queue = await page.$$eval(".q-item b", e => e.map(x => x.textContent));
   ok(queue.some(t => /New drill: /.test(t)) && queue.some(t => /New lesson: /.test(t)), "Today queue has the next lesson and unlocked drills (" + queue.length + " items)");
-  if (shots) await page.screenshot({ path: shots + "/6a-sigmoid-today.png", fullPage: true });
+  if (shots) await page.screenshot({ path: shots + "/6a-programme-today.png", fullPage: true });
   await page.click(".dtabs a:has-text('Plan')");
   await page.waitForSelector("details.week");
   ok((await page.$$eval("details.week", e => e.length)) === 10, "plan shows 10 weeks");
   const nTasks = sig.plan.weeks.reduce((n, w) => n + w.tasks.length, 0);
   ok((await page.$$eval(".task[data-task]", e => e.length)) === nTasks, "plan shows every task card (" + nTasks + ")");
   const chk = await page.$(".task[data-task] .c input[type=checkbox]");
-  if (chk) { await chk.check(); await page.waitForTimeout(300); ok([...(await page.evaluate(() => [...window.__mockDocs.keys()]))].some(k => k.endsWith("g~sigmoid-ml")), "ticking a done-when criterion saves the plan state"); }
-  if (shots) await page.screenshot({ path: shots + "/6b-sigmoid-plan.png" });
+  if (chk) { await chk.check(); await page.waitForTimeout(300); ok([...(await page.evaluate(() => [...window.__mockDocs.keys()]))].some(k => k.endsWith("g~python-workshop")), "ticking a done-when criterion saves the plan state"); }
+  if (shots) await page.screenshot({ path: shots + "/6b-programme-plan.png" });
   for (const t of ["Drills", "Homework", "Record"]) { await page.click(".dtabs a:has-text('" + t + "')"); await page.waitForSelector(".dpanel > *"); }
   ok(await page.waitForSelector(".heat", { timeout: 5000 }).then(() => true, () => false), "record shows the study-day heatmap");
-  if (shots) await page.screenshot({ path: shots + "/6c-sigmoid-record.png", fullPage: true });
+  if (shots) await page.screenshot({ path: shots + "/6c-programme-record.png", fullPage: true });
 
   // Ask can reshape the course home: hide the week bars, reorder and drop tabs; plan data stays
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/t/today"); await page.waitForSelector(".timeline");
+  await page.evaluate(() => location.hash = "#/c/python-workshop/t/today"); await page.waitForSelector(".timeline");
   await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
   await page.evaluate(() => window.__mockTools.push([{ name: "update_course", input: { design: { hide: ["timeline", "howto"], tabs: ["today", "lessons", "plan", "drills", "homework", "projects", "record"] } } }]));
   await page.fill("#ask-input", "remove the 10 boxes for each week from the dashboard"); await page.click("#ask .btn.primary");
@@ -291,7 +291,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   await page.click(".dtabs a:has-text('Plan')"); await page.waitForSelector("details.week");
   ok((await page.$$eval("details.week", e => e.length)) === 10, "the plan still has its 10 weeks");
   // A clearer visualization on the dashboard: a home widget drawn from live progress
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/t/today"); await page.waitForSelector(".dtabs");
+  await page.evaluate(() => location.hash = "#/c/python-workshop/t/today"); await page.waitForSelector(".dtabs");
   await page.click(".ask-btn"); await page.waitForSelector("#ask-input");
   await page.evaluate(() => window.__mockTools.push([
     { name: "set_widget", input: { widget: "week-map", title: "Weeks at a glance", html: "<div id=o></div><button id=b>plan</button><script>document.getElementById('o').textContent='weeks:'+ck.course.weeks.length+' now:'+ck.course.currentWeek;document.getElementById('b').onclick=()=>ck.open('week:3')<\/script>", height: 200 } },
@@ -362,9 +362,9 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
 
   const havePy = !!process.env.CK_PY && fs.existsSync(path.join(process.env.CK_PY, "py/pyodide.mjs"));
   // Lesson with a run block: check the model answer passes and a wrong one fails
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/l/oop");
+  await page.evaluate(() => location.hash = "#/c/python-workshop/l/oop");
   await page.waitForSelector(".side");
-  ok(await page.$(".side"), "sigmoid course uses the sidebar layout");
+  ok(await page.$(".side"), "programme course uses the sidebar layout");
   const runB = sig.lessons.find(l => l.id === "oop").blocks.find(b => b.t === "run");
   ok(await page.$("#b-" + runB.id + " textarea.code"), "run block renders a code editor");
   if (havePy) {
@@ -379,11 +379,11 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     const codeBtn = await page.$("button:has-text('Run this code')");
     if (codeBtn) { await codeBtn.click(); await page.click(".cell button:has-text('Run')"); ok(await page.waitForSelector(".cell pre.out", { timeout: 60000 }).then(() => true, () => false), "lesson code examples run in place"); }
   }
-  if (shots) await page.screenshot({ path: shots + "/6d-sigmoid-lesson.png" });
+  if (shots) await page.screenshot({ path: shots + "/6d-programme-lesson.png" });
 
   // Drill (unlocked: its lesson was learned yesterday)
   const drill = sig.drills.find(d => d.lesson === "oop" && d.tests);
-  await page.evaluate(id => location.hash = "#/c/sigmoid-ml/d/" + id, drill.id);
+  await page.evaluate(id => location.hash = "#/c/python-workshop/d/" + id, drill.id);
   await page.waitForSelector(".drill .timer");
   ok(true, "drill opens with a timer");
   if (havePy) {
@@ -393,13 +393,13 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     ok(r, "drill model answer passes when run");
     await page.click(".drill button:has-text('Got it')");
     await page.waitForTimeout(900);
-    const g = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~sigmoid-ml"));
+    const g = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~python-workshop"));
     ok(g && g.drills && g.drills[drill.id] && g.drills[drill.id].box === 1, "passing moves the drill to box 1");
   }
-  if (shots) await page.screenshot({ path: shots + "/6e-sigmoid-drill.png" });
+  if (shots) await page.screenshot({ path: shots + "/6e-programme-drill.png" });
 
   // Checkpoint: locked until its lessons are learned
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/x/cp1");
+  await page.evaluate(() => location.hash = "#/c/python-workshop/x/cp1");
   await page.waitForSelector(".exam h1");
   ok(!(await page.$(".exam .note")), "checkpoint is open once its lessons are learned");
   await page.click("button:has-text('Start the timer')");
@@ -407,14 +407,14 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
   ok(!(await page.$("#askbtn:not([hidden])")) || true, "timed checkpoint is running");
   const nItems = await page.$$eval(".exam .exam-item", e => e.length);
   ok(nItems === sig.checkpoints[0].items.length, "checkpoint shows all " + sig.checkpoints[0].items.length + " items (" + nItems + ")");
-  if (shots) await page.screenshot({ path: shots + "/6g-sigmoid-checkpoint.png" });
+  if (shots) await page.screenshot({ path: shots + "/6g-programme-checkpoint.png" });
   await page.click(".exam-bar button:has-text('Submit')");
   await page.waitForTimeout(500);
-  const gx = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~sigmoid-ml"));
+  const gx = await page.evaluate(() => window.__mockDocs.get("data/users/u1/g~python-workshop"));
   ok(gx && gx.exams && gx.exams.cp1 && gx.exams.cp1.attempts.length === 1, "submitting records the attempt");
 
   // Notebook
-  await page.evaluate(() => location.hash = "#/c/sigmoid-ml/n/hw1");
+  await page.evaluate(() => location.hash = "#/c/python-workshop/n/hw1");
   await page.waitForSelector(".nbcells");
   ok((await page.$$eval(".nbcells .cell, .nbcells .nbcell", e => e.length)) > 0, "notebook renders its cells");
   if (havePy) {
@@ -423,7 +423,7 @@ const ok = (cond, msg) => { console.log((cond ? "ok   " : "FAIL ") + msg); if (!
     const nbErr = await page.$$eval(".nbcells .err", e => e.map(x => x.textContent.slice(0, 200)));
     ok(true, "notebook errors on the blank template: " + nbErr.length);
   }
-  if (shots) await page.screenshot({ path: shots + "/6f-sigmoid-notebook.png", fullPage: false });
+  if (shots) await page.screenshot({ path: shots + "/6f-programme-notebook.png", fullPage: false });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);

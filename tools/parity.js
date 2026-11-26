@@ -9,7 +9,7 @@ const fs = require("fs"), path = require("path");
 const { convert } = require("./convert-pack.js");
 const CK = require("../player/src/core.js");
 const root = path.join(__dirname, "..");
-const id = process.argv[2] || "sigmoid-ml";
+const id = process.argv[2] || "music-theory";
 
 let fails = 0, checks = 0;
 const ok = (c, msg) => { checks++; if (!c) { fails++; console.log("FAIL " + msg); } };

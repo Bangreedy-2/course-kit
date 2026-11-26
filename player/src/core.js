@@ -1000,7 +1000,7 @@ home: up to 6 widgets from the course's widget library shown on the course home.
   A home widget should belong to the page: the frame already uses the page colours (--ck-bg, --ck-surface, --ck-ink, --ck-muted, --ck-accent, --ck-accent2), it fits its content by itself, and a drawing should cap its height (svg{width:100%;max-height:220px}) or it grows with the page. The render check reports its measured size.`;
 
 
-/* ---------- progress from Coursekit 1 / Sigmoid Prep (lessons keyed by practice index) ---------- */
+/* ---------- progress from Coursekit 1 (lessons keyed by practice index) ---------- */
 function fromV1Progress(old, lessonsById, cid) {
   const dayMs = d => { const [y, m, dd] = String(d).split("-").map(Number); return new Date(y, m - 1, dd, 12).getTime(); };
   const pracIds = l => (l.blocks || []).filter(b => PRACTICE.includes(b.t)).map(b => b.id);
